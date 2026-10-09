@@ -6,7 +6,7 @@
     <Nullable>enable</Nullable>
     <Platforms>AnyCPU;x64</Platforms>
     <PlatformTarget>x64</PlatformTarget>
-    <AssemblyName>BreezeVL</AssemblyName>
+    <AssemblyName>Breeze</AssemblyName>
     <RootNamespace>BreezeVL</RootNamespace>
     <Version>0.1.0</Version>
     <WealthLabInstallDir>C:\Program Files\Quantacula, LLC\WealthLab 8</WealthLabInstallDir>
