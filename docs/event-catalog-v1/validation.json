@@ -1,0 +1,51 @@
+{
+  "date": "2026-10-13",
+  "structural_checks_passed": true,
+  "event_count": 77,
+  "by_kind": {
+    "state": 27,
+    "composite": 15,
+    "sequence": 16,
+    "event": 16,
+    "execution": 3
+  },
+  "by_source": {
+    "P": 19,
+    "B2": 13,
+    "C": 31,
+    "B1": 12,
+    "U": 2
+  },
+  "frame_candidates": 567,
+  "unique_frame_hashes": 564,
+  "candidate_counts_by_source": {
+    "B1": 139,
+    "B2": 100,
+    "C": 212,
+    "P": 116,
+    "U": 0
+  },
+  "full_frames_opened": 3,
+  "contact_sheets_reviewed": 9,
+  "events_without_frame_in_narrative_range": [],
+  "checks": [
+    "unique event IDs",
+    "record schema",
+    "all video/transcript/frame references exist",
+    "time ranges within source duration",
+    "matching transcript segments",
+    "UTF-8 transcripts have no replacement characters",
+    "all learned weights null",
+    "first video episode coverage contiguous to end"
+  ],
+  "not_claimed": [
+    "each frame semantically reviewed",
+    "all trading dates aligned",
+    "detector implementation",
+    "numerical event validation",
+    "model training",
+    "backtest",
+    "production DLL changes"
+  ],
+  "source_spec_sha256": "53a8a02661d56725c73e12e4ee63bb6cfd6ebb873ca6b77263a64298aa63ae0d"
+}

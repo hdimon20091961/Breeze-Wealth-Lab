@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <DefineConstants>$(DefineConstants);EVENT_MODEL_TEST</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="..\Breeze\FuzzyMarketState.cs" Link="FuzzyMarketState.cs" />
+    <Compile Include="..\Breeze\TechnicalIndicators.cs" Link="TechnicalIndicators.cs" />
+    <Compile Include="..\Breeze\TitanicSyndrome.cs" Link="TitanicSyndrome.cs" />
+    <Compile Include="..\Breeze\ZweigBreadth.cs" Link="ZweigBreadth.cs" />
+    <Compile Include="..\Breeze\VixTermStructure.cs" Link="VixTermStructure.cs" />
+    <Compile Include="..\Breeze\HoldConfidence.cs" Link="HoldConfidence.cs" />
+    <Compile Include="..\Breeze\ModelPositionSizing.cs" Link="ModelPositionSizing.cs" />
+    <Compile Include="..\Breeze\ResearchHoldConfidence.cs" Link="ResearchHoldConfidence.cs" />
+    <Compile Include="..\Breeze\BreezeResearchHelp.cs" Link="BreezeResearchHelp.cs" />
+    <Compile Include="..\Breeze.Strategies\BreezeHoldPositionStrategy_new.cs" Link="BreezeHoldPositionEventModel.cs" />
+    <EmbeddedResource Include="..\docs\event-catalog-v1\catalog_source.json" Link="Research/EventCatalogSource.json" />
+  </ItemGroup>
+</Project>
