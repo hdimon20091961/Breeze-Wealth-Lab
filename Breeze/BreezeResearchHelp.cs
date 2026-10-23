@@ -1,22 +1,12 @@
 using System.Globalization;
-using System.IO;
 using System.Net;
-using System.Reflection;
 using System.Text;
-using System.Text.Json;
 using M = BreezeHoldPosition.Strategies.BreezeEventModelNew;
 
 namespace BreezeVL;
 
 internal static class BreezeResearchHelp
 {
-    private sealed record CatalogEntry(
-        string Name,
-        string Meaning,
-        string ProposedDefinition,
-        string Lifecycle,
-        string Unresolved);
-
     private sealed record Sensitivity(
         string Id,
         double BaseWeight,
@@ -68,28 +58,49 @@ internal static class BreezeResearchHelp
 
     public static string BuildHtml()
     {
-        Dictionary<string, CatalogEntry> catalog = LoadCatalog();
-        double[] soft = M.PresetWeights(0), standard = M.PresetWeights(1), strong = M.PresetWeights(2);
+        BreezeRuleSet ruleSet = BreezeRuleCatalog.Current;
+        Dictionary<string, BreezeRuleEntry> catalog = ruleSet.Rules.ToDictionary(rule => rule.Id, StringComparer.Ordinal);
+        double[] soft = ruleSet.BreezeWeights(0), standard = ruleSet.BreezeWeights(1), strong = ruleSet.BreezeWeights(2);
         var b = new StringBuilder(120_000);
         b.AppendLine("<section id=\"position-research\">");
         b.AppendLine("<h2>Позиционная событийная модель 0.10.0</h2>");
-        b.AppendLine("<div class=\"note\"><b>Что перенесено из Wealth-Lab.</b> Один и тот же код ежедневно рассчитывает 74 наблюдаемых состояния после закрытия рынка. Score = clamp(50 + сумма(вес × значение события), 0, 100). Решение исполняется на следующем открытии. Итоговый исследованный движок пороговый: Score ≥ 50 означает 10/10 контрактов, Score &lt; 50 — вне рынка. Будущие данные не используются.</div>");
+        b.Append("<div class=\"note\"><b>Единый каталог правил.</b> Этот раздел сформирован из <b>")
+            .Append(H(BreezeRuleCatalog.FileName)).Append("</b>: схема ").Append(H(ruleSet.SchemaVersion))
+            .Append(", каталог ").Append(H(ruleSet.CatalogVersion))
+            .AppendLine(". Определение детектора общее, а веса Breeze и коррекция порога TorchSharp хранятся раздельно.</div>");
+        b.AppendLine("<div class=\"note\"><b>Что перенесено из Wealth-Lab.</b> Один и тот же код ежедневно рассчитывает 75 наблюдаемых состояний после закрытия рынка. Score = clamp(50 + сумма(вес × значение события), 0, 100). Решение исполняется на следующем открытии. Итоговый исследованный движок пороговый: Score ≥ 50 означает 10/10 контрактов, Score &lt; 50 — вне рынка. Будущие данные не используются.</div>");
         b.AppendLine("<p>Три набора весов заморожены по пяти выборочным прогонам. Переключатель <b>Position model</b> на Fuzzy map меняет только набор весов; определения событий остаются одинаковыми.</p>");
         b.AppendLine("<table><thead><tr><th>Профиль</th><th>Назначение</th><th>ProfitPct</th><th>Max DD</th><th>Sharpe</th><th>Recovery</th><th>Позиций</th></tr></thead><tbody>");
         b.AppendLine("<tr><td><b>Soft</b></td><td>минимальная просадка при ProfitPct &gt; 240%</td><td>248,03%</td><td>−9,16%</td><td>1,620</td><td>10,343</td><td>1380</td></tr>");
         b.AppendLine("<tr><td><b>Standard</b></td><td>выбранная визуально сбалансированная equity</td><td>251,19%</td><td>−9,41%</td><td>1,607</td><td>10,872</td><td>1400</td></tr>");
-        b.AppendLine("<tr><td><b>Strong</b></td><td>максимальная доходность выборочных прогонов</td><td>251,51%</td><td>−9,37%</td><td>1,611</td><td>10,886</td><td>1380</td></tr>");
+        b.AppendLine("<tr><td><b>Hard</b></td><td>максимальная доходность выборочных прогонов</td><td>251,51%</td><td>−9,37%</td><td>1,611</td><td>10,886</td><td>1380</td></tr>");
         b.AppendLine("</tbody></table>");
 
-        b.AppendLine("<h3>Чувствительность Strong, по убыванию влияния на ProfitPct</h3>");
-        b.AppendLine("<p>База Strong = 251,513%. Для каждого ненулевого веса остальные веса фиксировались. Проверялись числовой левый и правый пределы последнего стресс-теста: 0 и 2× исходного веса. <b>Значимость</b> = max(|ΔProfitPct слева|, |ΔProfitPct справа|), в процентных пунктах. Это однофакторная чувствительность, а не доказательство причинности и не новая оптимизация.</p>");
-        b.AppendLine("<table class=\"results\"><thead><tr><th>№</th><th>ID и состояние</th><th>Strong</th><th>Левый вес → ProfitPct (Δ)</th><th>Правый вес → ProfitPct (Δ)</th><th>Значимость, п.п.</th></tr></thead><tbody>");
+        b.AppendLine("<section id=\"mt-supertrend-research\" style=\"break-inside:avoid;page-break-inside:avoid\">");
+        b.AppendLine("<h3>MTSuperTrend: проверка адаптации и добавления в Breeze</h3>");
+        b.AppendLine("<p><b>Цель.</b> Проверить, улучшает ли MTSuperTrend удержание тренда или просадку замороженных профилей Breeze. Сначала исследовались три варианта доминантного цикла Эллерса, доли цикла 20–100% и сглаживание 0/1. Устойчивого преимущества перед классическим периодом не обнаружено, поэтому для следующего этапа оставлен классический MTSuperTrend(10, multiplier, 3).</p>");
+        b.AppendLine("<table><thead><tr><th>Отдельный сигнал</th><th>Назначение</th><th>Profit</th><th>APR</th><th>Max DD</th><th>WLScore</th><th>Сделок</th></tr></thead><tbody>");
+        b.AppendLine("<tr><td><b>Black, ×2,40</b></td><td>удержание тренда</td><td>446,17</td><td>11,192%</td><td>−14,22%</td><td>12,338</td><td>9</td></tr>");
+        b.AppendLine("<tr><td><b>Red, ×1,05</b></td><td>ограничение просадки</td><td>396,91</td><td>10,311%</td><td>−10,59%</td><td>13,380</td><td>28</td></tr>");
+        b.AppendLine("</tbody></table>");
+        b.AppendLine("<p><b>Интеграционная проверка.</b> На каждом баре рассчитывалось FinalScore = FrozenBreezeScore + BlackWeight × BlackState + RedWeight × RedState, где состояние равно +1/−1. Проверены три профиля и веса 0–20 с шагом 1: 3 × 21 × 21 = 1323 комбинации. Контроль 0/0 точно воспроизвёл исходные профили.</p>");
+        b.AppendLine("<table><thead><tr><th>Профиль, веса 0/0</th><th>Profit</th><th>APR</th><th>Max DD</th><th>Sharpe</th><th>Sortino</th><th>WLScore</th></tr></thead><tbody>");
+        b.AppendLine("<tr><td>Soft</td><td>7249,50</td><td>14,642%</td><td>−9,188%</td><td>1,590</td><td>3,275</td><td>22,137</td></tr>");
+        b.AppendLine("<tr><td>Standard</td><td>7375,40</td><td>14,798%</td><td>−9,439%</td><td>1,582</td><td>3,318</td><td>22,066</td></tr>");
+        b.AppendLine("<tr><td>Hard</td><td>7385,20</td><td>14,810%</td><td>−9,402%</td><td>1,586</td><td>3,329</td><td>22,120</td></tr>");
+        b.AppendLine("</tbody></table>");
+        b.AppendLine("<div class=\"note\"><b>Результат отрицательный.</b> Во всех трёх профилях глобальные максимумы Profit, APR, Sharpe, Sortino, Recovery и WLScore получены при BlackWeight=0 и RedWeight=0. Единственное формальное улучшение просадки — Standard 0/1: −9,387% вместо −9,439%, но с потерей около 9% прибыли. Симметричные MTSuperTrend-добавки в действующий Breeze Score не включаются. Отдельная пригодность сигналов не доказала их полезность как обычных слагаемых готовой модели.</div>");
+        b.AppendLine("</section>");
+
+        b.AppendLine("<h3>Чувствительность Hard, по убыванию влияния на ProfitPct</h3>");
+        b.AppendLine("<p>База Hard = 251,513%. Для каждого ненулевого веса остальные веса фиксировались. Проверялись числовой левый и правый пределы последнего стресс-теста: 0 и 2× исходного веса. <b>Значимость</b> = max(|ΔProfitPct слева|, |ΔProfitPct справа|), в процентных пунктах. Это однофакторная чувствительность, а не доказательство причинности и не новая оптимизация.</p>");
+        b.AppendLine("<table class=\"results\"><thead><tr><th>№</th><th>ID и состояние</th><th>Hard</th><th>Левый вес → ProfitPct (Δ)</th><th>Правый вес → ProfitPct (Δ)</th><th>Значимость, п.п.</th></tr></thead><tbody>");
         int rank = 0;
         foreach (Sensitivity s in Sensitivities.OrderByDescending(item => item.Importance).ThenBy(item => item.Id))
         {
             rank++;
             M.Feature feature = M.Features.Single(item => item.Id == s.Id);
-            string name = catalog.TryGetValue(s.Id, out CatalogEntry? entry) ? entry.Name : feature.Name;
+            string name = catalog.TryGetValue(s.Id, out BreezeRuleEntry? entry) ? entry.NameRu : feature.Name;
             b.Append("<tr><td>").Append(rank).Append("</td><td><b>").Append(H(s.Id)).Append("</b> ").Append(H(name))
                 .Append("</td><td>").Append(N(s.BaseWeight)).Append("</td><td>")
                 .Append(N(s.LeftWeight)).Append(" → ").Append(N(s.LeftProfit)).Append("% (").Append(Signed(s.LeftDelta)).Append(")</td><td>")
@@ -98,52 +109,36 @@ internal static class BreezeResearchHelp
         }
         b.AppendLine("</tbody></table>");
 
-        b.AppendLine("<h3>Полный каталог 74 состояний</h3>");
-        b.AppendLine("<p>Вес 0 означает только то, что событие не влияет на текущий Score. Оно не удалено: состояние продолжает рассчитываться и остаётся доступным для проверки и будущего изменения определения. Колонка «Реализованная формула» описывает именно действующий код; «Исследовательское описание» сохраняет более широкую исходную идею.</p>");
-        b.AppendLine("<table><thead><tr><th>ID</th><th>Состояние</th><th>Soft</th><th>Standard</th><th>Strong</th><th>Статус</th><th>Реализованная формула</th><th>Исследовательское описание</th></tr></thead><tbody>");
+        b.AppendLine("<h3>Полный каталог 75 состояний</h3>");
+        b.AppendLine("<p>Номер является постоянной сквозной ссылкой, ID — программным ключом. Вес 0 в Breeze означает, что состояние рассчитывается, но не влияет на Score. Вес TorchSharp измеряется в процентных пунктах порога: отрицательный вес снижает порог, положительный повышает. Настройки жизненного цикла TorchSharp не изменяют замороженную модель Breeze.</p>");
+        b.AppendLine("<table><thead><tr><th>№</th><th>ID</th><th>Состояние</th><th>Soft</th><th>Standard</th><th>Hard</th><th>Breeze</th><th>TorchSharp, п.п.</th><th>Действие TorchSharp</th><th>Реализованная формула</th><th>Исследовательское описание</th></tr></thead><tbody>");
         for (int i = 0; i < M.Features.Length; i++)
         {
             M.Feature feature = M.Features[i];
-            catalog.TryGetValue(feature.Id, out CatalogEntry? entry);
+            BreezeRuleEntry entry = catalog[feature.Id];
             bool zero = soft[i] == 0 && standard[i] == 0 && strong[i] == 0;
             string status = zero ? "<b>0 — сохранён</b>" : "активен";
-            string description = entry is null
-                ? string.Empty
-                : $"<b>Смысл:</b> {H(entry.Meaning)}<br><b>Предварительное определение:</b> {H(entry.ProposedDefinition)}<br><b>Жизненный цикл:</b> {H(entry.Lifecycle)}<br><b>Требует уточнения:</b> {H(entry.Unresolved)}";
-            b.Append("<tr").Append(zero ? " style=\"background:#f5f6f7;color:#4f5963\"" : string.Empty).Append("><td><b>")
-                .Append(H(feature.Id)).Append("</b></td><td>").Append(H(entry?.Name ?? feature.Name))
+            string torch = entry.TorchEnabled
+                ? $"<b>{Signed(entry.TorchWeightThresholdPp)}</b>"
+                : string.Equals(entry.TorchWeightStatus, "rejected_after_test", StringComparison.Ordinal)
+                    ? "<b>отклонено</b>"
+                    : "0 — не настроен";
+            string description = $"<b>Смысл:</b> {H(entry.Meaning)}<br><b>Предварительное определение:</b> {H(entry.ProposedDefinition)}<br><b>Жизненный цикл:</b> {H(entry.Lifecycle)}<br><b>Требует уточнения:</b> {H(entry.Unresolved)}";
+            if (string.Equals(entry.TorchWeightStatus, "rejected_after_test", StringComparison.Ordinal))
+                description += $"<br><b>Результат теста TorchSharp:</b> {H(entry.TorchNote)}";
+            b.Append("<tr").Append(zero ? " style=\"background:#f5f6f7;color:#4f5963\"" : string.Empty).Append("><td>")
+                .Append(entry.Number).Append("</td><td><b>").Append(H(feature.Id)).Append("</b></td><td>").Append(H(entry.NameRu))
                 .Append("<br><span class=\"small\">").Append(H(feature.Name)).Append("</span></td><td>")
                 .Append(N(soft[i])).Append("</td><td>").Append(N(standard[i])).Append("</td><td>")
                 .Append(N(strong[i])).Append("</td><td>").Append(status).Append("</td><td>")
-                .Append(H(feature.Rule)).Append("</td><td>").Append(description).AppendLine("</td></tr>");
+                .Append(torch).Append("</td><td>").Append(H(BreezeRuleCatalog.ActivationText(entry)))
+                .Append("</td><td>").Append(H(entry.ImplementedFormula)).Append("</td><td>")
+                .Append(description).AppendLine("</td></tr>");
         }
         b.AppendLine("</tbody></table>");
-        b.AppendLine("<p class=\"small\">X01–X03 относятся к альтернативным способам исполнения лимитных заявок и намеренно не входят в 74 рыночных состояния текущего скоринга. Их нельзя оценивать как сегодняшнее событие, если исполнение стало известно позднее.</p>");
+        b.AppendLine("<p class=\"small\">X01–X03 относятся к альтернативным способам исполнения лимитных заявок и намеренно не входят в 75 рыночных состояний текущего скоринга. Их нельзя оценивать как сегодняшнее событие, если исполнение стало известно позднее.</p>");
         b.AppendLine("</section>");
         return b.ToString();
-    }
-
-    private static Dictionary<string, CatalogEntry> LoadCatalog()
-    {
-        Assembly assembly = typeof(BreezeResearchHelp).Assembly;
-        string? name = assembly.GetManifestResourceNames()
-            .FirstOrDefault(item => item.EndsWith("EventCatalogSource.json", StringComparison.OrdinalIgnoreCase));
-        if (name is null) return [];
-        using Stream stream = assembly.GetManifestResourceStream(name)!;
-        using JsonDocument document = JsonDocument.Parse(stream);
-        var result = new Dictionary<string, CatalogEntry>(StringComparer.Ordinal);
-        foreach (JsonElement item in document.RootElement.GetProperty("events").EnumerateArray())
-        {
-            string id = item[0].GetString() ?? string.Empty;
-            if (string.IsNullOrWhiteSpace(id)) continue;
-            result[id] = new CatalogEntry(
-                item[1].GetString() ?? string.Empty,
-                item[6].GetString() ?? string.Empty,
-                item[7].GetString() ?? string.Empty,
-                item[8].GetString() ?? string.Empty,
-                item[9].GetString() ?? string.Empty);
-        }
-        return result;
     }
 
     private static string H(string value) => WebUtility.HtmlEncode(value);

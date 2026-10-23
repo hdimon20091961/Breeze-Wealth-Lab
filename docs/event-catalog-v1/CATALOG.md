@@ -1,6 +1,6 @@
 # Каталог событий Breeze — карточки
 
-Версия 1.0.0, 2026-10-13. Всего 77 типов конструкций; не число сделок или независимых наблюдений.
+Версия 1.0.0, 2026-10-13. Всего 78 типов конструкций; не число сделок или независимых наблюдений.
 
 [Постановка, обозначения, правила причинности и ограничения](<D:/CODEX_PRG/Breadth/docs/event-catalog-v1/README.md>)
 
@@ -24,14 +24,14 @@
 | Titanic | 3 |
 | Контекстные комплексы | 12 |
 | Исполнение — вне рыночного скоринга | 3 |
-| Дополнительные конструкции из текущего чата | 2 |
+| Дополнительные конструкции из текущего чата | 3 |
 
 ## Источники
 
-- **B1** — Широты S&P — первый ролик, повторная оцифровка: [видео](<D:/CODEX_PRG/Breadth/Исходные видео для обучения/широтыS&P.mp4>); [расшифровка](<D:/CODEX_PRG/Breadth/artifacts/breeze_ai_reprocessed_20261012/transcript/transcript.txt>). Кадров-кандидатов: 139.
-- **B2** — Широты S&P 2 — MyRSI и EMA: [видео](<D:/CODEX_PRG/Breadth/Исходные видео для обучения/широтыS&P2.mp4>); [расшифровка](<D:/CODEX_PRG/Breadth/artifacts/Breeze_AI_2/transcript/transcript.txt>). Кадров-кандидатов: 100.
-- **C** — Contango 1: [видео](<D:/CODEX_PRG/Breadth/Исходные видео для обучения/contango1.mp4>); [расшифровка](<D:/CODEX_PRG/Breadth/artifacts/Contango_1/transcript/transcript.txt>). Кадров-кандидатов: 212.
-- **P** — Подхват 1: [видео](<D:/CODEX_PRG/Breadth/Исходные видео для обучения/подхват1.mp4>); [расшифровка](<D:/CODEX_PRG/Breadth/artifacts/Podhvat_1/transcript/transcript.txt>). Кадров-кандидатов: 116.
+- **B1** — Широты S&P — первый ролик, повторная оцифровка: [видео](<D:/CODEX_PRG/Breadth/research/inputs/videos/широтыS&P.mp4>); [расшифровка](<D:/CODEX_PRG/Breadth/research/artifacts/breeze_ai_reprocessed_20261012/transcript/transcript.txt>). Кадров-кандидатов: 139.
+- **B2** — Широты S&P 2 — MyRSI и EMA: [видео](<D:/CODEX_PRG/Breadth/research/inputs/videos/широтыS&P2.mp4>); [расшифровка](<D:/CODEX_PRG/Breadth/research/artifacts/Breeze_AI_2/transcript/transcript.txt>). Кадров-кандидатов: 100.
+- **C** — Contango 1: [видео](<D:/CODEX_PRG/Breadth/research/inputs/videos/contango1.mp4>); [расшифровка](<D:/CODEX_PRG/Breadth/research/artifacts/Contango_1/transcript/transcript.txt>). Кадров-кандидатов: 212.
+- **P** — Подхват 1: [видео](<D:/CODEX_PRG/Breadth/research/inputs/videos/подхват1.mp4>); [расшифровка](<D:/CODEX_PRG/Breadth/research/artifacts/Podhvat_1/transcript/transcript.txt>). Кадров-кандидатов: 116.
 - **U** — Уточнения пользователя в текущем чате, 12.10.2026. Примеры отдельно помечены и не приписаны видеороликам.
 
 ## Указатель
@@ -113,6 +113,7 @@
 - [X03 — Половина составного импульса из нескольких баров](#x03)
 - [U01 — Повторный отрыв RSI от -1 с изменением медленной широты](#u01)
 - [U02 — Вчера благополучие и Цвейг 30, сегодня двойной пробой и бэквордация](#u02)
+- [U03 — Месячная экспирация SPX](#u03)
 
 ## Тренд и контекст снижения
 
@@ -122,7 +123,7 @@
 
 Тип: состояние. Вес: не задан. Числовой детектор: ещё не реализован.
 
-Источник: Подхват 1, 00:01:11–00:01:54; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/artifacts/Podhvat_1/transcript/transcript.txt:5>).
+Источник: Подхват 1, 00:01:11–00:01:54; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/research/artifacts/Podhvat_1/transcript/transcript.txt:5>).
 
 **Смысл источника:** Порядок средних и положение цены — основа структуры роста.
 
@@ -132,14 +133,14 @@
 
 **Что уточнить / не подменять:** Допуск равенства и нормировка расстояний; не смешивать порядок с наклонами.
 
-Навигационные кадры: [00:01:36](<D:/CODEX_PRG/Breadth/artifacts/Podhvat_1/hold_frames/hold_003_00-01-36.jpg>).
+Навигационные кадры: [00:01:36](<D:/CODEX_PRG/Breadth/research/artifacts/Podhvat_1/hold_frames/hold_003_00-01-36.jpg>).
 <a id="t02"></a>
 
 ### T02 — Все четыре EMA растут
 
 Тип: состояние. Вес: не задан. Числовой детектор: ещё не реализован.
 
-Источник: Подхват 1, 00:01:11–00:04:55; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/artifacts/Podhvat_1/transcript/transcript.txt:5>).
+Источник: Подхват 1, 00:01:11–00:04:55; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/research/artifacts/Podhvat_1/transcript/transcript.txt:5>).
 
 **Смысл источника:** Сегодняшнее значение каждой EMA выше вчерашнего.
 
@@ -149,14 +150,14 @@
 
 **Что уточнить / не подменять:** Нормировка наклона; многодневный наклон — отдельный вариант, не исходное определение.
 
-Навигационные кадры: [00:03:12](<D:/CODEX_PRG/Breadth/artifacts/Podhvat_1/hold_frames/hold_007_00-03-12.jpg>); [00:03:13](<D:/CODEX_PRG/Breadth/artifacts/Podhvat_1/anchor_frames/anchor_003_00-03-13.jpg>); [00:02:45](<D:/CODEX_PRG/Breadth/artifacts/Podhvat_1/anchor_frames/anchor_002_00-02-45.jpg>).
+Навигационные кадры: [00:03:12](<D:/CODEX_PRG/Breadth/research/artifacts/Podhvat_1/hold_frames/hold_007_00-03-12.jpg>); [00:03:13](<D:/CODEX_PRG/Breadth/research/artifacts/Podhvat_1/anchor_frames/anchor_003_00-03-13.jpg>); [00:02:45](<D:/CODEX_PRG/Breadth/research/artifacts/Podhvat_1/anchor_frames/anchor_002_00-02-45.jpg>).
 <a id="t03"></a>
 
 ### T03 — Устойчивый рост с широкой поддержкой
 
 Тип: комплекс. Вес: не задан. Числовой детектор: ещё не реализован.
 
-Источник: Подхват 1, 00:01:11–00:04:08; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/artifacts/Podhvat_1/transcript/transcript.txt:5>).
+Источник: Подхват 1, 00:01:11–00:04:08; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/research/artifacts/Podhvat_1/transcript/transcript.txt:5>).
 
 **Смысл источника:** Порядок, положительные наклоны, цена выше EMA20, высокая широта и низкая волатильность сохраняются несколько дней.
 
@@ -166,14 +167,14 @@
 
 **Что уточнить / не подменять:** Порог спокойной волатильности и допустимые краткие нарушения; не требовать будущих 15 дней.
 
-Навигационные кадры: [00:02:42](<D:/CODEX_PRG/Breadth/artifacts/Podhvat_1/hold_frames/hold_006_00-02-42.jpg>); [00:02:45](<D:/CODEX_PRG/Breadth/artifacts/Podhvat_1/anchor_frames/anchor_002_00-02-45.jpg>); [00:02:26](<D:/CODEX_PRG/Breadth/artifacts/Podhvat_1/hold_frames/hold_005_00-02-26.jpg>).
+Навигационные кадры: [00:02:42](<D:/CODEX_PRG/Breadth/research/artifacts/Podhvat_1/hold_frames/hold_006_00-02-42.jpg>); [00:02:45](<D:/CODEX_PRG/Breadth/research/artifacts/Podhvat_1/anchor_frames/anchor_002_00-02-45.jpg>); [00:02:26](<D:/CODEX_PRG/Breadth/research/artifacts/Podhvat_1/hold_frames/hold_005_00-02-26.jpg>).
 <a id="t04"></a>
 
 ### T04 — Быстрые EMA падают, медленные растут
 
 Тип: состояние. Вес: не задан. Числовой детектор: ещё не реализован.
 
-Источник: Подхват 1, 00:04:08–00:04:55; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/artifacts/Podhvat_1/transcript/transcript.txt:13>).
+Источник: Подхват 1, 00:04:08–00:04:55; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/research/artifacts/Podhvat_1/transcript/transcript.txt:13>).
 
 **Смысл источника:** Порядок ещё правильный, но сначала EMA20, затем EMA50 становятся падающими.
 
@@ -183,14 +184,14 @@
 
 **Что уточнить / не подменять:** Равенство нулю и минимально значимый наклон.
 
-Навигационные кадры: [00:04:26](<D:/CODEX_PRG/Breadth/artifacts/Podhvat_1/anchor_frames/anchor_005_00-04-26.jpg>); [00:04:26](<D:/CODEX_PRG/Breadth/artifacts/Podhvat_1/hold_frames/hold_010_00-04-26.jpg>); [00:04:53](<D:/CODEX_PRG/Breadth/artifacts/Podhvat_1/hold_frames/hold_011_00-04-53.jpg>).
+Навигационные кадры: [00:04:26](<D:/CODEX_PRG/Breadth/research/artifacts/Podhvat_1/anchor_frames/anchor_005_00-04-26.jpg>); [00:04:26](<D:/CODEX_PRG/Breadth/research/artifacts/Podhvat_1/hold_frames/hold_010_00-04-26.jpg>); [00:04:53](<D:/CODEX_PRG/Breadth/research/artifacts/Podhvat_1/hold_frames/hold_011_00-04-53.jpg>).
 <a id="t05"></a>
 
 ### T05 — Растянутый веер EMA
 
 Тип: состояние. Вес: не задан. Числовой детектор: ещё не реализован.
 
-Источник: Подхват 1, 00:11:54–00:13:41; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/artifacts/Podhvat_1/transcript/transcript.txt:39>).
+Источник: Подхват 1, 00:11:54–00:13:41; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/research/artifacts/Podhvat_1/transcript/transcript.txt:39>).
 
 **Смысл источника:** Большие расстояния между ценой и средними описывают отрыв и возможность паузы.
 
@@ -200,14 +201,14 @@
 
 **Что уточнить / не подменять:** Границы сильного растяжения; процентиль только по доступному прошлому, не по всей истории.
 
-Навигационные кадры: [00:12:52](<D:/CODEX_PRG/Breadth/artifacts/Podhvat_1/hold_frames/hold_036_00-12-52.jpg>); [00:12:38](<D:/CODEX_PRG/Breadth/artifacts/Podhvat_1/hold_frames/hold_035_00-12-38.jpg>); [00:13:08](<D:/CODEX_PRG/Breadth/artifacts/Podhvat_1/anchor_frames/anchor_012_00-13-08.jpg>).
+Навигационные кадры: [00:12:52](<D:/CODEX_PRG/Breadth/research/artifacts/Podhvat_1/hold_frames/hold_036_00-12-52.jpg>); [00:12:38](<D:/CODEX_PRG/Breadth/research/artifacts/Podhvat_1/hold_frames/hold_035_00-12-38.jpg>); [00:13:08](<D:/CODEX_PRG/Breadth/research/artifacts/Podhvat_1/anchor_frames/anchor_012_00-13-08.jpg>).
 <a id="t06"></a>
 
 ### T06 — Сжатый бычий веер
 
 Тип: состояние. Вес: не задан. Числовой детектор: ещё не реализован.
 
-Источник: Подхват 1, 00:12:06–00:13:54; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/artifacts/Podhvat_1/transcript/transcript.txt:41>).
+Источник: Подхват 1, 00:12:06–00:13:54; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/research/artifacts/Podhvat_1/transcript/transcript.txt:41>).
 
 **Смысл источника:** При правильном порядке средние расположены плотно; пример ранней структуры продолжения роста.
 
@@ -217,14 +218,14 @@
 
 **Что уточнить / не подменять:** Порог сжатия и отличие от пересечения/переплетения EMA.
 
-Навигационные кадры: [00:13:08](<D:/CODEX_PRG/Breadth/artifacts/Podhvat_1/anchor_frames/anchor_012_00-13-08.jpg>); [00:12:52](<D:/CODEX_PRG/Breadth/artifacts/Podhvat_1/hold_frames/hold_036_00-12-52.jpg>); [00:13:17](<D:/CODEX_PRG/Breadth/artifacts/Podhvat_1/hold_frames/hold_037_00-13-17.jpg>).
+Навигационные кадры: [00:13:08](<D:/CODEX_PRG/Breadth/research/artifacts/Podhvat_1/anchor_frames/anchor_012_00-13-08.jpg>); [00:12:52](<D:/CODEX_PRG/Breadth/research/artifacts/Podhvat_1/hold_frames/hold_036_00-12-52.jpg>); [00:13:17](<D:/CODEX_PRG/Breadth/research/artifacts/Podhvat_1/hold_frames/hold_037_00-13-17.jpg>).
 <a id="t07"></a>
 
 ### T07 — Цена ниже всех EMA и нарушенный порядок
 
 Тип: состояние. Вес: не задан. Числовой детектор: ещё не реализован.
 
-Источник: Широты S&P 2 — MyRSI и EMA, 00:19:04–00:23:28; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/artifacts/Breeze_AI_2/transcript/transcript.txt:71>).
+Источник: Широты S&P 2 — MyRSI и EMA, 00:19:04–00:23:28; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/research/artifacts/Breeze_AI_2/transcript/transcript.txt:71>).
 
 **Смысл источника:** Глубокое падение может закончиться раньше восстановления бычьего порядка.
 
@@ -234,14 +235,14 @@
 
 **Что уточнить / не подменять:** Полностью медвежий порядок не равен любому нарушению бычьего.
 
-Навигационные кадры: [00:21:19](<D:/CODEX_PRG/Breadth/artifacts/Breeze_AI_2/frames/hold_070_00-21-19.jpg>); [00:21:30](<D:/CODEX_PRG/Breadth/artifacts/Breeze_AI_2/frames/hold_071_00-21-30.jpg>); [00:21:00](<D:/CODEX_PRG/Breadth/artifacts/Breeze_AI_2/frames/hold_069_00-21-00.jpg>).
+Навигационные кадры: [00:21:19](<D:/CODEX_PRG/Breadth/research/artifacts/Breeze_AI_2/frames/hold_070_00-21-19.jpg>); [00:21:30](<D:/CODEX_PRG/Breadth/research/artifacts/Breeze_AI_2/frames/hold_071_00-21-30.jpg>); [00:21:00](<D:/CODEX_PRG/Breadth/research/artifacts/Breeze_AI_2/frames/hold_069_00-21-00.jpg>).
 <a id="t08"></a>
 
 ### T08 — Глубина, скорость и длительность снижения
 
 Тип: состояние. Вес: не задан. Числовой детектор: ещё не реализован.
 
-Источник: Contango 1, 00:34:45–00:35:18; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/artifacts/Contango_1/transcript/transcript.txt:253>).
+Источник: Contango 1, 00:34:45–00:35:18; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/research/artifacts/Contango_1/transcript/transcript.txt:253>).
 
 **Смысл источника:** Долгое падение — больше 10 торговых дней; ориентиры глубины 5%, сильнее 8–12%.
 
@@ -251,14 +252,14 @@
 
 **Что уточнить / не подменять:** Определение локального пика; 10–15% из первого ролика и 5–12% здесь — разные уровни контекста, не один жёсткий порог.
 
-Навигационные кадры: [00:34:55](<D:/CODEX_PRG/Breadth/artifacts/Contango_1/hold_frames/hold_062_00-34-55.jpg>); [00:35:14](<D:/CODEX_PRG/Breadth/artifacts/Contango_1/hold_frames/hold_063_00-35-14.jpg>).
+Навигационные кадры: [00:34:55](<D:/CODEX_PRG/Breadth/research/artifacts/Contango_1/hold_frames/hold_062_00-34-55.jpg>); [00:35:14](<D:/CODEX_PRG/Breadth/research/artifacts/Contango_1/hold_frames/hold_063_00-35-14.jpg>).
 <a id="t09"></a>
 
 ### T09 — Многоволновое снижение
 
 Тип: последовательность. Вес: не задан. Числовой детектор: ещё не реализован.
 
-Источник: Широты S&P — первый ролик, повторная оцифровка, 00:24:37–00:34:51; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/artifacts/breeze_ai_reprocessed_20261012/transcript/transcript.txt:564>).
+Источник: Широты S&P — первый ролик, повторная оцифровка, 00:24:37–00:34:51; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/research/artifacts/breeze_ai_reprocessed_20261012/transcript/transcript.txt:564>).
 
 **Смысл источника:** Несколько движений вниз и характер падения важнее одного значения широты.
 
@@ -268,14 +269,14 @@
 
 **Что уточнить / не подменять:** Что считать волной и величиной отскока; три бара не равны трём волнам.
 
-Навигационные кадры: [00:29:41](<D:/CODEX_PRG/Breadth/artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_073_00-29-41.jpg>); [00:29:53](<D:/CODEX_PRG/Breadth/artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_074_00-29-53.jpg>); [00:29:59](<D:/CODEX_PRG/Breadth/artifacts/breeze_ai_reprocessed_20261012/anchor_frames/anchor_010_00-29-59.jpg>).
+Навигационные кадры: [00:29:41](<D:/CODEX_PRG/Breadth/research/artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_073_00-29-41.jpg>); [00:29:53](<D:/CODEX_PRG/Breadth/research/artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_074_00-29-53.jpg>); [00:29:59](<D:/CODEX_PRG/Breadth/research/artifacts/breeze_ai_reprocessed_20261012/anchor_frames/anchor_010_00-29-59.jpg>).
 <a id="t10"></a>
 
 ### T10 — Падение от недавнего исторического максимума
 
 Тип: состояние. Вес: не задан. Числовой детектор: ещё не реализован.
 
-Источник: Широты S&P — первый ролик, повторная оцифровка, 00:33:51–00:34:51; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/artifacts/breeze_ai_reprocessed_20261012/transcript/transcript.txt:779>).
+Источник: Широты S&P — первый ролик, повторная оцифровка, 00:33:51–00:34:51; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/research/artifacts/breeze_ai_reprocessed_20261012/transcript/transcript.txt:779>).
 
 **Смысл источника:** Автор выделяет снижение на 10–15–20% именно от недавнего all-time high.
 
@@ -285,7 +286,7 @@
 
 **Что уточнить / не подменять:** High или Close, насколько полна история и что означает недавний; не подменять all-time high максимумом 252 дней без явного флага.
 
-Навигационные кадры: [00:34:29](<D:/CODEX_PRG/Breadth/artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_084_00-34-29.jpg>); [00:33:58](<D:/CODEX_PRG/Breadth/artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_083_00-33-58.jpg>); [00:34:46](<D:/CODEX_PRG/Breadth/artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_085_00-34-46.jpg>).
+Навигационные кадры: [00:34:29](<D:/CODEX_PRG/Breadth/research/artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_084_00-34-29.jpg>); [00:33:58](<D:/CODEX_PRG/Breadth/research/artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_083_00-33-58.jpg>); [00:34:46](<D:/CODEX_PRG/Breadth/research/artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_085_00-34-46.jpg>).
 
 ## Цена и пересечения EMA
 
@@ -295,7 +296,7 @@
 
 Тип: событие. Вес: не задан. Числовой детектор: ещё не реализован.
 
-Источник: Широты S&P 2 — MyRSI и EMA, 00:04:59–00:05:58; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/artifacts/Breeze_AI_2/transcript/transcript.txt:21>).
+Источник: Широты S&P 2 — MyRSI и EMA, 00:04:59–00:05:58; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/research/artifacts/Breeze_AI_2/transcript/transcript.txt:21>).
 
 **Смысл источника:** Закрытие ниже средней существенно отличается от внутридневного прокола.
 
@@ -305,14 +306,14 @@
 
 **Что уточнить / не подменять:** Допуск на границе; источник описывает особенно EMA20/50, глубина расширяется по иерархии R14 прежней разметки.
 
-Навигационные кадры: [00:05:32](<D:/CODEX_PRG/Breadth/artifacts/Breeze_AI_2/frames/hold_020_00-05-32.jpg>); [00:05:14](<D:/CODEX_PRG/Breadth/artifacts/Breeze_AI_2/frames/hold_019_00-05-14.jpg>); [00:05:44](<D:/CODEX_PRG/Breadth/artifacts/Breeze_AI_2/frames/hold_021_00-05-44.jpg>).
+Навигационные кадры: [00:05:32](<D:/CODEX_PRG/Breadth/research/artifacts/Breeze_AI_2/frames/hold_020_00-05-32.jpg>); [00:05:14](<D:/CODEX_PRG/Breadth/research/artifacts/Breeze_AI_2/frames/hold_019_00-05-14.jpg>); [00:05:44](<D:/CODEX_PRG/Breadth/research/artifacts/Breeze_AI_2/frames/hold_021_00-05-44.jpg>).
 <a id="e02"></a>
 
 ### E02 — Прокол средней тенью с удержанием закрытия
 
 Тип: событие. Вес: не задан. Числовой детектор: ещё не реализован.
 
-Источник: Подхват 1, 00:06:26–00:06:56; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/artifacts/Podhvat_1/transcript/transcript.txt:21>).
+Источник: Подхват 1, 00:06:26–00:06:56; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/research/artifacts/Podhvat_1/transcript/transcript.txt:21>).
 
 **Смысл источника:** Low ниже EMA50, но закрытие остаётся выше — поддержка не пробита по закрытию.
 
@@ -322,14 +323,14 @@
 
 **Что уточнить / не подменять:** Сравнение с E_n[t] является EOD-описанием, не доказательством внутридневного порядка касаний.
 
-Навигационные кадры: [00:06:42](<D:/CODEX_PRG/Breadth/artifacts/Podhvat_1/hold_frames/hold_016_00-06-42.jpg>); [00:06:26](<D:/CODEX_PRG/Breadth/artifacts/Podhvat_1/hold_frames/hold_015_00-06-26.jpg>); [00:06:56](<D:/CODEX_PRG/Breadth/artifacts/Podhvat_1/hold_frames/hold_017_00-06-56.jpg>).
+Навигационные кадры: [00:06:42](<D:/CODEX_PRG/Breadth/research/artifacts/Podhvat_1/hold_frames/hold_016_00-06-42.jpg>); [00:06:26](<D:/CODEX_PRG/Breadth/research/artifacts/Podhvat_1/hold_frames/hold_015_00-06-26.jpg>); [00:06:56](<D:/CODEX_PRG/Breadth/research/artifacts/Podhvat_1/hold_frames/hold_017_00-06-56.jpg>).
 <a id="e03"></a>
 
 ### E03 — За день пробиты EMA20 и EMA50
 
 Тип: событие. Вес: не задан. Числовой детектор: ещё не реализован.
 
-Источник: Подхват 1, 00:15:15–00:18:29; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/artifacts/Podhvat_1/transcript/transcript.txt:51>).
+Источник: Подхват 1, 00:15:15–00:18:29; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/research/artifacts/Podhvat_1/transcript/transcript.txt:51>).
 
 **Смысл источника:** Сильный бар или гэп проходит несколько уровней сразу.
 
@@ -339,14 +340,14 @@
 
 **Что уточнить / не подменять:** Разделить close-to-close переход, движение внутри тела и гэп; дневной OHLC не даёт точного времени пробоя.
 
-Навигационные кадры: [00:16:52](<D:/CODEX_PRG/Breadth/artifacts/Podhvat_1/anchor_frames/anchor_016_00-16-52.jpg>); [00:16:53](<D:/CODEX_PRG/Breadth/artifacts/Podhvat_1/hold_frames/hold_047_00-16-53.jpg>); [00:16:38](<D:/CODEX_PRG/Breadth/artifacts/Podhvat_1/hold_frames/hold_046_00-16-38.jpg>).
+Навигационные кадры: [00:16:52](<D:/CODEX_PRG/Breadth/research/artifacts/Podhvat_1/anchor_frames/anchor_016_00-16-52.jpg>); [00:16:53](<D:/CODEX_PRG/Breadth/research/artifacts/Podhvat_1/hold_frames/hold_047_00-16-53.jpg>); [00:16:38](<D:/CODEX_PRG/Breadth/research/artifacts/Podhvat_1/hold_frames/hold_046_00-16-38.jpg>).
 <a id="e04"></a>
 
 ### E04 — После пробоя EMA20 EMA50 пока удержана
 
 Тип: последовательность. Вес: не задан. Числовой детектор: ещё не реализован.
 
-Источник: Широты S&P 2 — MyRSI и EMA, 00:04:59–00:05:58; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/artifacts/Breeze_AI_2/transcript/transcript.txt:21>).
+Источник: Широты S&P 2 — MyRSI и EMA, 00:04:59–00:05:58; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/research/artifacts/Breeze_AI_2/transcript/transcript.txt:21>).
 
 **Смысл источника:** Отсутствие закрытия ниже EMA50 в ближайшие 3–4 бара оставляет локальную коррекцию.
 
@@ -356,14 +357,14 @@
 
 **Что уточнить / не подменять:** Начало счёта окна, 3 или 4 бара, сброс при возврате выше E20.
 
-Навигационные кадры: [00:05:32](<D:/CODEX_PRG/Breadth/artifacts/Breeze_AI_2/frames/hold_020_00-05-32.jpg>); [00:05:14](<D:/CODEX_PRG/Breadth/artifacts/Breeze_AI_2/frames/hold_019_00-05-14.jpg>); [00:05:44](<D:/CODEX_PRG/Breadth/artifacts/Breeze_AI_2/frames/hold_021_00-05-44.jpg>).
+Навигационные кадры: [00:05:32](<D:/CODEX_PRG/Breadth/research/artifacts/Breeze_AI_2/frames/hold_020_00-05-32.jpg>); [00:05:14](<D:/CODEX_PRG/Breadth/research/artifacts/Breeze_AI_2/frames/hold_019_00-05-14.jpg>); [00:05:44](<D:/CODEX_PRG/Breadth/research/artifacts/Breeze_AI_2/frames/hold_021_00-05-44.jpg>).
 <a id="e05"></a>
 
 ### E05 — Возврат над пробитой EMA
 
 Тип: событие. Вес: не задан. Числовой детектор: ещё не реализован.
 
-Источник: Широты S&P 2 — MyRSI и EMA, 00:15:23–00:16:02; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/artifacts/Breeze_AI_2/transcript/transcript.txt:56>).
+Источник: Широты S&P 2 — MyRSI и EMA, 00:15:23–00:16:02; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/research/artifacts/Breeze_AI_2/transcript/transcript.txt:56>).
 
 **Смысл источника:** Ослабление ниже EMA20 может отмениться возвратом выше неё.
 
@@ -373,14 +374,14 @@
 
 **Что уточнить / не подменять:** Ложный пробой требует заранее выбранного прошлого окна, а не будущего успеха возврата.
 
-Навигационные кадры: [00:15:38](<D:/CODEX_PRG/Breadth/artifacts/Breeze_AI_2/frames/hold_048_00-15-38.jpg>); [00:15:50](<D:/CODEX_PRG/Breadth/artifacts/Breeze_AI_2/frames/hold_049_00-15-50.jpg>); [00:15:24](<D:/CODEX_PRG/Breadth/artifacts/Breeze_AI_2/frames/hold_047_00-15-24.jpg>).
+Навигационные кадры: [00:15:38](<D:/CODEX_PRG/Breadth/research/artifacts/Breeze_AI_2/frames/hold_048_00-15-38.jpg>); [00:15:50](<D:/CODEX_PRG/Breadth/research/artifacts/Breeze_AI_2/frames/hold_049_00-15-50.jpg>); [00:15:24](<D:/CODEX_PRG/Breadth/research/artifacts/Breeze_AI_2/frames/hold_047_00-15-24.jpg>).
 <a id="e06"></a>
 
 ### E06 — Пересечения самих EMA
 
 Тип: событие. Вес: не задан. Числовой детектор: ещё не реализован.
 
-Источник: Contango 1, 01:01:17–01:02:23; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/artifacts/Contango_1/transcript/transcript.txt:799>).
+Источник: Contango 1, 01:01:17–01:02:23; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/research/artifacts/Contango_1/transcript/transcript.txt:799>).
 
 **Смысл источника:** При разрушении структуры пересекаются средние, оба RSI уходят ниже нуля.
 
@@ -390,14 +391,14 @@
 
 **Что уточнить / не подменять:** Какие пары включать; не начислять несколько независимых полных весов за одно разрушение порядка.
 
-Навигационные кадры: [01:01:32](<D:/CODEX_PRG/Breadth/artifacts/Contango_1/hold_frames/hold_096_01-01-32.jpg>); [01:02:17](<D:/CODEX_PRG/Breadth/artifacts/Contango_1/hold_frames/hold_097_01-02-17.jpg>).
+Навигационные кадры: [01:01:32](<D:/CODEX_PRG/Breadth/research/artifacts/Contango_1/hold_frames/hold_096_01-01-32.jpg>); [01:02:17](<D:/CODEX_PRG/Breadth/research/artifacts/Contango_1/hold_frames/hold_097_01-02-17.jpg>).
 <a id="e07"></a>
 
 ### E07 — Неудачное восстановление между EMA100 и EMA50
 
 Тип: последовательность. Вес: не задан. Числовой детектор: ещё не реализован.
 
-Источник: Contango 1, 01:01:17–01:01:48; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/artifacts/Contango_1/transcript/transcript.txt:799>).
+Источник: Contango 1, 01:01:17–01:01:48; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/research/artifacts/Contango_1/transcript/transcript.txt:799>).
 
 **Смысл источника:** После пробоя EMA100 отскок возвращается над ней, но не преодолевает EMA50 и снова срывается.
 
@@ -407,7 +408,7 @@
 
 **Что уточнить / не подменять:** Окно поиска последовательности, сравнения при необычном порядке EMA.
 
-Навигационные кадры: [01:01:32](<D:/CODEX_PRG/Breadth/artifacts/Contango_1/hold_frames/hold_096_01-01-32.jpg>).
+Навигационные кадры: [01:01:32](<D:/CODEX_PRG/Breadth/research/artifacts/Contango_1/hold_frames/hold_096_01-01-32.jpg>).
 
 ## MyRSI: состояния и переходы
 
@@ -417,7 +418,7 @@
 
 Тип: состояние. Вес: не задан. Числовой детектор: ещё не реализован.
 
-Источник: Широты S&P 2 — MyRSI и EMA, 00:00:31–00:01:52; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/artifacts/Breeze_AI_2/transcript/transcript.txt:4>).
+Источник: Широты S&P 2 — MyRSI и EMA, 00:00:31–00:01:52; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/research/artifacts/Breeze_AI_2/transcript/transcript.txt:4>).
 
 **Смысл источника:** RSI может долго оставаться на -1, пока рынок продолжает падать.
 
@@ -427,14 +428,14 @@
 
 **Что уточнить / не подменять:** eps и независимая фиксация периода RSI/AGC.
 
-Навигационные кадры: [00:01:11](<D:/CODEX_PRG/Breadth/artifacts/Breeze_AI_2/frames/hold_004_00-01-11.jpg>); [00:01:00](<D:/CODEX_PRG/Breadth/artifacts/Breeze_AI_2/frames/hold_003_00-01-00.jpg>); [00:01:24](<D:/CODEX_PRG/Breadth/artifacts/Breeze_AI_2/frames/hold_005_00-01-24.jpg>).
+Навигационные кадры: [00:01:11](<D:/CODEX_PRG/Breadth/research/artifacts/Breeze_AI_2/frames/hold_004_00-01-11.jpg>); [00:01:00](<D:/CODEX_PRG/Breadth/research/artifacts/Breeze_AI_2/frames/hold_003_00-01-00.jpg>); [00:01:24](<D:/CODEX_PRG/Breadth/research/artifacts/Breeze_AI_2/frames/hold_005_00-01-24.jpg>).
 <a id="r02"></a>
 
 ### R02 — Верхнее насыщение MyRSI
 
 Тип: состояние. Вес: не задан. Числовой детектор: ещё не реализован.
 
-Источник: Широты S&P 2 — MyRSI и EMA, 00:02:07–00:04:59; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/artifacts/Breeze_AI_2/transcript/transcript.txt:11>).
+Источник: Широты S&P 2 — MyRSI и EMA, 00:02:07–00:04:59; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/research/artifacts/Breeze_AI_2/transcript/transcript.txt:11>).
 
 **Смысл источника:** +1 не требует автоматической продажи при сильной структуре.
 
@@ -444,14 +445,14 @@
 
 **Что уточнить / не подменять:** Допуск eps; знак веса зависит от контекста.
 
-Навигационные кадры: [00:03:30](<D:/CODEX_PRG/Breadth/artifacts/Breeze_AI_2/frames/hold_013_00-03-30.jpg>); [00:03:17](<D:/CODEX_PRG/Breadth/artifacts/Breeze_AI_2/frames/hold_012_00-03-17.jpg>); [00:03:54](<D:/CODEX_PRG/Breadth/artifacts/Breeze_AI_2/frames/hold_014_00-03-54.jpg>).
+Навигационные кадры: [00:03:30](<D:/CODEX_PRG/Breadth/research/artifacts/Breeze_AI_2/frames/hold_013_00-03-30.jpg>); [00:03:17](<D:/CODEX_PRG/Breadth/research/artifacts/Breeze_AI_2/frames/hold_012_00-03-17.jpg>); [00:03:54](<D:/CODEX_PRG/Breadth/research/artifacts/Breeze_AI_2/frames/hold_014_00-03-54.jpg>).
 <a id="r03"></a>
 
 ### R03 — Отрыв MyRSI от -1 вверх
 
 Тип: событие. Вес: не задан. Числовой детектор: ещё не реализован.
 
-Источник: Широты S&P 2 — MyRSI и EMA, 00:19:58–00:20:45; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/artifacts/Breeze_AI_2/transcript/transcript.txt:74>).
+Источник: Широты S&P 2 — MyRSI и EMA, 00:19:58–00:20:45; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/research/artifacts/Breeze_AI_2/transcript/transcript.txt:74>).
 
 **Смысл источника:** Первый отрыв от насыщения — отдельное разворотное событие.
 
@@ -461,14 +462,14 @@
 
 **Что уточнить / не подменять:** eps и минимальная амплитуда; нельзя автоматически переносить сигнал на предшествующий минимум.
 
-Навигационные кадры: [00:20:14](<D:/CODEX_PRG/Breadth/artifacts/Breeze_AI_2/frames/hold_066_00-20-14.jpg>); [00:20:30](<D:/CODEX_PRG/Breadth/artifacts/Breeze_AI_2/frames/hold_067_00-20-30.jpg>); [00:20:04](<D:/CODEX_PRG/Breadth/artifacts/Breeze_AI_2/frames/hold_065_00-20-04.jpg>).
+Навигационные кадры: [00:20:14](<D:/CODEX_PRG/Breadth/research/artifacts/Breeze_AI_2/frames/hold_066_00-20-14.jpg>); [00:20:30](<D:/CODEX_PRG/Breadth/research/artifacts/Breeze_AI_2/frames/hold_067_00-20-30.jpg>); [00:20:04](<D:/CODEX_PRG/Breadth/research/artifacts/Breeze_AI_2/frames/hold_065_00-20-04.jpg>).
 <a id="r04"></a>
 
 ### R04 — Отрыв MyRSI от +1 вниз
 
 Тип: событие. Вес: не задан. Числовой детектор: ещё не реализован.
 
-Источник: Широты S&P 2 — MyRSI и EMA, 00:12:10–00:16:02; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/artifacts/Breeze_AI_2/transcript/transcript.txt:45>).
+Источник: Широты S&P 2 — MyRSI и EMA, 00:12:10–00:16:02; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/research/artifacts/Breeze_AI_2/transcript/transcript.txt:45>).
 
 **Смысл источника:** Отрыв может сопровождаться только небольшим откатом, а не сменой тренда.
 
@@ -478,14 +479,14 @@
 
 **Что уточнить / не подменять:** eps; минимальное снижение и контекст сильной структуры.
 
-Навигационные кадры: [00:14:04](<D:/CODEX_PRG/Breadth/artifacts/Breeze_AI_2/frames/hold_041_00-14-04.jpg>); [00:14:24](<D:/CODEX_PRG/Breadth/artifacts/Breeze_AI_2/frames/hold_042_00-14-24.jpg>); [00:13:45](<D:/CODEX_PRG/Breadth/artifacts/Breeze_AI_2/frames/hold_040_00-13-45.jpg>).
+Навигационные кадры: [00:14:04](<D:/CODEX_PRG/Breadth/research/artifacts/Breeze_AI_2/frames/hold_041_00-14-04.jpg>); [00:14:24](<D:/CODEX_PRG/Breadth/research/artifacts/Breeze_AI_2/frames/hold_042_00-14-24.jpg>); [00:13:45](<D:/CODEX_PRG/Breadth/research/artifacts/Breeze_AI_2/frames/hold_040_00-13-45.jpg>).
 <a id="r05"></a>
 
 ### R05 — Переход RSI через ноль
 
 Тип: событие. Вес: не задан. Числовой детектор: ещё не реализован.
 
-Источник: Contango 1, 00:06:05–00:07:44; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/artifacts/Contango_1/transcript/transcript.txt:43>).
+Источник: Contango 1, 00:06:05–00:07:44; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/research/artifacts/Contango_1/transcript/transcript.txt:43>).
 
 **Смысл источника:** Быстрый RSI пересекает ноль раньше медленного; это отдельная характеристика.
 
@@ -495,14 +496,14 @@
 
 **Что уточнить / не подменять:** Равенство нулю и диапазон шума; 7/8 — эксперимент, не подмена 10/8.
 
-Навигационные кадры: [00:07:11](<D:/CODEX_PRG/Breadth/artifacts/Contango_1/hold_frames/hold_009_00-07-11.jpg>); [00:06:31](<D:/CODEX_PRG/Breadth/artifacts/Contango_1/hold_frames/hold_008_00-06-31.jpg>); [00:07:31](<D:/CODEX_PRG/Breadth/artifacts/Contango_1/hold_frames/hold_010_00-07-31.jpg>).
+Навигационные кадры: [00:07:11](<D:/CODEX_PRG/Breadth/research/artifacts/Contango_1/hold_frames/hold_009_00-07-11.jpg>); [00:06:31](<D:/CODEX_PRG/Breadth/research/artifacts/Contango_1/hold_frames/hold_008_00-06-31.jpg>); [00:07:31](<D:/CODEX_PRG/Breadth/research/artifacts/Contango_1/hold_frames/hold_010_00-07-31.jpg>).
 <a id="r06"></a>
 
 ### R06 — Опережение быстрого RSI относительно медленного
 
 Тип: последовательность. Вес: не задан. Числовой детектор: ещё не реализован.
 
-Источник: Contango 1, 00:50:14–00:50:44; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/artifacts/Contango_1/transcript/transcript.txt:543>).
+Источник: Contango 1, 00:50:14–00:50:44; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/research/artifacts/Contango_1/transcript/transcript.txt:543>).
 
 **Смысл источника:** Быстрый RSI уже выше нуля, медленный ещё ниже.
 
@@ -512,14 +513,14 @@
 
 **Что уточнить / не подменять:** Максимальный лаг сопряжения, недопустимо искать будущий отрыв медленного в текущей дате.
 
-Навигационные кадры: [00:50:16](<D:/CODEX_PRG/Breadth/artifacts/Contango_1/anchor_frames/anchor_052_00-50-16.jpg>).
+Навигационные кадры: [00:50:16](<D:/CODEX_PRG/Breadth/research/artifacts/Contango_1/anchor_frames/anchor_052_00-50-16.jpg>).
 <a id="r07"></a>
 
 ### R07 — Одновременное насыщение двух RSI
 
 Тип: состояние. Вес: не задан. Числовой детектор: ещё не реализован.
 
-Источник: Contango 1, 00:23:42–00:24:22; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/artifacts/Contango_1/transcript/transcript.txt:156>).
+Источник: Contango 1, 00:23:42–00:24:22; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/research/artifacts/Contango_1/transcript/transcript.txt:156>).
 
 **Смысл источника:** Оба MyRSI в нижней зоне при глубоком падении; оба в верхней зоне в другом эпизоде.
 
@@ -529,14 +530,14 @@
 
 **Что уточнить / не подменять:** Это составной признак, не два независимых подтверждения без учёта корреляции.
 
-Навигационные кадры: [00:24:06](<D:/CODEX_PRG/Breadth/artifacts/Contango_1/anchor_frames/anchor_013_00-24-06.jpg>); [00:23:55](<D:/CODEX_PRG/Breadth/artifacts/Contango_1/hold_frames/hold_041_00-23-55.jpg>).
+Навигационные кадры: [00:24:06](<D:/CODEX_PRG/Breadth/research/artifacts/Contango_1/anchor_frames/anchor_013_00-24-06.jpg>); [00:23:55](<D:/CODEX_PRG/Breadth/research/artifacts/Contango_1/hold_frames/hold_041_00-23-55.jpg>).
 <a id="r08"></a>
 
 ### R08 — Одновременный выход обоих RSI из верхней зоны
 
 Тип: событие. Вес: не задан. Числовой детектор: ещё не реализован.
 
-Источник: Contango 1, 01:02:32–01:04:11; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/artifacts/Contango_1/transcript/transcript.txt:833>).
+Источник: Contango 1, 01:02:32–01:04:11; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/research/artifacts/Contango_1/transcript/transcript.txt:833>).
 
 **Смысл источника:** Совместное ослабление быстрого и медленного RSI усиливает комплекс с красным баром и EMA20.
 
@@ -546,7 +547,7 @@
 
 **Что уточнить / не подменять:** Окно синхронности; событие без свечи/EMA не приравнивать к полному комплексу C08.
 
-Навигационные кадры: [01:03:01](<D:/CODEX_PRG/Breadth/artifacts/Contango_1/anchor_frames/anchor_073_01-03-01.jpg>); [01:03:17](<D:/CODEX_PRG/Breadth/artifacts/Contango_1/hold_frames/hold_100_01-03-17.jpg>); [01:03:32](<D:/CODEX_PRG/Breadth/artifacts/Contango_1/hold_frames/hold_101_01-03-32.jpg>).
+Навигационные кадры: [01:03:01](<D:/CODEX_PRG/Breadth/research/artifacts/Contango_1/anchor_frames/anchor_073_01-03-01.jpg>); [01:03:17](<D:/CODEX_PRG/Breadth/research/artifacts/Contango_1/hold_frames/hold_100_01-03-17.jpg>); [01:03:32](<D:/CODEX_PRG/Breadth/research/artifacts/Contango_1/hold_frames/hold_101_01-03-32.jpg>).
 
 Отдельно просмотренный кадр: На курсоре красная свеча ниже EMA20; MyRSI 14/8=0.688, 10/8=0.639; ZW Density=30, Titanic ACTIVE d2. Относительная сила тела требует числового сравнения с прошлым.
 
@@ -558,7 +559,7 @@
 
 Тип: состояние. Вес: не задан. Числовой детектор: ещё не реализован.
 
-Источник: Широты S&P — первый ролик, повторная оцифровка, 00:08:19–00:17:37; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/artifacts/breeze_ai_reprocessed_20261012/transcript/transcript.txt:178>).
+Источник: Широты S&P — первый ролик, повторная оцифровка, 00:08:19–00:17:37; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/research/artifacts/breeze_ai_reprocessed_20261012/transcript/transcript.txt:178>).
 
 **Смысл источника:** Быстрая и медленная широты описывают разные части внутренней структуры рынка.
 
@@ -568,14 +569,14 @@
 
 **Что уточнить / не подменять:** Не смешивать EMA цены с SMA широты; история состава индекса и качество OHLC.
 
-Навигационные кадры: [00:13:00](<D:/CODEX_PRG/Breadth/artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_030_00-13-00.jpg>); [00:12:47](<D:/CODEX_PRG/Breadth/artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_029_00-12-47.jpg>); [00:13:14](<D:/CODEX_PRG/Breadth/artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_031_00-13-14.jpg>).
+Навигационные кадры: [00:13:00](<D:/CODEX_PRG/Breadth/research/artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_030_00-13-00.jpg>); [00:12:47](<D:/CODEX_PRG/Breadth/research/artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_029_00-12-47.jpg>); [00:13:14](<D:/CODEX_PRG/Breadth/research/artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_031_00-13-14.jpg>).
 <a id="b02"></a>
 
 ### B02 — Совместный экстремум низкой широты
 
 Тип: комплекс. Вес: не задан. Числовой детектор: ещё не реализован.
 
-Источник: Широты S&P — первый ролик, повторная оцифровка, 00:24:37–00:34:51; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/artifacts/breeze_ai_reprocessed_20261012/transcript/transcript.txt:564>).
+Источник: Широты S&P — первый ролик, повторная оцифровка, 00:24:37–00:34:51; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/research/artifacts/breeze_ai_reprocessed_20261012/transcript/transcript.txt:564>).
 
 **Смысл источника:** После сильного снижения несколько горизонтов достигают очень низких значений.
 
@@ -585,14 +586,14 @@
 
 **Что уточнить / не подменять:** Числа приблизительные; не считать сам экстремум достаточным повышением целевой позиции.
 
-Навигационные кадры: [00:29:41](<D:/CODEX_PRG/Breadth/artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_073_00-29-41.jpg>); [00:29:53](<D:/CODEX_PRG/Breadth/artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_074_00-29-53.jpg>); [00:29:59](<D:/CODEX_PRG/Breadth/artifacts/breeze_ai_reprocessed_20261012/anchor_frames/anchor_010_00-29-59.jpg>).
+Навигационные кадры: [00:29:41](<D:/CODEX_PRG/Breadth/research/artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_073_00-29-41.jpg>); [00:29:53](<D:/CODEX_PRG/Breadth/research/artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_074_00-29-53.jpg>); [00:29:59](<D:/CODEX_PRG/Breadth/research/artifacts/breeze_ai_reprocessed_20261012/anchor_frames/anchor_010_00-29-59.jpg>).
 <a id="b03"></a>
 
 ### B03 — Особенно слабая медленная широта
 
 Тип: состояние. Вес: не задан. Числовой детектор: ещё не реализован.
 
-Источник: Широты S&P — первый ролик, повторная оцифровка, 00:28:48–00:30:00; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/artifacts/breeze_ai_reprocessed_20261012/transcript/transcript.txt:664>).
+Источник: Широты S&P — первый ролик, повторная оцифровка, 00:28:48–00:30:00; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/research/artifacts/breeze_ai_reprocessed_20261012/transcript/transcript.txt:664>).
 
 **Смысл источника:** B200 ниже 10% — особенно глубокое состояние внутри падения.
 
@@ -602,14 +603,14 @@
 
 **Что уточнить / не подменять:** Граница и ширина мягкого перехода; отличие от B02 как части того же комплекса.
 
-Навигационные кадры: [00:29:26](<D:/CODEX_PRG/Breadth/artifacts/breeze_ai_reprocessed_20261012/anchor_frames/anchor_009_00-29-26.jpg>); [00:29:20](<D:/CODEX_PRG/Breadth/artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_072_00-29-20.jpg>); [00:29:41](<D:/CODEX_PRG/Breadth/artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_073_00-29-41.jpg>).
+Навигационные кадры: [00:29:26](<D:/CODEX_PRG/Breadth/research/artifacts/breeze_ai_reprocessed_20261012/anchor_frames/anchor_009_00-29-26.jpg>); [00:29:20](<D:/CODEX_PRG/Breadth/research/artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_072_00-29-20.jpg>); [00:29:41](<D:/CODEX_PRG/Breadth/research/artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_073_00-29-41.jpg>).
 <a id="b04"></a>
 
 ### B04 — Широта растёт относительно вчера
 
 Тип: состояние. Вес: не задан. Числовой детектор: ещё не реализован.
 
-Источник: Подхват 1, 00:08:52–00:09:24; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/artifacts/Podhvat_1/transcript/transcript.txt:28>).
+Источник: Подхват 1, 00:08:52–00:09:24; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/research/artifacts/Podhvat_1/transcript/transcript.txt:28>).
 
 **Смысл источника:** Текущее значение быстрой широты выше прошлого подтверждает подхват.
 
@@ -619,14 +620,14 @@
 
 **Что уточнить / не подменять:** Не путать с цветом свечи: Close>Open — B05.
 
-Навигационные кадры: [00:09:12](<D:/CODEX_PRG/Breadth/artifacts/Podhvat_1/hold_frames/hold_026_00-09-12.jpg>); [00:08:56](<D:/CODEX_PRG/Breadth/artifacts/Podhvat_1/hold_frames/hold_025_00-08-56.jpg>).
+Навигационные кадры: [00:09:12](<D:/CODEX_PRG/Breadth/research/artifacts/Podhvat_1/hold_frames/hold_026_00-09-12.jpg>); [00:08:56](<D:/CODEX_PRG/Breadth/research/artifacts/Podhvat_1/hold_frames/hold_025_00-08-56.jpg>).
 <a id="b05"></a>
 
 ### B05 — Растущие свечи нескольких широт
 
 Тип: состояние. Вес: не задан. Числовой детектор: ещё не реализован.
 
-Источник: Широты S&P 2 — MyRSI и EMA, 00:06:15–00:10:15; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/artifacts/Breeze_AI_2/transcript/transcript.txt:25>).
+Источник: Широты S&P 2 — MyRSI и EMA, 00:06:15–00:10:15; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/research/artifacts/Breeze_AI_2/transcript/transcript.txt:25>).
 
 **Смысл источника:** Белые свечи широт подтверждают зелёную свечу цены.
 
@@ -636,14 +637,14 @@
 
 **Что уточнить / не подменять:** Допуски тела, число рядов; не вводить жёсткий фильтр 3 из 4 как установленный автором закон.
 
-Навигационные кадры: [00:07:20](<D:/CODEX_PRG/Breadth/artifacts/Breeze_AI_2/frames/hold_026_00-07-20.jpg>); [00:06:56](<D:/CODEX_PRG/Breadth/artifacts/Breeze_AI_2/frames/hold_025_00-06-56.jpg>); [00:06:44](<D:/CODEX_PRG/Breadth/artifacts/Breeze_AI_2/frames/hold_024_00-06-44.jpg>).
+Навигационные кадры: [00:07:20](<D:/CODEX_PRG/Breadth/research/artifacts/Breeze_AI_2/frames/hold_026_00-07-20.jpg>); [00:06:56](<D:/CODEX_PRG/Breadth/research/artifacts/Breeze_AI_2/frames/hold_025_00-06-56.jpg>); [00:06:44](<D:/CODEX_PRG/Breadth/research/artifacts/Breeze_AI_2/frames/hold_024_00-06-44.jpg>).
 <a id="b06"></a>
 
 ### B06 — Запаздывающее подтверждение широтой
 
 Тип: последовательность. Вес: не задан. Числовой детектор: ещё не реализован.
 
-Источник: Широты S&P 2 — MyRSI и EMA, 00:27:07–00:29:13; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/artifacts/Breeze_AI_2/transcript/transcript.txt:102>).
+Источник: Широты S&P 2 — MyRSI и EMA, 00:27:07–00:29:13; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/research/artifacts/Breeze_AI_2/transcript/transcript.txt:102>).
 
 **Смысл источника:** Цена/RSI разворачиваются раньше части широт на один день.
 
@@ -653,14 +654,14 @@
 
 **Что уточнить / не подменять:** Окно 1 день — ориентир; расширение окна требует отдельного варианта.
 
-Навигационные кадры: [00:28:17](<D:/CODEX_PRG/Breadth/artifacts/Breeze_AI_2/frames/hold_091_00-28-17.jpg>); [00:27:54](<D:/CODEX_PRG/Breadth/artifacts/Breeze_AI_2/frames/hold_090_00-27-54.jpg>); [00:27:38](<D:/CODEX_PRG/Breadth/artifacts/Breeze_AI_2/frames/hold_089_00-27-38.jpg>).
+Навигационные кадры: [00:28:17](<D:/CODEX_PRG/Breadth/research/artifacts/Breeze_AI_2/frames/hold_091_00-28-17.jpg>); [00:27:54](<D:/CODEX_PRG/Breadth/research/artifacts/Breeze_AI_2/frames/hold_090_00-27-54.jpg>); [00:27:38](<D:/CODEX_PRG/Breadth/research/artifacts/Breeze_AI_2/frames/hold_089_00-27-38.jpg>).
 <a id="b07"></a>
 
 ### B07 — Истончение у ценового максимума
 
 Тип: последовательность. Вес: не задан. Числовой детектор: ещё не реализован.
 
-Источник: Широты S&P — первый ролик, повторная оцифровка, 00:40:18–00:43:12; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/artifacts/breeze_ai_reprocessed_20261012/transcript/transcript.txt:942>).
+Источник: Широты S&P — первый ролик, повторная оцифровка, 00:40:18–00:43:12; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/research/artifacts/breeze_ai_reprocessed_20261012/transcript/transcript.txt:942>).
 
 **Смысл источника:** Цена обновляет максимум, широты не подтверждают или снижаются; это предупреждение, не автоматическая продажа.
 
@@ -670,7 +671,7 @@
 
 **Что уточнить / не подменять:** Окно максимумов, High или Close, минимальная амплитуда; уровень 75 сам по себе не означает истончение.
 
-Навигационные кадры: [00:41:30](<D:/CODEX_PRG/Breadth/artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_099_00-41-30.jpg>); [00:42:06](<D:/CODEX_PRG/Breadth/artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_100_00-42-06.jpg>); [00:42:20](<D:/CODEX_PRG/Breadth/artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_101_00-42-20.jpg>).
+Навигационные кадры: [00:41:30](<D:/CODEX_PRG/Breadth/research/artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_099_00-41-30.jpg>); [00:42:06](<D:/CODEX_PRG/Breadth/research/artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_100_00-42-06.jpg>); [00:42:20](<D:/CODEX_PRG/Breadth/research/artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_101_00-42-20.jpg>).
 
 Отдельно просмотренный кадр: Открыт полный кадр Nasdaq SMA100 и SPY; виден широкий участок до кризиса 2020. Дата курсора не подтверждена как дата дивергенции; событие требует разметки по данным.
 <a id="b08"></a>
@@ -679,7 +680,7 @@
 
 Тип: последовательность. Вес: не задан. Числовой детектор: ещё не реализован.
 
-Источник: Contango 1, 00:29:20–00:31:32; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/artifacts/Contango_1/transcript/transcript.txt:208>).
+Источник: Contango 1, 00:29:20–00:31:32; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/research/artifacts/Contango_1/transcript/transcript.txt:208>).
 
 **Смысл источника:** Двойное дно широты при более низкой цене; B50 может не подтвердить минимум, даже если B200 подтвердил.
 
@@ -689,14 +690,14 @@
 
 **Что уточнить / не подменять:** Выбор минимума, допуск равенства, окно; около 6 баров — пример, не универсальное число.
 
-Навигационные кадры: [00:30:31](<D:/CODEX_PRG/Breadth/artifacts/Contango_1/hold_frames/hold_053_00-30-31.jpg>); [00:29:36](<D:/CODEX_PRG/Breadth/artifacts/Contango_1/anchor_frames/anchor_016_00-29-36.jpg>); [00:31:21](<D:/CODEX_PRG/Breadth/artifacts/Contango_1/anchor_frames/anchor_017_00-31-21.jpg>).
+Навигационные кадры: [00:30:31](<D:/CODEX_PRG/Breadth/research/artifacts/Contango_1/hold_frames/hold_053_00-30-31.jpg>); [00:29:36](<D:/CODEX_PRG/Breadth/research/artifacts/Contango_1/anchor_frames/anchor_016_00-29-36.jpg>); [00:31:21](<D:/CODEX_PRG/Breadth/research/artifacts/Contango_1/anchor_frames/anchor_017_00-31-21.jpg>).
 <a id="b09"></a>
 
 ### B09 — Широтное блюдце и прекращение обновления минимумов
 
 Тип: последовательность. Вес: не задан. Числовой детектор: ещё не реализован.
 
-Источник: Широты S&P — первый ролик, повторная оцифровка, 00:36:50–00:40:11; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/artifacts/breeze_ai_reprocessed_20261012/transcript/transcript.txt:859>).
+Источник: Широты S&P — первый ролик, повторная оцифровка, 00:36:50–00:40:11; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/research/artifacts/breeze_ai_reprocessed_20261012/transcript/transcript.txt:859>).
 
 **Смысл источника:** После падения широты перестают обновлять минимумы и формируют основание.
 
@@ -706,14 +707,14 @@
 
 **Что уточнить / не подменять:** Длина участков, способ причинной оценки наклона и допустимые новые минимумы; форма пока качественная.
 
-Навигационные кадры: [00:38:26](<D:/CODEX_PRG/Breadth/artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_094_00-38-26.jpg>); [00:38:38](<D:/CODEX_PRG/Breadth/artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_095_00-38-38.jpg>); [00:38:50](<D:/CODEX_PRG/Breadth/artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_096_00-38-50.jpg>).
+Навигационные кадры: [00:38:26](<D:/CODEX_PRG/Breadth/research/artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_094_00-38-26.jpg>); [00:38:38](<D:/CODEX_PRG/Breadth/research/artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_095_00-38-38.jpg>); [00:38:50](<D:/CODEX_PRG/Breadth/research/artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_096_00-38-50.jpg>).
 <a id="b10"></a>
 
 ### B10 — Слабая быстрая широта при сильной медленной
 
 Тип: комплекс. Вес: не задан. Числовой детектор: ещё не реализован.
 
-Источник: Широты S&P — первый ролик, повторная оцифровка, 00:45:38–00:50:10; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/artifacts/breeze_ai_reprocessed_20261012/transcript/transcript.txt:1081>).
+Источник: Широты S&P — первый ролик, повторная оцифровка, 00:45:38–00:50:10; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/research/artifacts/breeze_ai_reprocessed_20261012/transcript/transcript.txt:1081>).
 
 **Смысл источника:** Падение быстрой широты ниже 50 при сильной B200 может оказаться обычной коррекцией.
 
@@ -723,14 +724,14 @@
 
 **Что уточнить / не подменять:** Что считать сильной B200; порог 50 — исходный ориентир.
 
-Навигационные кадры: [00:47:50](<D:/CODEX_PRG/Breadth/artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_112_00-47-50.jpg>); [00:48:16](<D:/CODEX_PRG/Breadth/artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_113_00-48-16.jpg>); [00:47:20](<D:/CODEX_PRG/Breadth/artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_111_00-47-20.jpg>).
+Навигационные кадры: [00:47:50](<D:/CODEX_PRG/Breadth/research/artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_112_00-47-50.jpg>); [00:48:16](<D:/CODEX_PRG/Breadth/research/artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_113_00-48-16.jpg>); [00:47:20](<D:/CODEX_PRG/Breadth/research/artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_111_00-47-20.jpg>).
 <a id="b11"></a>
 
 ### B11 — Одновременный импульс широты
 
 Тип: событие. Вес: не задан. Числовой детектор: ещё не реализован.
 
-Источник: Contango 1, 00:53:21–00:54:37; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/artifacts/Contango_1/transcript/transcript.txt:614>).
+Источник: Contango 1, 00:53:21–00:54:37; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/research/artifacts/Contango_1/transcript/transcript.txt:614>).
 
 **Смысл источника:** Несколько горизонтов резко поднимаются вместе; расширяется участие рынка.
 
@@ -740,14 +741,14 @@
 
 **Что уточнить / не подменять:** Порог резкости; не считать зависимые широты независимыми голосами.
 
-Навигационные кадры: [00:54:06](<D:/CODEX_PRG/Breadth/artifacts/Contango_1/anchor_frames/anchor_056_00-54-06.jpg>); [00:54:10](<D:/CODEX_PRG/Breadth/artifacts/Contango_1/anchor_frames/anchor_057_00-54-10.jpg>); [00:53:44](<D:/CODEX_PRG/Breadth/artifacts/Contango_1/hold_frames/hold_090_00-53-44.jpg>).
+Навигационные кадры: [00:54:06](<D:/CODEX_PRG/Breadth/research/artifacts/Contango_1/anchor_frames/anchor_056_00-54-06.jpg>); [00:54:10](<D:/CODEX_PRG/Breadth/research/artifacts/Contango_1/anchor_frames/anchor_057_00-54-10.jpg>); [00:53:44](<D:/CODEX_PRG/Breadth/research/artifacts/Contango_1/hold_frames/hold_090_00-53-44.jpg>).
 <a id="b12"></a>
 
 ### B12 — Широта Nasdaq начинает восстанавливаться раньше
 
 Тип: последовательность. Вес: не задан. Числовой детектор: ещё не реализован.
 
-Источник: Широты S&P — первый ролик, повторная оцифровка, 00:32:14–00:32:52; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/artifacts/breeze_ai_reprocessed_20261012/transcript/transcript.txt:744>).
+Источник: Широты S&P — первый ролик, повторная оцифровка, 00:32:14–00:32:52; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/research/artifacts/breeze_ai_reprocessed_20261012/transcript/transcript.txt:744>).
 
 **Смысл источника:** На кризисном примере Nasdaq по своей широте пошёл вверх раньше остальных.
 
@@ -757,14 +758,14 @@
 
 **Что уточнить / не подменять:** Определение начала восстановления и его силы; это гипотеза межрыночного опережения, не универсальное правило.
 
-Навигационные кадры: [00:32:44](<D:/CODEX_PRG/Breadth/artifacts/breeze_ai_reprocessed_20261012/anchor_frames/anchor_012_00-32-44.jpg>); [00:32:46](<D:/CODEX_PRG/Breadth/artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_080_00-32-46.jpg>).
+Навигационные кадры: [00:32:44](<D:/CODEX_PRG/Breadth/research/artifacts/breeze_ai_reprocessed_20261012/anchor_frames/anchor_012_00-32-44.jpg>); [00:32:46](<D:/CODEX_PRG/Breadth/research/artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_080_00-32-46.jpg>).
 <a id="b13"></a>
 
 ### B13 — Медленная широта на высоком плато при росте цены
 
 Тип: состояние. Вес: не задан. Числовой детектор: ещё не реализован.
 
-Источник: Широты S&P — первый ролик, повторная оцифровка, 00:16:33–00:17:37; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/artifacts/breeze_ai_reprocessed_20261012/transcript/transcript.txt:391>).
+Источник: Широты S&P — первый ролик, повторная оцифровка, 00:16:33–00:17:37; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/research/artifacts/breeze_ai_reprocessed_20261012/transcript/transcript.txt:391>).
 
 **Смысл источника:** B200 может долго стоять примерно на одном высоком уровне, пока индекс растёт.
 
@@ -774,14 +775,14 @@
 
 **Что уточнить / не подменять:** Порог плато и высокий уровень; отсутствие дальнейшего роста широты не приравнивать к дивергенции автоматически.
 
-Навигационные кадры: [00:17:14](<D:/CODEX_PRG/Breadth/artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_041_00-17-14.jpg>); [00:16:50](<D:/CODEX_PRG/Breadth/artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_040_00-16-50.jpg>); [00:17:29](<D:/CODEX_PRG/Breadth/artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_042_00-17-29.jpg>).
+Навигационные кадры: [00:17:14](<D:/CODEX_PRG/Breadth/research/artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_041_00-17-14.jpg>); [00:16:50](<D:/CODEX_PRG/Breadth/research/artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_040_00-16-50.jpg>); [00:17:29](<D:/CODEX_PRG/Breadth/research/artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_042_00-17-29.jpg>).
 <a id="b14"></a>
 
 ### B14 — Похожая ценовая коррекция при гораздо более слабом участии
 
 Тип: последовательность. Вес: не задан. Числовой детектор: ещё не реализован.
 
-Источник: Широты S&P — первый ролик, повторная оцифровка, 00:45:38–00:47:47; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/artifacts/breeze_ai_reprocessed_20261012/transcript/transcript.txt:1081>).
+Источник: Широты S&P — первый ролик, повторная оцифровка, 00:45:38–00:47:47; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/research/artifacts/breeze_ai_reprocessed_20261012/transcript/transcript.txt:1081>).
 
 **Смысл источника:** Внешне похожие падения цены отличаются тем, что во втором случае широта существенно слабее.
 
@@ -791,7 +792,7 @@
 
 **Что уточнить / не подменять:** Метрика сходства и окно поиска ещё не заданы; нельзя выбирать прошлый аналог по будущему исходу текущей коррекции.
 
-Навигационные кадры: [00:46:44](<D:/CODEX_PRG/Breadth/artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_110_00-46-44.jpg>); [00:46:25](<D:/CODEX_PRG/Breadth/artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_109_00-46-25.jpg>); [00:47:20](<D:/CODEX_PRG/Breadth/artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_111_00-47-20.jpg>).
+Навигационные кадры: [00:46:44](<D:/CODEX_PRG/Breadth/research/artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_110_00-46-44.jpg>); [00:46:25](<D:/CODEX_PRG/Breadth/research/artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_109_00-46-25.jpg>); [00:47:20](<D:/CODEX_PRG/Breadth/research/artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_111_00-47-20.jpg>).
 
 ## Свечи, волатильность и гэпы
 
@@ -801,7 +802,7 @@
 
 Тип: состояние. Вес: не задан. Числовой детектор: ещё не реализован.
 
-Источник: Подхват 1, 00:15:15–00:15:48; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/artifacts/Podhvat_1/transcript/transcript.txt:51>).
+Источник: Подхват 1, 00:15:15–00:15:48; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/research/artifacts/Podhvat_1/transcript/transcript.txt:51>).
 
 **Смысл источника:** Сильный красный бар определяется движением от открытия к закрытию.
 
@@ -811,14 +812,14 @@
 
 **Что уточнить / не подменять:** Прошлое окно нормировки; исключать текущий бар из эталонной медианы.
 
-Навигационные кадры: [00:15:26](<D:/CODEX_PRG/Breadth/artifacts/Podhvat_1/hold_frames/hold_042_00-15-26.jpg>); [00:15:42](<D:/CODEX_PRG/Breadth/artifacts/Podhvat_1/hold_frames/hold_043_00-15-42.jpg>).
+Навигационные кадры: [00:15:26](<D:/CODEX_PRG/Breadth/research/artifacts/Podhvat_1/hold_frames/hold_042_00-15-26.jpg>); [00:15:42](<D:/CODEX_PRG/Breadth/research/artifacts/Podhvat_1/hold_frames/hold_043_00-15-42.jpg>).
 <a id="p02"></a>
 
 ### P02 — Нижняя тень с новым минимумом и зелёным закрытием
 
 Тип: событие. Вес: не задан. Числовой детектор: ещё не реализован.
 
-Источник: Подхват 1, 00:24:57–00:26:23; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/artifacts/Podhvat_1/transcript/transcript.txt:88>).
+Источник: Подхват 1, 00:24:57–00:26:23; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/research/artifacts/Podhvat_1/transcript/transcript.txt:88>).
 
 **Смысл источника:** Во время подхвата есть новый минимум, длинная нижняя тень и возврат вверх.
 
@@ -828,14 +829,14 @@
 
 **Что уточнить / не подменять:** Что считать длинной тенью; для H=L отношение unknown, не деление на ноль.
 
-Навигационные кадры: [00:25:42](<D:/CODEX_PRG/Breadth/artifacts/Podhvat_1/hold_frames/hold_067_00-25-42.jpg>); [00:25:23](<D:/CODEX_PRG/Breadth/artifacts/Podhvat_1/hold_frames/hold_066_00-25-23.jpg>); [00:26:02](<D:/CODEX_PRG/Breadth/artifacts/Podhvat_1/hold_frames/hold_068_00-26-02.jpg>).
+Навигационные кадры: [00:25:42](<D:/CODEX_PRG/Breadth/research/artifacts/Podhvat_1/hold_frames/hold_067_00-25-42.jpg>); [00:25:23](<D:/CODEX_PRG/Breadth/research/artifacts/Podhvat_1/hold_frames/hold_066_00-25-23.jpg>); [00:26:02](<D:/CODEX_PRG/Breadth/research/artifacts/Podhvat_1/hold_frames/hold_068_00-26-02.jpg>).
 <a id="p03"></a>
 
 ### P03 — True Range, ATRP и всплеск волатильности
 
 Тип: состояние. Вес: не задан. Числовой детектор: ещё не реализован.
 
-Источник: Подхват 1, 00:08:05–00:08:52; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/artifacts/Podhvat_1/transcript/transcript.txt:25>).
+Источник: Подхват 1, 00:08:05–00:08:52; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/research/artifacts/Podhvat_1/transcript/transcript.txt:25>).
 
 **Смысл источника:** Зелёный импульс с ATRP более 2% усиливает показанный подхват.
 
@@ -845,7 +846,7 @@
 
 **Что уточнить / не подменять:** ATRP1 не равен телу свечи; 2% — ориентир конкретного комплекса, не универсальный штраф.
 
-Навигационные кадры: [00:08:08](<D:/CODEX_PRG/Breadth/artifacts/Podhvat_1/anchor_frames/anchor_008_00-08-08.jpg>); [00:08:26](<D:/CODEX_PRG/Breadth/artifacts/Podhvat_1/hold_frames/hold_023_00-08-26.jpg>); [00:08:42](<D:/CODEX_PRG/Breadth/artifacts/Podhvat_1/hold_frames/hold_024_00-08-42.jpg>).
+Навигационные кадры: [00:08:08](<D:/CODEX_PRG/Breadth/research/artifacts/Podhvat_1/anchor_frames/anchor_008_00-08-08.jpg>); [00:08:26](<D:/CODEX_PRG/Breadth/research/artifacts/Podhvat_1/hold_frames/hold_023_00-08-26.jpg>); [00:08:42](<D:/CODEX_PRG/Breadth/research/artifacts/Podhvat_1/hold_frames/hold_024_00-08-42.jpg>).
 
 Отдельно просмотренный кадр: На курсоре возвратный зелёный бар в эпизоде подхвата; EMA20/50/100/200=551.1/547.2/537.5/515.9, ATRP1=2.78%. Проверка всей последовательности по числовым данным ещё не выполнена.
 <a id="p04"></a>
@@ -854,7 +855,7 @@
 
 Тип: событие. Вес: не задан. Числовой детектор: ещё не реализован.
 
-Источник: Contango 1, 00:50:44–00:52:23; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/artifacts/Contango_1/transcript/transcript.txt:556>).
+Источник: Contango 1, 00:50:44–00:52:23; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/research/artifacts/Contango_1/transcript/transcript.txt:556>).
 
 **Смысл источника:** Минимум дня выше максимума вчера и нескольких предшествующих дней; цена возвращается над EMA.
 
@@ -864,14 +865,14 @@
 
 **Что уточнить / не подменять:** k и минимальный размер; симметричный гэп вниз допустим как явно помеченное расширение.
 
-Навигационные кадры: [00:51:50](<D:/CODEX_PRG/Breadth/artifacts/Contango_1/hold_frames/hold_086_00-51-50.jpg>); [00:51:14](<D:/CODEX_PRG/Breadth/artifacts/Contango_1/hold_frames/hold_085_00-51-14.jpg>); [00:50:56](<D:/CODEX_PRG/Breadth/artifacts/Contango_1/anchor_frames/anchor_053_00-50-56.jpg>).
+Навигационные кадры: [00:51:50](<D:/CODEX_PRG/Breadth/research/artifacts/Contango_1/hold_frames/hold_086_00-51-50.jpg>); [00:51:14](<D:/CODEX_PRG/Breadth/research/artifacts/Contango_1/hold_frames/hold_085_00-51-14.jpg>); [00:50:56](<D:/CODEX_PRG/Breadth/research/artifacts/Contango_1/anchor_frames/anchor_053_00-50-56.jpg>).
 <a id="p05"></a>
 
 ### P05 — Серия сильных опорных баров
 
 Тип: последовательность. Вес: не задан. Числовой детектор: ещё не реализован.
 
-Источник: Подхват 1, 00:29:13–00:29:51; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/artifacts/Podhvat_1/transcript/transcript.txt:109>).
+Источник: Подхват 1, 00:29:13–00:29:51; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/research/artifacts/Podhvat_1/transcript/transcript.txt:109>).
 
 **Смысл источника:** Два-три бара могут образовывать единый импульс.
 
@@ -881,14 +882,14 @@
 
 **Что уточнить / не подменять:** Допустимы ли смешанные цвета, критерий сильного суммарного движения.
 
-Навигационные кадры: [00:29:24](<D:/CODEX_PRG/Breadth/artifacts/Podhvat_1/anchor_frames/anchor_035_00-29-24.jpg>); [00:29:41](<D:/CODEX_PRG/Breadth/artifacts/Podhvat_1/hold_frames/hold_079_00-29-41.jpg>); [00:29:16](<D:/CODEX_PRG/Breadth/artifacts/Podhvat_1/anchor_frames/anchor_034_00-29-16.jpg>).
+Навигационные кадры: [00:29:24](<D:/CODEX_PRG/Breadth/research/artifacts/Podhvat_1/anchor_frames/anchor_035_00-29-24.jpg>); [00:29:41](<D:/CODEX_PRG/Breadth/research/artifacts/Podhvat_1/hold_frames/hold_079_00-29-41.jpg>); [00:29:16](<D:/CODEX_PRG/Breadth/research/artifacts/Podhvat_1/anchor_frames/anchor_034_00-29-16.jpg>).
 <a id="p06"></a>
 
 ### P06 — Доджи и длинная тень возле низкой широты — с контрпримером
 
 Тип: комплекс. Вес: не задан. Числовой детектор: ещё не реализован.
 
-Источник: Широты S&P — первый ролик, повторная оцифровка, 00:36:50–00:38:54; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/artifacts/breeze_ai_reprocessed_20261012/transcript/transcript.txt:859>).
+Источник: Широты S&P — первый ролик, повторная оцифровка, 00:36:50–00:38:54; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/research/artifacts/breeze_ai_reprocessed_20261012/transcript/transcript.txt:859>).
 
 **Смысл источника:** Показаны доджи, длинные тени и похожие свечи, после которых снижение продолжалось. Автор подчёркивает неоднозначность.
 
@@ -898,7 +899,7 @@
 
 **Что уточнить / не подменять:** На каком именно ряду доджи в отдельных фразах — сверить по кадру; при H=L отношение unknown. Не задавать положительный вес по одному рисунку.
 
-Навигационные кадры: [00:37:56](<D:/CODEX_PRG/Breadth/artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_093_00-37-56.jpg>); [00:37:32](<D:/CODEX_PRG/Breadth/artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_092_00-37-32.jpg>); [00:38:26](<D:/CODEX_PRG/Breadth/artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_094_00-38-26.jpg>).
+Навигационные кадры: [00:37:56](<D:/CODEX_PRG/Breadth/research/artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_093_00-37-56.jpg>); [00:37:32](<D:/CODEX_PRG/Breadth/research/artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_092_00-37-32.jpg>); [00:38:26](<D:/CODEX_PRG/Breadth/research/artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_094_00-38-26.jpg>).
 
 ## VIX и форма срочной кривой
 
@@ -908,7 +909,7 @@
 
 Тип: состояние. Вес: не задан. Числовой детектор: ещё не реализован.
 
-Источник: Contango 1, 00:08:24–00:10:19; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/artifacts/Contango_1/transcript/transcript.txt:54>).
+Источник: Contango 1, 00:08:24–00:10:19; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/research/artifacts/Contango_1/transcript/transcript.txt:54>).
 
 **Смысл источника:** Ближний фьючерс дешевле следующего; величина спреда существенна.
 
@@ -918,14 +919,14 @@
 
 **Что уточнить / не подменять:** Реальные контракты и сроки 30/60 не взаимозаменяемы; ролловер маркировать.
 
-Навигационные кадры: [00:09:25](<D:/CODEX_PRG/Breadth/artifacts/Contango_1/anchor_frames/anchor_006_00-09-25.jpg>); [00:09:26](<D:/CODEX_PRG/Breadth/artifacts/Contango_1/hold_frames/hold_014_00-09-26.jpg>); [00:09:44](<D:/CODEX_PRG/Breadth/artifacts/Contango_1/hold_frames/hold_015_00-09-44.jpg>).
+Навигационные кадры: [00:09:25](<D:/CODEX_PRG/Breadth/research/artifacts/Contango_1/anchor_frames/anchor_006_00-09-25.jpg>); [00:09:26](<D:/CODEX_PRG/Breadth/research/artifacts/Contango_1/hold_frames/hold_014_00-09-26.jpg>); [00:09:44](<D:/CODEX_PRG/Breadth/research/artifacts/Contango_1/hold_frames/hold_015_00-09-44.jpg>).
 <a id="v02"></a>
 
 ### V02 — Широкое контанго или широкая бэквордация
 
 Тип: состояние. Вес: не задан. Числовой детектор: ещё не реализован.
 
-Источник: Contango 1, 00:20:24–00:26:33; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/artifacts/Contango_1/transcript/transcript.txt:126>).
+Источник: Contango 1, 00:20:24–00:26:33; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/research/artifacts/Contango_1/transcript/transcript.txt:126>).
 
 **Смысл источника:** Важна форма нескольких месяцев, а не только первой пары.
 
@@ -935,14 +936,14 @@
 
 **Что уточнить / не подменять:** Сколько инверсий означает широкую бэквордацию; небольшая дальняя инверсия не должна механически отменять весь режим.
 
-Навигационные кадры: [00:23:05](<D:/CODEX_PRG/Breadth/artifacts/Contango_1/hold_frames/hold_040_00-23-05.jpg>); [00:23:55](<D:/CODEX_PRG/Breadth/artifacts/Contango_1/hold_frames/hold_041_00-23-55.jpg>); [00:24:06](<D:/CODEX_PRG/Breadth/artifacts/Contango_1/anchor_frames/anchor_013_00-24-06.jpg>).
+Навигационные кадры: [00:23:05](<D:/CODEX_PRG/Breadth/research/artifacts/Contango_1/hold_frames/hold_040_00-23-05.jpg>); [00:23:55](<D:/CODEX_PRG/Breadth/research/artifacts/Contango_1/hold_frames/hold_041_00-23-55.jpg>); [00:24:06](<D:/CODEX_PRG/Breadth/research/artifacts/Contango_1/anchor_frames/anchor_013_00-24-06.jpg>).
 <a id="v03"></a>
 
 ### V03 — Инвертированный фронт при плоском или положительном дальнем участке
 
 Тип: состояние. Вес: не задан. Числовой детектор: ещё не реализован.
 
-Источник: Contango 1, 00:33:13–00:34:26; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/artifacts/Contango_1/transcript/transcript.txt:238>).
+Источник: Contango 1, 00:33:13–00:34:26; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/research/artifacts/Contango_1/transcript/transcript.txt:238>).
 
 **Смысл источника:** Первые месяцы в бэквордации, дальше кривая почти плоская.
 
@@ -952,14 +953,14 @@
 
 **Что уточнить / не подменять:** Граница плоскости; примерно 0.5% в речи — ориентир, не готовый порог.
 
-Навигационные кадры: [00:33:31](<D:/CODEX_PRG/Breadth/artifacts/Contango_1/hold_frames/hold_059_00-33-31.jpg>); [00:34:11](<D:/CODEX_PRG/Breadth/artifacts/Contango_1/hold_frames/hold_060_00-34-11.jpg>); [00:34:25](<D:/CODEX_PRG/Breadth/artifacts/Contango_1/hold_frames/hold_061_00-34-25.jpg>).
+Навигационные кадры: [00:33:31](<D:/CODEX_PRG/Breadth/research/artifacts/Contango_1/hold_frames/hold_059_00-33-31.jpg>); [00:34:11](<D:/CODEX_PRG/Breadth/research/artifacts/Contango_1/hold_frames/hold_060_00-34-11.jpg>); [00:34:25](<D:/CODEX_PRG/Breadth/research/artifacts/Contango_1/hold_frames/hold_061_00-34-25.jpg>).
 <a id="v04"></a>
 
 ### V04 — Переход контанго в бэквордацию
 
 Тип: событие. Вес: не задан. Числовой детектор: ещё не реализован.
 
-Источник: Contango 1, 00:38:35–00:39:35; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/artifacts/Contango_1/transcript/transcript.txt:294>).
+Источник: Contango 1, 00:38:35–00:39:35; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/research/artifacts/Contango_1/transcript/transcript.txt:294>).
 
 **Смысл источника:** После нормальной структуры появляется инверсия первой пары на фоне роста VIX.
 
@@ -969,14 +970,14 @@
 
 **Что уточнить / не подменять:** Шум около нуля и ролловер; нельзя считать отсутствовавший вчера снимок нормальным контанго.
 
-Навигационные кадры: [00:39:05](<D:/CODEX_PRG/Breadth/artifacts/Contango_1/anchor_frames/anchor_024_00-39-05.jpg>); [00:38:55](<D:/CODEX_PRG/Breadth/artifacts/Contango_1/hold_frames/hold_071_00-38-55.jpg>); [00:39:25](<D:/CODEX_PRG/Breadth/artifacts/Contango_1/hold_frames/hold_072_00-39-25.jpg>).
+Навигационные кадры: [00:39:05](<D:/CODEX_PRG/Breadth/research/artifacts/Contango_1/anchor_frames/anchor_024_00-39-05.jpg>); [00:38:55](<D:/CODEX_PRG/Breadth/research/artifacts/Contango_1/hold_frames/hold_071_00-38-55.jpg>); [00:39:25](<D:/CODEX_PRG/Breadth/research/artifacts/Contango_1/hold_frames/hold_072_00-39-25.jpg>).
 <a id="v05"></a>
 
 ### V05 — Восстановление кривой после бэквордации
 
 Тип: событие. Вес: не задан. Числовой детектор: ещё не реализован.
 
-Источник: Contango 1, 00:48:29–00:53:15; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/artifacts/Contango_1/transcript/transcript.txt:502>).
+Источник: Contango 1, 00:48:29–00:53:15; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/research/artifacts/Contango_1/transcript/transcript.txt:502>).
 
 **Смысл источника:** Цена уже растёт, затем восстанавливается контанго до нескольких месяцев.
 
@@ -986,14 +987,14 @@
 
 **Что уточнить / не подменять:** Не переносить готовый порог CurveScore=-0.18 из прежнего исследования в авторское определение.
 
-Навигационные кадры: [00:50:56](<D:/CODEX_PRG/Breadth/artifacts/Contango_1/anchor_frames/anchor_053_00-50-56.jpg>); [00:51:14](<D:/CODEX_PRG/Breadth/artifacts/Contango_1/hold_frames/hold_085_00-51-14.jpg>); [00:50:16](<D:/CODEX_PRG/Breadth/artifacts/Contango_1/anchor_frames/anchor_052_00-50-16.jpg>).
+Навигационные кадры: [00:50:56](<D:/CODEX_PRG/Breadth/research/artifacts/Contango_1/anchor_frames/anchor_053_00-50-56.jpg>); [00:51:14](<D:/CODEX_PRG/Breadth/research/artifacts/Contango_1/hold_frames/hold_085_00-51-14.jpg>); [00:50:16](<D:/CODEX_PRG/Breadth/research/artifacts/Contango_1/anchor_frames/anchor_052_00-50-16.jpg>).
 <a id="v06"></a>
 
 ### V06 — Spot VIX относительно фьючерсов
 
 Тип: состояние. Вес: не задан. Числовой детектор: ещё не реализован.
 
-Источник: Contango 1, 01:06:57–01:09:31; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/artifacts/Contango_1/transcript/transcript.txt:936>).
+Источник: Contango 1, 01:06:57–01:09:31; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/research/artifacts/Contango_1/transcript/transcript.txt:936>).
 
 **Смысл источника:** VIX превышает ближние контракты, хотя между ними ещё контанго.
 
@@ -1003,14 +1004,14 @@
 
 **Что уточнить / не подменять:** Спот над F1 не равен инверсии F1/F2; временная синхронизация котировок.
 
-Навигационные кадры: [01:08:42](<D:/CODEX_PRG/Breadth/artifacts/Contango_1/hold_frames/hold_110_01-08-42.jpg>); [01:07:42](<D:/CODEX_PRG/Breadth/artifacts/Contango_1/hold_frames/hold_109_01-07-42.jpg>); [01:09:04](<D:/CODEX_PRG/Breadth/artifacts/Contango_1/anchor_frames/anchor_079_01-09-04.jpg>).
+Навигационные кадры: [01:08:42](<D:/CODEX_PRG/Breadth/research/artifacts/Contango_1/hold_frames/hold_110_01-08-42.jpg>); [01:07:42](<D:/CODEX_PRG/Breadth/research/artifacts/Contango_1/hold_frames/hold_109_01-07-42.jpg>); [01:09:04](<D:/CODEX_PRG/Breadth/research/artifacts/Contango_1/anchor_frames/anchor_079_01-09-04.jpg>).
 <a id="v07"></a>
 
 ### V07 — Близость экспирации меняет смысл фронтального перекоса
 
 Тип: состояние. Вес: не задан. Числовой детектор: ещё не реализован.
 
-Источник: Contango 1, 01:07:39–01:08:59; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/artifacts/Contango_1/transcript/transcript.txt:951>).
+Источник: Contango 1, 01:07:39–01:08:59; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/research/artifacts/Contango_1/transcript/transcript.txt:951>).
 
 **Смысл источника:** Отклонение spot около экспирации и такое же отклонение далеко от неё требуют разного контекста.
 
@@ -1020,14 +1021,14 @@
 
 **Что уточнить / не подменять:** Граница близкой экспирации; ориентир 1–3 дня не правило доходности.
 
-Навигационные кадры: [01:08:42](<D:/CODEX_PRG/Breadth/artifacts/Contango_1/hold_frames/hold_110_01-08-42.jpg>); [01:07:42](<D:/CODEX_PRG/Breadth/artifacts/Contango_1/hold_frames/hold_109_01-07-42.jpg>).
+Навигационные кадры: [01:08:42](<D:/CODEX_PRG/Breadth/research/artifacts/Contango_1/hold_frames/hold_110_01-08-42.jpg>); [01:07:42](<D:/CODEX_PRG/Breadth/research/artifacts/Contango_1/hold_frames/hold_109_01-07-42.jpg>).
 <a id="v08"></a>
 
 ### V08 — Уровень VIX, скачок и последующее успокоение
 
 Тип: состояние. Вес: не задан. Числовой детектор: ещё не реализован.
 
-Источник: Contango 1, 00:24:35–00:28:56; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/artifacts/Contango_1/transcript/transcript.txt:164>).
+Источник: Contango 1, 00:24:35–00:28:56; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/research/artifacts/Contango_1/transcript/transcript.txt:164>).
 
 **Смысл источника:** Спокойные и стрессовые значения VIX, всплеск и отход от высоких уровней — разные стадии.
 
@@ -1037,7 +1038,7 @@
 
 **Что уточнить / не подменять:** Нельзя приравнивать высокий VIX к немедленной положительной цели SVXY; это отдельный инструмент и гипотеза.
 
-Навигационные кадры: [00:26:25](<D:/CODEX_PRG/Breadth/artifacts/Contango_1/hold_frames/hold_047_00-26-25.jpg>); [00:27:14](<D:/CODEX_PRG/Breadth/artifacts/Contango_1/hold_frames/hold_048_00-27-14.jpg>); [00:25:55](<D:/CODEX_PRG/Breadth/artifacts/Contango_1/hold_frames/hold_046_00-25-55.jpg>).
+Навигационные кадры: [00:26:25](<D:/CODEX_PRG/Breadth/research/artifacts/Contango_1/hold_frames/hold_047_00-26-25.jpg>); [00:27:14](<D:/CODEX_PRG/Breadth/research/artifacts/Contango_1/hold_frames/hold_048_00-27-14.jpg>); [00:25:55](<D:/CODEX_PRG/Breadth/research/artifacts/Contango_1/hold_frames/hold_046_00-25-55.jpg>).
 
 ## Цвейг
 
@@ -1047,7 +1048,7 @@
 
 Тип: событие. Вес: не задан. Числовой детектор: ещё не реализован.
 
-Источник: Contango 1, 00:54:47–00:56:21; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/artifacts/Contango_1/transcript/transcript.txt:645>).
+Источник: Contango 1, 00:54:47–00:56:21; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/research/artifacts/Contango_1/transcript/transcript.txt:645>).
 
 **Смысл источника:** Working/Strong и классический сигнал могут совпадать, но различаются.
 
@@ -1057,14 +1058,14 @@
 
 **Что уточнить / не подменять:** Сверить формулы с Breeze/ZweigBreadth.cs; не считать одно совпадение трёх режимов тремя независимыми событиями.
 
-Навигационные кадры: [00:55:35](<D:/CODEX_PRG/Breadth/artifacts/Contango_1/anchor_frames/anchor_059_00-55-35.jpg>); [00:55:46](<D:/CODEX_PRG/Breadth/artifacts/Contango_1/anchor_frames/anchor_060_00-55-46.jpg>); [00:56:02](<D:/CODEX_PRG/Breadth/artifacts/Contango_1/anchor_frames/anchor_061_00-56-02.jpg>).
+Навигационные кадры: [00:55:35](<D:/CODEX_PRG/Breadth/research/artifacts/Contango_1/anchor_frames/anchor_059_00-55-35.jpg>); [00:55:46](<D:/CODEX_PRG/Breadth/research/artifacts/Contango_1/anchor_frames/anchor_060_00-55-46.jpg>); [00:56:02](<D:/CODEX_PRG/Breadth/research/artifacts/Contango_1/anchor_frames/anchor_061_00-56-02.jpg>).
 <a id="z02"></a>
 
 ### Z02 — Плотность и возраст Цвейга
 
 Тип: состояние. Вес: не задан. Числовой детектор: ещё не реализован.
 
-Источник: Contango 1, 00:56:22–00:56:54; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/artifacts/Contango_1/transcript/transcript.txt:683>).
+Источник: Contango 1, 00:56:22–00:56:54; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/research/artifacts/Contango_1/transcript/transcript.txt:683>).
 
 **Смысл источника:** При плотности 5 влияние слабее, чем в начале активной зоны.
 
@@ -1074,14 +1075,14 @@
 
 **Что уточнить / не подменять:** Это текущая кодовая ступенчатая шкала, не доказанные рыночные веса; возраст и плотность зависимы.
 
-Навигационные кадры: [00:56:45](<D:/CODEX_PRG/Breadth/artifacts/Contango_1/anchor_frames/anchor_062_00-56-45.jpg>); [00:56:26](<D:/CODEX_PRG/Breadth/artifacts/Contango_1/hold_frames/hold_093_00-56-26.jpg>).
+Навигационные кадры: [00:56:45](<D:/CODEX_PRG/Breadth/research/artifacts/Contango_1/anchor_frames/anchor_062_00-56-45.jpg>); [00:56:26](<D:/CODEX_PRG/Breadth/research/artifacts/Contango_1/hold_frames/hold_093_00-56-26.jpg>).
 <a id="z03"></a>
 
 ### Z03 — Совпадение и расхождение режимов Цвейга
 
 Тип: состояние. Вес: не задан. Числовой детектор: ещё не реализован.
 
-Источник: Contango 1, 00:58:15–00:59:35; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/artifacts/Contango_1/transcript/transcript.txt:730>).
+Источник: Contango 1, 00:58:15–00:59:35; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/research/artifacts/Contango_1/transcript/transcript.txt:730>).
 
 **Смысл источника:** Working, Strong и классический режим обсуждаются отдельно.
 
@@ -1091,14 +1092,14 @@
 
 **Что уточнить / не подменять:** Речь о включении одного режима в другой неоднозначна; проверять формулы, не закреплять неточное включение как аксиому.
 
-Навигационные кадры: [00:58:38](<D:/CODEX_PRG/Breadth/artifacts/Contango_1/anchor_frames/anchor_065_00-58-38.jpg>); [00:58:23](<D:/CODEX_PRG/Breadth/artifacts/Contango_1/anchor_frames/anchor_064_00-58-23.jpg>).
+Навигационные кадры: [00:58:38](<D:/CODEX_PRG/Breadth/research/artifacts/Contango_1/anchor_frames/anchor_065_00-58-38.jpg>); [00:58:23](<D:/CODEX_PRG/Breadth/research/artifacts/Contango_1/anchor_frames/anchor_064_00-58-23.jpg>).
 <a id="z04"></a>
 
 ### Z04 — Ухудшение рынка внутри активного Цвейга
 
 Тип: комплекс. Вес: не задан. Числовой детектор: ещё не реализован.
 
-Источник: Contango 1, 00:59:35–01:02:23; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/artifacts/Contango_1/transcript/transcript.txt:763>).
+Источник: Contango 1, 00:59:35–01:02:23; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/research/artifacts/Contango_1/transcript/transcript.txt:763>).
 
 **Смысл источника:** Падение широт и разрушение EMA происходят даже внутри Working-зоны.
 
@@ -1108,7 +1109,7 @@
 
 **Что уточнить / не подменять:** Сколько дней ухудшения и какие широты; не фиксировать вечный положительный бонус от одного старого сигнала.
 
-Навигационные кадры: [01:00:50](<D:/CODEX_PRG/Breadth/artifacts/Contango_1/anchor_frames/anchor_069_01-00-50.jpg>); [01:01:11](<D:/CODEX_PRG/Breadth/artifacts/Contango_1/anchor_frames/anchor_070_01-01-11.jpg>); [01:00:35](<D:/CODEX_PRG/Breadth/artifacts/Contango_1/hold_frames/hold_095_01-00-35.jpg>).
+Навигационные кадры: [01:00:50](<D:/CODEX_PRG/Breadth/research/artifacts/Contango_1/anchor_frames/anchor_069_01-00-50.jpg>); [01:01:11](<D:/CODEX_PRG/Breadth/research/artifacts/Contango_1/anchor_frames/anchor_070_01-01-11.jpg>); [01:00:35](<D:/CODEX_PRG/Breadth/research/artifacts/Contango_1/hold_frames/hold_095_01-00-35.jpg>).
 
 ## Titanic
 
@@ -1118,7 +1119,7 @@
 
 Тип: событие. Вес: не задан. Числовой детектор: ещё не реализован.
 
-Источник: Contango 1, 01:14:33–01:15:13; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/artifacts/Contango_1/transcript/transcript.txt:1108>).
+Источник: Contango 1, 01:14:33–01:15:13; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/research/artifacts/Contango_1/transcript/transcript.txt:1108>).
 
 **Смысл источника:** Titanic может предупреждать в начале ухудшения, а не на самом дне.
 
@@ -1128,14 +1129,14 @@
 
 **Что уточнить / не подменять:** Формула в Breeze/TitanicSyndrome.cs: 252-дневный максимум, окно 7, допуск 3%; это происхождение кода, не числа из данного фрагмента речи.
 
-Навигационные кадры: [01:14:56](<D:/CODEX_PRG/Breadth/artifacts/Contango_1/hold_frames/hold_119_01-14-56.jpg>); [01:14:44](<D:/CODEX_PRG/Breadth/artifacts/Contango_1/anchor_frames/anchor_089_01-14-44.jpg>); [01:15:07](<D:/CODEX_PRG/Breadth/artifacts/Contango_1/anchor_frames/anchor_090_01-15-07.jpg>).
+Навигационные кадры: [01:14:56](<D:/CODEX_PRG/Breadth/research/artifacts/Contango_1/hold_frames/hold_119_01-14-56.jpg>); [01:14:44](<D:/CODEX_PRG/Breadth/research/artifacts/Contango_1/anchor_frames/anchor_089_01-14-44.jpg>); [01:15:07](<D:/CODEX_PRG/Breadth/research/artifacts/Contango_1/anchor_frames/anchor_090_01-15-07.jpg>).
 <a id="i02"></a>
 
 ### I02 — Устойчивый Titanic
 
 Тип: состояние. Вес: не задан. Числовой детектор: ещё не реализован.
 
-Источник: Contango 1, 01:15:15–01:16:12; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/artifacts/Contango_1/transcript/transcript.txt:1125>).
+Источник: Contango 1, 01:15:15–01:16:12; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/research/artifacts/Contango_1/transcript/transcript.txt:1125>).
 
 **Смысл источника:** Длительная зона больше недели иногда совпадает с ростом, иногда с дальнейшим падением; однозначного вывода нет.
 
@@ -1145,14 +1146,14 @@
 
 **Что уточнить / не подменять:** Граница 7 или 8 дней; цвет не означает автоматический положительный вес.
 
-Навигационные кадры: [01:15:47](<D:/CODEX_PRG/Breadth/artifacts/Contango_1/anchor_frames/anchor_092_01-15-47.jpg>); [01:15:18](<D:/CODEX_PRG/Breadth/artifacts/Contango_1/anchor_frames/anchor_091_01-15-18.jpg>).
+Навигационные кадры: [01:15:47](<D:/CODEX_PRG/Breadth/research/artifacts/Contango_1/anchor_frames/anchor_092_01-15-47.jpg>); [01:15:18](<D:/CODEX_PRG/Breadth/research/artifacts/Contango_1/anchor_frames/anchor_091_01-15-18.jpg>).
 <a id="i03"></a>
 
 ### I03 — Предшествующий Titanic уже закончился
 
 Тип: последовательность. Вес: не задан. Числовой детектор: ещё не реализован.
 
-Источник: Contango 1, 01:14:33–01:15:13; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/artifacts/Contango_1/transcript/transcript.txt:1108>).
+Источник: Contango 1, 01:14:33–01:15:13; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/research/artifacts/Contango_1/transcript/transcript.txt:1108>).
 
 **Смысл источника:** В точке обсуждаемого минимума Titanic отсутствует, но предупреждение было раньше.
 
@@ -1162,7 +1163,7 @@
 
 **Что уточнить / не подменять:** Окно действия прошлой информации; отсутствие Titanic не доказывает безопасность.
 
-Навигационные кадры: [01:14:56](<D:/CODEX_PRG/Breadth/artifacts/Contango_1/hold_frames/hold_119_01-14-56.jpg>); [01:14:44](<D:/CODEX_PRG/Breadth/artifacts/Contango_1/anchor_frames/anchor_089_01-14-44.jpg>); [01:15:07](<D:/CODEX_PRG/Breadth/artifacts/Contango_1/anchor_frames/anchor_090_01-15-07.jpg>).
+Навигационные кадры: [01:14:56](<D:/CODEX_PRG/Breadth/research/artifacts/Contango_1/hold_frames/hold_119_01-14-56.jpg>); [01:14:44](<D:/CODEX_PRG/Breadth/research/artifacts/Contango_1/anchor_frames/anchor_089_01-14-44.jpg>); [01:15:07](<D:/CODEX_PRG/Breadth/research/artifacts/Contango_1/anchor_frames/anchor_090_01-15-07.jpg>).
 
 ## Контекстные комплексы
 
@@ -1172,7 +1173,7 @@
 
 Тип: комплекс. Вес: не задан. Числовой детектор: ещё не реализован.
 
-Источник: Широты S&P 2 — MyRSI и EMA, 00:25:58–00:26:53; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/artifacts/Breeze_AI_2/transcript/transcript.txt:97>).
+Источник: Широты S&P 2 — MyRSI и EMA, 00:25:58–00:26:53; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/research/artifacts/Breeze_AI_2/transcript/transcript.txt:97>).
 
 **Смысл источника:** RSI +1 или небольшой выход из +1 при цене над EMA20 и хорошем порядке не требует продажи.
 
@@ -1182,14 +1183,14 @@
 
 **Что уточнить / не подменять:** Не задавать жёсткое 100%; проверить конкурирующие признаки риска.
 
-Навигационные кадры: [00:26:30](<D:/CODEX_PRG/Breadth/artifacts/Breeze_AI_2/frames/hold_085_00-26-30.jpg>); [00:26:44](<D:/CODEX_PRG/Breadth/artifacts/Breeze_AI_2/frames/hold_086_00-26-44.jpg>); [00:26:05](<D:/CODEX_PRG/Breadth/artifacts/Breeze_AI_2/frames/hold_084_00-26-05.jpg>).
+Навигационные кадры: [00:26:30](<D:/CODEX_PRG/Breadth/research/artifacts/Breeze_AI_2/frames/hold_085_00-26-30.jpg>); [00:26:44](<D:/CODEX_PRG/Breadth/research/artifacts/Breeze_AI_2/frames/hold_086_00-26-44.jpg>); [00:26:05](<D:/CODEX_PRG/Breadth/research/artifacts/Breeze_AI_2/frames/hold_084_00-26-05.jpg>).
 <a id="c02"></a>
 
 ### C02 — Цена и широты разворачиваются раньше обоих RSI
 
 Тип: комплекс. Вес: не задан. Числовой детектор: ещё не реализован.
 
-Источник: Contango 1, 00:43:41–00:47:44; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/artifacts/Contango_1/transcript/transcript.txt:396>).
+Источник: Contango 1, 00:43:41–00:47:44; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/research/artifacts/Contango_1/transcript/transcript.txt:396>).
 
 **Смысл источника:** Зелёная цена и белые широты появляются, пока оба RSI ещё на -1.
 
@@ -1199,14 +1200,14 @@
 
 **Что уточнить / не подменять:** Количество широт и критерий предшествующего снижения; не ждать обязательного полного бычьего порядка EMA.
 
-Навигационные кадры: [00:45:49](<D:/CODEX_PRG/Breadth/artifacts/Contango_1/anchor_frames/anchor_039_00-45-49.jpg>); [00:45:52](<D:/CODEX_PRG/Breadth/artifacts/Contango_1/hold_frames/hold_076_00-45-52.jpg>); [00:45:58](<D:/CODEX_PRG/Breadth/artifacts/Contango_1/anchor_frames/anchor_040_00-45-58.jpg>).
+Навигационные кадры: [00:45:49](<D:/CODEX_PRG/Breadth/research/artifacts/Contango_1/anchor_frames/anchor_039_00-45-49.jpg>); [00:45:52](<D:/CODEX_PRG/Breadth/research/artifacts/Contango_1/hold_frames/hold_076_00-45-52.jpg>); [00:45:58](<D:/CODEX_PRG/Breadth/research/artifacts/Contango_1/anchor_frames/anchor_040_00-45-58.jpg>).
 <a id="c03"></a>
 
 ### C03 — Отрыв RSI с подтверждением широтой и ценой
 
 Тип: комплекс. Вес: не задан. Числовой детектор: ещё не реализован.
 
-Источник: Широты S&P 2 — MyRSI и EMA, 00:19:58–00:23:28; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/artifacts/Breeze_AI_2/transcript/transcript.txt:74>).
+Источник: Широты S&P 2 — MyRSI и EMA, 00:19:58–00:23:28; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/research/artifacts/Breeze_AI_2/transcript/transcript.txt:74>).
 
 **Смысл источника:** Отрыв от -1, разворот SPY и рост широт формируют положительный комплекс даже при сломанном порядке EMA.
 
@@ -1216,14 +1217,14 @@
 
 **Что уточнить / не подменять:** Веса синхронного и запаздывающего подтверждения; объединять близкие дни в один эпизод для статистики.
 
-Навигационные кадры: [00:21:50](<D:/CODEX_PRG/Breadth/artifacts/Breeze_AI_2/frames/hold_072_00-21-50.jpg>); [00:21:30](<D:/CODEX_PRG/Breadth/artifacts/Breeze_AI_2/frames/hold_071_00-21-30.jpg>); [00:22:00](<D:/CODEX_PRG/Breadth/artifacts/Breeze_AI_2/frames/hold_073_00-22-00.jpg>).
+Навигационные кадры: [00:21:50](<D:/CODEX_PRG/Breadth/research/artifacts/Breeze_AI_2/frames/hold_072_00-21-50.jpg>); [00:21:30](<D:/CODEX_PRG/Breadth/research/artifacts/Breeze_AI_2/frames/hold_071_00-21-30.jpg>); [00:22:00](<D:/CODEX_PRG/Breadth/research/artifacts/Breeze_AI_2/frames/hold_073_00-22-00.jpg>).
 <a id="c04"></a>
 
 ### C04 — Отскок от EMA100 без достижения RSI=-1
 
 Тип: комплекс. Вес: не задан. Числовой детектор: ещё не реализован.
 
-Источник: Широты S&P 2 — MyRSI и EMA, 00:10:15–00:11:21; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/artifacts/Breeze_AI_2/transcript/transcript.txt:38>).
+Источник: Широты S&P 2 — MyRSI и EMA, 00:10:15–00:11:21; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/research/artifacts/Breeze_AI_2/transcript/transcript.txt:38>).
 
 **Смысл источника:** Разворот возможен после EMA20/50 при удержании EMA100 без нижнего насыщения RSI.
 
@@ -1233,14 +1234,14 @@
 
 **Что уточнить / не подменять:** Определение близости к E100 и периода коррекции; не требовать обязательного R01.
 
-Навигационные кадры: [00:10:44](<D:/CODEX_PRG/Breadth/artifacts/Breeze_AI_2/frames/hold_030_00-10-44.jpg>); [00:11:00](<D:/CODEX_PRG/Breadth/artifacts/Breeze_AI_2/frames/hold_031_00-11-00.jpg>); [00:10:24](<D:/CODEX_PRG/Breadth/artifacts/Breeze_AI_2/frames/hold_029_00-10-24.jpg>).
+Навигационные кадры: [00:10:44](<D:/CODEX_PRG/Breadth/research/artifacts/Breeze_AI_2/frames/hold_030_00-10-44.jpg>); [00:11:00](<D:/CODEX_PRG/Breadth/research/artifacts/Breeze_AI_2/frames/hold_031_00-11-00.jpg>); [00:10:24](<D:/CODEX_PRG/Breadth/research/artifacts/Breeze_AI_2/frames/hold_029_00-10-24.jpg>).
 <a id="c05"></a>
 
 ### C05 — Неглубокий подхват EMA20/50
 
 Тип: последовательность. Вес: не задан. Числовой детектор: ещё не реализован.
 
-Источник: Подхват 1, 00:05:22–00:07:18; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/artifacts/Podhvat_1/transcript/transcript.txt:17>).
+Источник: Подхват 1, 00:05:22–00:07:18; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/research/artifacts/Podhvat_1/transcript/transcript.txt:17>).
 
 **Смысл источника:** После правильной структуры EMA20 падает 1–3 бара, цена ниже неё, но EMA50 удержана; появляется зелёный бар.
 
@@ -1250,14 +1251,14 @@
 
 **Что уточнить / не подменять:** Начало эпизода, длительность; существование фактической позиции не является условием.
 
-Навигационные кадры: [00:06:26](<D:/CODEX_PRG/Breadth/artifacts/Podhvat_1/hold_frames/hold_015_00-06-26.jpg>); [00:06:12](<D:/CODEX_PRG/Breadth/artifacts/Podhvat_1/hold_frames/hold_014_00-06-12.jpg>); [00:06:42](<D:/CODEX_PRG/Breadth/artifacts/Podhvat_1/hold_frames/hold_016_00-06-42.jpg>).
+Навигационные кадры: [00:06:26](<D:/CODEX_PRG/Breadth/research/artifacts/Podhvat_1/hold_frames/hold_015_00-06-26.jpg>); [00:06:12](<D:/CODEX_PRG/Breadth/research/artifacts/Podhvat_1/hold_frames/hold_014_00-06-12.jpg>); [00:06:42](<D:/CODEX_PRG/Breadth/research/artifacts/Podhvat_1/hold_frames/hold_016_00-06-42.jpg>).
 <a id="c06"></a>
 
 ### C06 — Глубокий подхват EMA50/100
 
 Тип: последовательность. Вес: не задан. Числовой детектор: ещё не реализован.
 
-Источник: Подхват 1, 00:07:20–00:09:24; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/artifacts/Podhvat_1/transcript/transcript.txt:23>).
+Источник: Подхват 1, 00:07:20–00:09:24; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/research/artifacts/Podhvat_1/transcript/transcript.txt:23>).
 
 **Смысл источника:** Цена проходила EMA50, удержала EMA100, затем вернулась над EMA20; наклоны и широта восстановились.
 
@@ -1267,7 +1268,7 @@
 
 **Что уточнить / не подменять:** Не путать обязательную структуру с необязательным сильным импульсом; пограничные примеры ниже E100 выделять.
 
-Навигационные кадры: [00:08:08](<D:/CODEX_PRG/Breadth/artifacts/Podhvat_1/anchor_frames/anchor_008_00-08-08.jpg>); [00:08:26](<D:/CODEX_PRG/Breadth/artifacts/Podhvat_1/hold_frames/hold_023_00-08-26.jpg>); [00:08:12](<D:/CODEX_PRG/Breadth/artifacts/Podhvat_1/hold_frames/hold_022_00-08-12.jpg>).
+Навигационные кадры: [00:08:08](<D:/CODEX_PRG/Breadth/research/artifacts/Podhvat_1/anchor_frames/anchor_008_00-08-08.jpg>); [00:08:26](<D:/CODEX_PRG/Breadth/research/artifacts/Podhvat_1/hold_frames/hold_023_00-08-26.jpg>); [00:08:12](<D:/CODEX_PRG/Breadth/research/artifacts/Podhvat_1/hold_frames/hold_022_00-08-12.jpg>).
 
 Отдельно просмотренный кадр: На курсоре возвратный зелёный бар в эпизоде подхвата; EMA20/50/100/200=551.1/547.2/537.5/515.9, ATRP1=2.78%. Проверка всей последовательности по числовым данным ещё не выполнена.
 <a id="c07"></a>
@@ -1276,7 +1277,7 @@
 
 Тип: последовательность. Вес: не задан. Числовой детектор: ещё не реализован.
 
-Источник: Подхват 1, 00:10:13–00:11:54; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/artifacts/Podhvat_1/transcript/transcript.txt:33>).
+Источник: Подхват 1, 00:10:13–00:11:54; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/research/artifacts/Podhvat_1/transcript/transcript.txt:33>).
 
 **Смысл источника:** Сходная коррекция и возврат над EMA повторяются через небольшой интервал.
 
@@ -1286,14 +1287,14 @@
 
 **Что уточнить / не подменять:** Интервал 8–10 — пример; диапазон допуска и критерий независимости эпизодов.
 
-Навигационные кадры: [00:11:05](<D:/CODEX_PRG/Breadth/artifacts/Podhvat_1/hold_frames/hold_030_00-11-05.jpg>); [00:10:35](<D:/CODEX_PRG/Breadth/artifacts/Podhvat_1/hold_frames/hold_029_00-10-35.jpg>); [00:11:33](<D:/CODEX_PRG/Breadth/artifacts/Podhvat_1/anchor_frames/anchor_010_00-11-33.jpg>).
+Навигационные кадры: [00:11:05](<D:/CODEX_PRG/Breadth/research/artifacts/Podhvat_1/hold_frames/hold_030_00-11-05.jpg>); [00:10:35](<D:/CODEX_PRG/Breadth/research/artifacts/Podhvat_1/hold_frames/hold_029_00-10-35.jpg>); [00:11:33](<D:/CODEX_PRG/Breadth/research/artifacts/Podhvat_1/anchor_frames/anchor_010_00-11-33.jpg>).
 <a id="c08"></a>
 
 ### C08 — Совместный выход RSI из +1, сильный красный бар и EMA20
 
 Тип: комплекс. Вес: не задан. Числовой детектор: ещё не реализован.
 
-Источник: Contango 1, 01:02:32–01:04:11; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/artifacts/Contango_1/transcript/transcript.txt:833>).
+Источник: Contango 1, 01:02:32–01:04:11; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/research/artifacts/Contango_1/transcript/transcript.txt:833>).
 
 **Смысл источника:** После благополучного дня оба RSI выходят вниз, сильная красная свеча закрывается под EMA20.
 
@@ -1303,7 +1304,7 @@
 
 **Что уточнить / не подменять:** В речи сравнивается тело с прежней волатильностью; окно 20 и замена тела на TR — не авторские факты, а варианты для проверки.
 
-Навигационные кадры: [01:03:01](<D:/CODEX_PRG/Breadth/artifacts/Contango_1/anchor_frames/anchor_073_01-03-01.jpg>); [01:03:17](<D:/CODEX_PRG/Breadth/artifacts/Contango_1/hold_frames/hold_100_01-03-17.jpg>); [01:03:32](<D:/CODEX_PRG/Breadth/artifacts/Contango_1/hold_frames/hold_101_01-03-32.jpg>).
+Навигационные кадры: [01:03:01](<D:/CODEX_PRG/Breadth/research/artifacts/Contango_1/anchor_frames/anchor_073_01-03-01.jpg>); [01:03:17](<D:/CODEX_PRG/Breadth/research/artifacts/Contango_1/hold_frames/hold_100_01-03-17.jpg>); [01:03:32](<D:/CODEX_PRG/Breadth/research/artifacts/Contango_1/hold_frames/hold_101_01-03-32.jpg>).
 
 Отдельно просмотренный кадр: На курсоре красная свеча ниже EMA20; MyRSI 14/8=0.688, 10/8=0.639; ZW Density=30, Titanic ACTIVE d2. Относительная сила тела требует числового сравнения с прошлым.
 <a id="c09"></a>
@@ -1312,7 +1313,7 @@
 
 Тип: комплекс. Вес: не задан. Числовой детектор: ещё не реализован.
 
-Источник: Contango 1, 01:06:27–01:10:57; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/artifacts/Contango_1/transcript/transcript.txt:925>).
+Источник: Contango 1, 01:06:27–01:10:57; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/research/artifacts/Contango_1/transcript/transcript.txt:925>).
 
 **Смысл источника:** Цена уже пробивает EMA, VIX растёт, но кривая ещё сохраняет контанго.
 
@@ -1322,14 +1323,14 @@
 
 **Что уточнить / не подменять:** Приоритеты учатся; положительная кривая не накладывает жёсткий запрет на уменьшение позиции SPY.
 
-Навигационные кадры: [01:08:42](<D:/CODEX_PRG/Breadth/artifacts/Contango_1/hold_frames/hold_110_01-08-42.jpg>); [01:09:04](<D:/CODEX_PRG/Breadth/artifacts/Contango_1/anchor_frames/anchor_079_01-09-04.jpg>); [01:09:26](<D:/CODEX_PRG/Breadth/artifacts/Contango_1/hold_frames/hold_111_01-09-26.jpg>).
+Навигационные кадры: [01:08:42](<D:/CODEX_PRG/Breadth/research/artifacts/Contango_1/hold_frames/hold_110_01-08-42.jpg>); [01:09:04](<D:/CODEX_PRG/Breadth/research/artifacts/Contango_1/anchor_frames/anchor_079_01-09-04.jpg>); [01:09:26](<D:/CODEX_PRG/Breadth/research/artifacts/Contango_1/hold_frames/hold_111_01-09-26.jpg>).
 <a id="c10"></a>
 
 ### C10 — Рост цены до восстановления контанго
 
 Тип: комплекс. Вес: не задан. Числовой детектор: ещё не реализован.
 
-Источник: Contango 1, 00:47:50–00:50:03; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/artifacts/Contango_1/transcript/transcript.txt:488>).
+Источник: Contango 1, 00:47:50–00:50:03; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/research/artifacts/Contango_1/transcript/transcript.txt:488>).
 
 **Смысл источника:** Цена растёт несколько дней, VIX снижается, но фронтальная кривая остаётся смешанной/инвертированной.
 
@@ -1339,14 +1340,14 @@
 
 **Что уточнить / не подменять:** SPY и SVXY оцениваются отдельно: хороший комплекс для SPY не означает такую же целевую долю SVXY.
 
-Навигационные кадры: [00:48:50](<D:/CODEX_PRG/Breadth/artifacts/Contango_1/hold_frames/hold_081_00-48-50.jpg>); [00:49:10](<D:/CODEX_PRG/Breadth/artifacts/Contango_1/anchor_frames/anchor_049_00-49-10.jpg>); [00:48:40](<D:/CODEX_PRG/Breadth/artifacts/Contango_1/anchor_frames/anchor_048_00-48-40.jpg>).
+Навигационные кадры: [00:48:50](<D:/CODEX_PRG/Breadth/research/artifacts/Contango_1/hold_frames/hold_081_00-48-50.jpg>); [00:49:10](<D:/CODEX_PRG/Breadth/research/artifacts/Contango_1/anchor_frames/anchor_049_00-49-10.jpg>); [00:48:40](<D:/CODEX_PRG/Breadth/research/artifacts/Contango_1/anchor_frames/anchor_048_00-48-40.jpg>).
 <a id="c11"></a>
 
 ### C11 — Разрыв вверх, возврат над EMA и широкое восстановление
 
 Тип: комплекс. Вес: не задан. Числовой детектор: ещё не реализован.
 
-Источник: Contango 1, 00:50:44–00:55:19; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/artifacts/Contango_1/transcript/transcript.txt:556>).
+Источник: Contango 1, 00:50:44–00:55:19; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/research/artifacts/Contango_1/transcript/transcript.txt:556>).
 
 **Смысл источника:** Гэп и возврат цены над средними совпадают с широким ростом широты и восстановлением кривой; Цвейг может появиться позже.
 
@@ -1356,14 +1357,14 @@
 
 **Что уточнить / не подменять:** Не требовать завтрашнего Цвейга для сегодняшней отметки; различать начало и развитие комплекса.
 
-Навигационные кадры: [00:52:50](<D:/CODEX_PRG/Breadth/artifacts/Contango_1/hold_frames/hold_088_00-52-50.jpg>); [00:53:14](<D:/CODEX_PRG/Breadth/artifacts/Contango_1/hold_frames/hold_089_00-53-14.jpg>); [00:52:32](<D:/CODEX_PRG/Breadth/artifacts/Contango_1/anchor_frames/anchor_054_00-52-32.jpg>).
+Навигационные кадры: [00:52:50](<D:/CODEX_PRG/Breadth/research/artifacts/Contango_1/hold_frames/hold_088_00-52-50.jpg>); [00:53:14](<D:/CODEX_PRG/Breadth/research/artifacts/Contango_1/hold_frames/hold_089_00-53-14.jpg>); [00:52:32](<D:/CODEX_PRG/Breadth/research/artifacts/Contango_1/anchor_frames/anchor_054_00-52-32.jpg>).
 <a id="c12"></a>
 
 ### C12 — Двойное дно широты в стрессовом контексте
 
 Тип: комплекс. Вес: не задан. Числовой детектор: ещё не реализован.
 
-Источник: Contango 1, 00:29:20–00:35:18; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/artifacts/Contango_1/transcript/transcript.txt:208>).
+Источник: Contango 1, 00:29:20–00:35:18; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/research/artifacts/Contango_1/transcript/transcript.txt:208>).
 
 **Смысл источника:** Повторный минимум цены, более устойчивая широта, оба RSI внизу и напряжённая кривая рассматриваются совместно.
 
@@ -1373,7 +1374,7 @@
 
 **Что уточнить / не подменять:** Какие компоненты обязательны; нельзя свести комплекс к покупке любой бэквордации.
 
-Навигационные кадры: [00:32:25](<D:/CODEX_PRG/Breadth/artifacts/Contango_1/hold_frames/hold_057_00-32-25.jpg>); [00:32:05](<D:/CODEX_PRG/Breadth/artifacts/Contango_1/hold_frames/hold_056_00-32-05.jpg>); [00:32:56](<D:/CODEX_PRG/Breadth/artifacts/Contango_1/anchor_frames/anchor_019_00-32-56.jpg>).
+Навигационные кадры: [00:32:25](<D:/CODEX_PRG/Breadth/research/artifacts/Contango_1/hold_frames/hold_057_00-32-25.jpg>); [00:32:05](<D:/CODEX_PRG/Breadth/research/artifacts/Contango_1/hold_frames/hold_056_00-32-05.jpg>); [00:32:56](<D:/CODEX_PRG/Breadth/research/artifacts/Contango_1/anchor_frames/anchor_019_00-32-56.jpg>).
 
 ## Исполнение — вне рыночного скоринга
 
@@ -1383,7 +1384,7 @@
 
 Тип: исполнение. Вес: не задан. Числовой детектор: ещё не реализован.
 
-Источник: Подхват 1, 00:14:51–00:20:20; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/artifacts/Podhvat_1/transcript/transcript.txt:49>).
+Источник: Подхват 1, 00:14:51–00:20:20; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/research/artifacts/Podhvat_1/transcript/transcript.txt:49>).
 
 **Смысл источника:** После сильного нисходящего бара предлагается отдельно исследовать исполнение сокращения на середине движения.
 
@@ -1393,14 +1394,14 @@
 
 **Что уточнить / не подменять:** 1.5–2% — ориентир; выбор середины, срок и запасное исполнение не определены. Не превращать последующее касание в сегодняшнюю информацию.
 
-Навигационные кадры: [00:17:26](<D:/CODEX_PRG/Breadth/artifacts/Podhvat_1/hold_frames/hold_049_00-17-26.jpg>); [00:17:47](<D:/CODEX_PRG/Breadth/artifacts/Podhvat_1/hold_frames/hold_050_00-17-47.jpg>); [00:17:19](<D:/CODEX_PRG/Breadth/artifacts/Podhvat_1/anchor_frames/anchor_017_00-17-19.jpg>).
+Навигационные кадры: [00:17:26](<D:/CODEX_PRG/Breadth/research/artifacts/Podhvat_1/hold_frames/hold_049_00-17-26.jpg>); [00:17:47](<D:/CODEX_PRG/Breadth/research/artifacts/Podhvat_1/hold_frames/hold_050_00-17-47.jpg>); [00:17:19](<D:/CODEX_PRG/Breadth/research/artifacts/Podhvat_1/anchor_frames/anchor_017_00-17-19.jpg>).
 <a id="x02"></a>
 
 ### X02 — Покупка на половинной коррекции зелёного опорного бара
 
 Тип: исполнение. Вес: не задан. Числовой детектор: ещё не реализован.
 
-Источник: Подхват 1, 00:20:20–00:24:35; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/artifacts/Podhvat_1/transcript/transcript.txt:71>).
+Источник: Подхват 1, 00:20:20–00:24:35; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/research/artifacts/Podhvat_1/transcript/transcript.txt:71>).
 
 **Смысл источника:** Сильный зелёный бар и всплеск широты могут появиться при ещё падающих EMA; описана покупка на откате.
 
@@ -1410,14 +1411,14 @@
 
 **Что уточнить / не подменять:** 2.5–3% — ориентир движения; ожидание 1 день и 2–3 дня в разных примерах требуют отдельных правил.
 
-Навигационные кадры: [00:22:42](<D:/CODEX_PRG/Breadth/artifacts/Podhvat_1/hold_frames/hold_059_00-22-42.jpg>); [00:22:12](<D:/CODEX_PRG/Breadth/artifacts/Podhvat_1/hold_frames/hold_058_00-22-12.jpg>); [00:23:05](<D:/CODEX_PRG/Breadth/artifacts/Podhvat_1/anchor_frames/anchor_022_00-23-05.jpg>).
+Навигационные кадры: [00:22:42](<D:/CODEX_PRG/Breadth/research/artifacts/Podhvat_1/hold_frames/hold_059_00-22-42.jpg>); [00:22:12](<D:/CODEX_PRG/Breadth/research/artifacts/Podhvat_1/hold_frames/hold_058_00-22-12.jpg>); [00:23:05](<D:/CODEX_PRG/Breadth/research/artifacts/Podhvat_1/anchor_frames/anchor_022_00-23-05.jpg>).
 <a id="x03"></a>
 
 ### X03 — Половина составного импульса из нескольких баров
 
 Тип: исполнение. Вес: не задан. Числовой детектор: ещё не реализован.
 
-Источник: Подхват 1, 00:29:13–00:30:05; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/artifacts/Podhvat_1/transcript/transcript.txt:109>).
+Источник: Подхват 1, 00:29:13–00:30:05; [фрагмент расшифровки](<D:/CODEX_PRG/Breadth/research/artifacts/Podhvat_1/transcript/transcript.txt:109>).
 
 **Смысл источника:** Для двойных/тройных опорных баров нужно различать весь импульс и его части.
 
@@ -1427,7 +1428,7 @@
 
 **Что уточнить / не подменять:** Нельзя выбирать лучшую середину по уже известному будущему исполнению; число и сочетание заявок ещё не определены.
 
-Навигационные кадры: [00:29:41](<D:/CODEX_PRG/Breadth/artifacts/Podhvat_1/hold_frames/hold_079_00-29-41.jpg>); [00:29:24](<D:/CODEX_PRG/Breadth/artifacts/Podhvat_1/anchor_frames/anchor_035_00-29-24.jpg>); [00:29:55](<D:/CODEX_PRG/Breadth/artifacts/Podhvat_1/anchor_frames/anchor_036_00-29-55.jpg>).
+Навигационные кадры: [00:29:41](<D:/CODEX_PRG/Breadth/research/artifacts/Podhvat_1/hold_frames/hold_079_00-29-41.jpg>); [00:29:24](<D:/CODEX_PRG/Breadth/research/artifacts/Podhvat_1/anchor_frames/anchor_035_00-29-24.jpg>); [00:29:55](<D:/CODEX_PRG/Breadth/research/artifacts/Podhvat_1/anchor_frames/anchor_036_00-29-55.jpg>).
 
 ## Дополнительные конструкции из текущего чата
 
@@ -1461,6 +1462,21 @@
 **Появление, действие и отмена:** Событие текущего дня; вчерашние показатели не заменяются сегодняшними или завтрашними.
 
 **Что уточнить / не подменять:** Допуск к 30, обязательность всех частей, сколько независимых повторений. Отдельный вес взаимодействия не равен сумме весов его частей.
+<a id="u03"></a>
+
+### U03 — Месячная экспирация SPX
+
+Тип: событие. Вес: не задан. Числовой детектор: ещё не реализован.
+
+Источник: пример пользователя в текущем обсуждении архитектуры.
+
+**Смысл источника:** Стандартная месячная экспирация SPX исторически чаще завершалась снижением, но не показала повышения дневной волатильности или устойчивого эффекта следующего дня.
+
+**Предлагаемое определение:** Скорректированная третья пятница месяца: если она не торговая, используется предыдущий торговый день. Признак равен 1 только в день экспирации.
+
+**Появление, действие и отмена:** Календарное событие текущего дня; праздничный перенос определяется только по уже известному торговому календарю.
+
+**Что уточнить / не подменять:** Исследовательский признак с весом 0 во всех профилях. Ненулевой вес допустим только после независимого walk-forward подтверждения; не смешивать с VIX DTE и календарём расчёта VX.
 
 ## Проверка покрытия
 

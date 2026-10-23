@@ -10,6 +10,7 @@ internal sealed record TitanicPoint(
     bool RecentlyAtHigh,
     double NasdaqNewHighs,
     double NasdaqNewLows,
+    double NasdaqHighLowRatio,
     bool LowsExceedHighs,
     double NasdaqBreadth50,
     int ValidBreadthMembers,
@@ -87,6 +88,10 @@ internal static class TitanicSyndromeCalculator
             }
 
             bool lowsExceedHighs = newLows.Close > newHighs.Close;
+            double highLowTotal = newHighs.Close + newLows.Close;
+            double highLowRatio = double.IsFinite(highLowTotal) && highLowTotal > 0.0
+                ? newHighs.Close / highLowTotal
+                : double.NaN;
             BreadthPoint? breadth = breadthByDate.GetValueOrDefault(date);
             double breadthValue = breadth?.Close ?? double.NaN;
             int validMembers = breadth?.EligibleCount ?? 0;
@@ -102,7 +107,7 @@ internal static class TitanicSyndromeCalculator
                     date, qqqPoints[index].Open, qqqPoints[index].High,
                     qqqPoints[index].Low, qqqPoints[index].Close,
                     annualHigh[index], recentlyAtHigh,
-                    newHighs.Close, newLows.Close, lowsExceedHighs,
+                    newHighs.Close, newLows.Close, highLowRatio, lowsExceedHighs,
                     breadthValue, validMembers, breadthFilterPassed,
                     signal, run, signal && run >= PersistentDays));
             }

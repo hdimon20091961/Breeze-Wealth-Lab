@@ -24,7 +24,7 @@
             <ComboBox x:Name="SpDataSet" Grid.Column="1" Margin="0,0,12,0" DisplayMemberPath="QualifiedName"/>
             <TextBlock Grid.Column="2" Text="Nasdaq-100 DataSet:" VerticalAlignment="Center" Margin="0,0,6,0"/>
             <ComboBox x:Name="NasdaqDataSet" Grid.Column="3" Margin="0,0,12,0" DisplayMemberPath="QualifiedName"/>
-            <Button x:Name="RefreshButton" Grid.Column="4" Content="Calculate 12 years" Padding="12,4"
+            <Button x:Name="RefreshButton" Grid.Column="4" Content="Recalculate" MinWidth="108" Padding="14,4"
                     Background="#BFE8C5" Foreground="#173B20" FontWeight="SemiBold" Click="RefreshClick"/>
             <CheckBox x:Name="ShowSp500Price" Grid.Column="5" Margin="12,0,0,0" VerticalAlignment="Center"
                       Content="Show S&amp;P" IsChecked="True"
@@ -61,11 +61,11 @@
                            TextWrapping="NoWrap" Margin="0,1,12,0"/>
                 <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
                     <Button Content="−" Width="26" Height="22" Margin="0,0,2,0"
-                            ToolTip="Show 25 fewer bars" Click="DecreaseVisibleBarsClick"/>
+                            ToolTip="Show 20 fewer bars" Click="DecreaseVisibleBarsClick"/>
                     <TextBlock x:Name="VisibleBarsText" Text="200 bars" Width="60"
                                TextAlignment="Center" VerticalAlignment="Center"/>
                     <Button Content="+" Width="26" Height="22" Margin="2,0,6,0"
-                            ToolTip="Show 25 more bars" Click="IncreaseVisibleBarsClick"/>
+                            ToolTip="Show 20 more bars" Click="IncreaseVisibleBarsClick"/>
                     <Slider x:Name="HistorySlider" Width="280" Minimum="0" Maximum="0"
                             VerticalAlignment="Center" IsMoveToPointEnabled="True"
                             ValueChanged="HistorySliderValueChanged"/>
@@ -131,7 +131,8 @@
                             </Grid.RowDefinitions>
                             <local:BreadthChart x:Name="OverviewCombinedChart" Grid.Row="0"/>
                             <GridSplitter x:Name="OverviewAtrpSplitter" Grid.Row="1" Height="5"
-                                          HorizontalAlignment="Stretch" Background="#D7CFBB"/>
+                                          HorizontalAlignment="Stretch" Background="#D7CFBB"
+                                          DragCompleted="LayoutSplitterDragCompleted"/>
                             <local:AtrpChart x:Name="OverviewAtrpChart" Grid.Row="2"/>
                         </Grid>
                     </Grid>
@@ -142,13 +143,24 @@
                     </TabItem.Header>
                     <DockPanel Background="White">
                         <StackPanel DockPanel.Dock="Top" Background="White" Orientation="Horizontal" HorizontalAlignment="Center" Margin="6,4,6,0">
-                            <Border Width="14" Height="14" Background="#58BEE4" Margin="5,0,3,0"/>
-                            <TextBlock Text="Titanic active" VerticalAlignment="Center"/>
-                            <Border Width="14" Height="14" Background="#2FA669" Margin="14,0,3,0"/>
-                            <TextBlock Text="Persistent" VerticalAlignment="Center"/>
-                            <CheckBox x:Name="TitanicShowHold" Content="Hold %" IsChecked="True"
-                                      Margin="18,0,0,0" VerticalAlignment="Center"
+                            <CheckBox x:Name="TitanicShowActive" Content="Titanic Active" IsChecked="True"
+                                      Foreground="#3199C8" FontWeight="SemiBold" Margin="5,0,0,0" VerticalAlignment="Center"
+                                      Checked="TitanicLayerVisibilityChanged" Unchecked="TitanicLayerVisibilityChanged"/>
+                            <CheckBox x:Name="TitanicShowPersistent" Content="Persistent" IsChecked="True"
+                                      Foreground="#218A57" FontWeight="SemiBold" Margin="14,0,0,0" VerticalAlignment="Center"
+                                      Checked="TitanicLayerVisibilityChanged" Unchecked="TitanicLayerVisibilityChanged"/>
+                            <CheckBox x:Name="TitanicShowHold" Content="Оценка" IsChecked="True"
+                                      Margin="14,0,0,0" VerticalAlignment="Center"
                                       Checked="HoldVisibilityChanged" Unchecked="HoldVisibilityChanged"/>
+                            <CheckBox x:Name="TitanicShowNewHigh" Content="New High" IsChecked="True"
+                                      Foreground="#239152" FontWeight="SemiBold" Margin="14,0,0,0" VerticalAlignment="Center"
+                                      Checked="TitanicLayerVisibilityChanged" Unchecked="TitanicLayerVisibilityChanged"/>
+                            <CheckBox x:Name="TitanicShowNewLow" Content="New Low" IsChecked="True"
+                                      Foreground="#C43737" FontWeight="SemiBold" Margin="14,0,0,0" VerticalAlignment="Center"
+                                      Checked="TitanicLayerVisibilityChanged" Unchecked="TitanicLayerVisibilityChanged"/>
+                            <CheckBox x:Name="TitanicShowValue" Content="Titanic value" IsChecked="True"
+                                      Foreground="#2958B0" FontWeight="SemiBold" Margin="14,0,0,0" VerticalAlignment="Center"
+                                      Checked="TitanicLayerVisibilityChanged" Unchecked="TitanicLayerVisibilityChanged"/>
                         </StackPanel>
                         <local:TitanicChart x:Name="TitanicChart"/>
                     </DockPanel>
@@ -197,7 +209,7 @@
                                 <TextBlock Text="Buy / hold" VerticalAlignment="Center"/>
                                 <Border Width="14" Height="14" Background="#D3EEF8" Margin="8,0,3,0"/>
                                 <TextBlock Text="Extended hold" VerticalAlignment="Center"/>
-                                <CheckBox x:Name="FuzzyShowHold" Content="Hold %" IsChecked="True"
+                                <CheckBox x:Name="FuzzyShowHold" Content="Оценка" IsChecked="True"
                                           Margin="18,0,0,0" VerticalAlignment="Center"
                                           Checked="HoldVisibilityChanged" Unchecked="HoldVisibilityChanged"/>
                         </StackPanel>
@@ -207,52 +219,156 @@
                             <DockPanel>
                                 <Grid DockPanel.Dock="Top" Margin="0,0,0,7">
                                     <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
                                         <ColumnDefinition Width="*"/>
                                         <ColumnDefinition Width="Auto"/>
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock Grid.Column="0" Text="Market state at cursor"
+                                    <Button x:Name="CopyMarketStateButton" Grid.Column="0"
+                                            Width="25" Height="24" Margin="0,0,7,0" Padding="0"
+                                            Background="Transparent" BorderBrush="#AAB8C5"
+                                            ToolTip="Скопировать весь отчёт о состоянии рынка"
+                                            Click="CopyMarketStateClick">
+                                        <TextBlock Text="&#xE8C8;" FontFamily="Segoe MDL2 Assets"
+                                                   FontSize="13" Foreground="#25303D"
+                                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Button>
+                                    <TextBlock Grid.Column="1" Text="Состояние рынка"
                                                FontSize="15" FontWeight="SemiBold" Foreground="#25303D"
                                                VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
-                                    <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="8,0,0,0">
-                                        <TextBlock Text="Model:" FontSize="12" FontWeight="SemiBold"
+                                    <StackPanel Grid.Column="2" Orientation="Horizontal" Margin="8,0,0,0">
+                                        <TextBlock Text="Модель:" FontSize="12" FontWeight="SemiBold"
                                                    Foreground="#25303D" VerticalAlignment="Center"/>
                                         <ComboBox x:Name="PositionProfile" Width="92" Height="24" Margin="6,0,0,0"
                                                   SelectedIndex="1" SelectionChanged="PositionProfileChanged">
                                             <ComboBoxItem Content="Soft"/>
                                             <ComboBoxItem Content="Standard"/>
-                                            <ComboBoxItem Content="Strong"/>
+                                            <ComboBoxItem Content="Hard"/>
                                         </ComboBox>
                                     </StackPanel>
                                 </Grid>
-                                <Border x:Name="OperationalPositionBorder" DockPanel.Dock="Top"
-                                        Margin="0,0,0,9" Padding="9,7"
-                                        Background="#FFFFFF" BorderBrush="#B9C8D5"
-                                        BorderThickness="1" CornerRadius="4">
-                                    <StackPanel>
-                                        <TextBlock x:Name="OperationalPositionTitle"
-                                                   Text="MODEL POSITION"
-                                                   FontSize="12.5" FontWeight="Bold"
-                                                   Foreground="#25303D" Margin="0,0,0,4"/>
-                                        <TextBlock x:Name="OperationalPositionText"
-                                                   Text="Waiting for calculation"
-                                                   TextWrapping="Wrap" FontSize="12"
-                                                   LineHeight="17" Foreground="#303840"/>
-                                    </StackPanel>
-                                </Border>
                                 <ScrollViewer x:Name="FuzzyAnalysisScroll" VerticalScrollBarVisibility="Auto"
                                               HorizontalScrollBarVisibility="Disabled">
-                                    <TextBlock x:Name="FuzzyAnalysisText"
-                                               Text="Calculate the data, then move the cursor over the chart."
-                                               TextWrapping="Wrap" FontSize="12.5" LineHeight="18"
-                                               Foreground="#303840"/>
+                                    <StackPanel>
+                                        <Border x:Name="OperationalPositionBorder"
+                                                Margin="0,0,0,9" Padding="9,7"
+                                                Background="#FFFFFF" BorderBrush="#B9C8D5"
+                                                BorderThickness="1" CornerRadius="4">
+                                            <StackPanel>
+                                                <TextBlock x:Name="OperationalPositionTitle"
+                                                           Text="ПОЗИЦИЯ ПО МОДЕЛИ"
+                                                           FontSize="12.5" FontWeight="Bold"
+                                                           Foreground="#25303D" Margin="0,0,0,4"/>
+                                                <TextBlock x:Name="OperationalEventWarning"
+                                                           Text="" Visibility="Collapsed"
+                                                           TextWrapping="Wrap" FontSize="12" FontWeight="Bold"
+                                                           LineHeight="17" Foreground="#C62828" Margin="0,0,0,4"/>
+                                                <TextBlock x:Name="OperationalVixExpirationNotice"
+                                                           Text="" Visibility="Collapsed"
+                                                           TextWrapping="Wrap" FontSize="12" FontWeight="SemiBold"
+                                                           LineHeight="17" Foreground="#315A7D" Margin="0,0,0,4"/>
+                                                <TextBlock x:Name="OperationalPositionText"
+                                                           Text="Ожидание расчёта"
+                                                           TextWrapping="Wrap" FontSize="12"
+                                                           LineHeight="17" Foreground="#303840"/>
+                                            </StackPanel>
+                                        </Border>
+                                        <TextBlock x:Name="FuzzyAnalysisText"
+                                                   Text="Рассчитайте данные, затем наведите курсор на график."
+                                                   TextWrapping="Wrap" FontSize="12.5" LineHeight="18"
+                                                   Foreground="#303840"/>
+                                        <Border x:Name="TopContributionsBorder" Margin="0,10,0,0" Padding="9,7"
+                                                Background="#FFFFFF" BorderBrush="#B9C8D5"
+                                                BorderThickness="1" CornerRadius="4" Visibility="Collapsed">
+                                            <StackPanel>
+                                                <TextBlock x:Name="TopContributionsTitle"
+                                                           Text="ТОП-10 ПОКАЗАТЕЛЕЙ"
+                                                           TextWrapping="Wrap"
+                                                           FontSize="12.5" FontWeight="Bold"
+                                                           Foreground="#25303D" Margin="0,0,0,4"/>
+                                                <TextBlock x:Name="TopContributionsText"
+                                                           TextWrapping="Wrap" FontSize="12"
+                                                           LineHeight="17" Foreground="#303840"/>
+                                            </StackPanel>
+                                        </Border>
+                                    </StackPanel>
                                 </ScrollViewer>
                             </DockPanel>
                         </Border>
                         <GridSplitter x:Name="FuzzyHorizontalSplitter" Grid.Row="1" Grid.Column="1"
                                       Width="5" HorizontalAlignment="Stretch"
                                       ResizeDirection="Columns" ResizeBehavior="PreviousAndNext"
-                                      Background="#D7CFBB"/>
+                                      Background="#D7CFBB"
+                                      DragCompleted="LayoutSplitterDragCompleted"/>
                         <local:FuzzyStateChart x:Name="FuzzyChart" Grid.Row="1" Grid.Column="2"/>
+                    </Grid>
+                </TabItem>
+                <TabItem x:Name="TradingEnsemblesTab">
+                    <TabItem.Header>
+                        <TextBlock Text="Trading Ensemble" Width="160" TextAlignment="Center"/>
+                    </TabItem.Header>
+                    <Grid Background="White">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        <Border Grid.Row="0" Background="White" BorderBrush="#D7CFBB" BorderThickness="0,0,0,1" Padding="10,5,8,5">
+                          <WrapPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center">
+                            <TextBlock Text="Рабочая директория:" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                            <Grid Width="180" Height="24" Margin="0,0,18,0">
+                                <TextBox x:Name="TradingEnsembleDirectory" Text="D:\TorchSharp4GPU" IsReadOnly="True"
+                                         Padding="4,2,28,2" VerticalContentAlignment="Center"/>
+                                <Button x:Name="TradingDirectoryButton" Content="▼" Width="25" Height="22"
+                                        HorizontalAlignment="Right" VerticalAlignment="Center"
+                                        ToolTip="Выбрать рабочую директорию"
+                                        Click="OpenTradingDirectoryTreeClick"/>
+                                <Popup x:Name="TradingDirectoryPopup" Placement="Bottom"
+                                       PlacementTarget="{Binding ElementName=TradingEnsembleDirectory}"
+                                       StaysOpen="False" AllowsTransparency="True">
+                                    <Border Width="430" Height="420" Background="White" BorderBrush="#8A8170"
+                                            BorderThickness="1" CornerRadius="2" Padding="8">
+                                        <DockPanel>
+                                            <TextBlock DockPanel.Dock="Top" Text="Выберите рабочую директорию"
+                                                       FontWeight="SemiBold" Margin="2,0,2,7"/>
+                                            <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal"
+                                                        HorizontalAlignment="Right" Margin="0,8,0,0">
+                                                <Button Content="Выбрать" Width="88" Height="25" Margin="0,0,7,0"
+                                                        Click="SelectTradingDirectoryClick"/>
+                                                <Button Content="Закрыть" Width="78" Height="25"
+                                                        Click="CloseTradingDirectoryTreeClick"/>
+                                            </StackPanel>
+                                            <Border BorderBrush="#D7CFBB" BorderThickness="1" Background="White">
+                                                <TreeView x:Name="TradingDirectoryTree"
+                                                          MouseDoubleClick="TradingDirectoryTreeMouseDoubleClick"/>
+                                            </Border>
+                                        </DockPanel>
+                                    </Border>
+                                </Popup>
+                            </Grid>
+                            <CheckBox x:Name="TradingShowSp500" Content="S&amp;P 500" IsChecked="True" Margin="0,0,16,0"
+                                      VerticalAlignment="Center" Checked="TradingEnsembleOptionsChanged" Unchecked="TradingEnsembleOptionsChanged"/>
+                            <CheckBox x:Name="TradingShowZz1" Content="ZZ1" IsChecked="True" Margin="0,0,14,0"
+                                      VerticalAlignment="Center" Checked="TradingEnsembleOptionsChanged" Unchecked="TradingEnsembleOptionsChanged"/>
+                            <CheckBox x:Name="TradingShowZz2" Content="ZZ2" IsChecked="True" Margin="0,0,14,0"
+                                      VerticalAlignment="Center" Checked="TradingEnsembleOptionsChanged" Unchecked="TradingEnsembleOptionsChanged"/>
+                            <CheckBox x:Name="TradingShowZz3" Content="ZZ3" IsChecked="True" Margin="0,0,18,0"
+                                      VerticalAlignment="Center" Checked="TradingEnsembleOptionsChanged" Unchecked="TradingEnsembleOptionsChanged"/>
+                            <TextBlock Text="Forecast" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                            <Button Content="−" Width="23" Height="22" Padding="0" Click="DecreaseTradingForecastClick"/>
+                            <TextBox x:Name="TradingForecastValue" Text="10" Width="34" Height="22" Margin="3,0"
+                                     IsReadOnly="True" TextAlignment="Center" VerticalContentAlignment="Center"/>
+                            <Button Content="+" Width="23" Height="22" Padding="0" Margin="0,0,10,0"
+                                    Click="IncreaseTradingForecastClick"/>
+                            <TextBlock x:Name="TradingCalculationStatus" Text="Forecast: ожидание данных"
+                                       MinWidth="190" Margin="0,0,18,0" VerticalAlignment="Center"
+                                       FontWeight="SemiBold" Foreground="#B56700" TextTrimming="CharacterEllipsis"/>
+                            <CheckBox x:Name="TradingShowEma" Content="EMA 20/50/100/200" IsChecked="False"
+                                      VerticalAlignment="Center" Checked="TradingEnsembleOptionsChanged" Unchecked="TradingEnsembleOptionsChanged"/>
+                            <CheckBox x:Name="TradingShowScoring" Content="Scoring classification" IsChecked="False"
+                                      Margin="28,0,0,0" VerticalAlignment="Center"
+                                      Checked="TradingEnsembleOptionsChanged" Unchecked="TradingEnsembleOptionsChanged"/>
+                          </WrapPanel>
+                        </Border>
+                        <local:TradingEnsembleChart x:Name="TradingEnsembleChart" Grid.Row="1"/>
                     </Grid>
                 </TabItem>
                 <TabItem x:Name="ZweigTab">
@@ -267,7 +383,7 @@
                                       Checked="ZweigModeChanged" Unchecked="ZweigModeChanged"/>
                             <TextBlock x:Name="ZweigModeText" Margin="18,0,0,0" VerticalAlignment="Center"
                                        Text="Current: Strong" Foreground="#087443" FontWeight="SemiBold"/>
-                            <CheckBox x:Name="ZweigShowHold" Content="Hold %" IsChecked="True"
+                            <CheckBox x:Name="ZweigShowHold" Content="Оценка" IsChecked="True"
                                       Margin="18,0,0,0" VerticalAlignment="Center"
                                       Checked="HoldVisibilityChanged" Unchecked="HoldVisibilityChanged"/>
                         </StackPanel>
@@ -281,14 +397,14 @@
                     <Grid Background="White">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="2*"/>
+                            <RowDefinition x:Name="ContangoTopRow" Height="2*"/>
                             <RowDefinition Height="5"/>
-                            <RowDefinition Height="*"/>
+                            <RowDefinition x:Name="ContangoBottomRow" Height="*"/>
                         </Grid.RowDefinitions>
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition x:Name="ContangoLeftColumn" Width="*"/>
                             <ColumnDefinition Width="5"/>
-                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition x:Name="ContangoRightColumn" Width="*"/>
                         </Grid.ColumnDefinitions>
                         <StackPanel Grid.Row="0" Grid.Column="0" Orientation="Horizontal"
                                     HorizontalAlignment="Left" Margin="10,3,4,3">
@@ -330,14 +446,14 @@
                         </StackPanel>
                         <local:ContangoChart x:Name="ContangoChart" Grid.Row="1" Grid.Column="0"/>
                         <local:BreadthChart x:Name="ContangoSpChart" Grid.Row="1" Grid.Column="2"/>
-                        <GridSplitter Grid.Row="2" Grid.Column="0" Height="5" HorizontalAlignment="Stretch"
-                                      Background="#D7CFBB"/>
-                        <GridSplitter Grid.Row="2" Grid.Column="2" Height="5" HorizontalAlignment="Stretch"
-                                      Background="#D7CFBB"/>
+                        <GridSplitter x:Name="ContangoLeftHorizontalSplitter" Grid.Row="2" Grid.Column="0" Height="5" HorizontalAlignment="Stretch"
+                                      Background="#D7CFBB" DragCompleted="LayoutSplitterDragCompleted"/>
+                        <GridSplitter x:Name="ContangoRightHorizontalSplitter" Grid.Row="2" Grid.Column="2" Height="5" HorizontalAlignment="Stretch"
+                                      Background="#D7CFBB" DragCompleted="LayoutSplitterDragCompleted"/>
                         <local:BreadthChart x:Name="ContangoSvxyChart" Grid.Row="3" Grid.Column="0"/>
                         <local:MyRsiChart x:Name="ContangoMyRsiChart" Grid.Row="3" Grid.Column="2"/>
-                        <GridSplitter Grid.RowSpan="4" Grid.Column="1" Width="5" HorizontalAlignment="Stretch"
-                                      Background="#D7CFBB"/>
+                        <GridSplitter x:Name="ContangoVerticalSplitter" Grid.RowSpan="4" Grid.Column="1" Width="5" HorizontalAlignment="Stretch"
+                                      Background="#D7CFBB" DragCompleted="LayoutSplitterDragCompleted"/>
                         <Border x:Name="ContangoWaitBanner" Grid.RowSpan="4" Grid.ColumnSpan="3" Panel.ZIndex="1000"
                                 HorizontalAlignment="Center" VerticalAlignment="Top"
                                 Margin="0,10,0,0" Padding="18,7"

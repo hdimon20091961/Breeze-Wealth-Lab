@@ -13,13 +13,13 @@
   "sources": {
     "B1": {
       "title": "Широты S&P — первый ролик, повторная оцифровка",
-      "video": "Исходные видео для обучения/широтыS&P.mp4",
-      "transcript": "artifacts/breeze_ai_reprocessed_20261012/transcript/transcript.txt",
+      "video": "research/inputs/videos/широтыS&P.mp4",
+      "transcript": "research/artifacts/breeze_ai_reprocessed_20261012/transcript/transcript.txt",
       "frame_dirs": [
-        "artifacts/breeze_ai_reprocessed_20261012/hold_frames",
-        "artifacts/breeze_ai_reprocessed_20261012/anchor_frames"
+        "research/artifacts/breeze_ai_reprocessed_20261012/hold_frames",
+        "research/artifacts/breeze_ai_reprocessed_20261012/anchor_frames"
       ],
-      "legacy": "artifacts/breeze_ai/decision_rules.json",
+      "legacy": "research/artifacts/breeze_ai/decision_rules.json",
       "video_sha256": "ce90d6ccce1db0cf66001c5ffbf295e30c250d8e8c26bdd65818ae0ea9697a69",
       "transcript_sha256": "1b6e1bb23aa87daf75f1e1d5f46f4dcb9e676eb647d17292274f9de1665ce01d",
       "transcript_segments": 1198,
@@ -29,10 +29,10 @@
     },
     "B2": {
       "title": "Широты S&P 2 — MyRSI и EMA",
-      "video": "Исходные видео для обучения/широтыS&P2.mp4",
-      "transcript": "artifacts/Breeze_AI_2/transcript/transcript.txt",
+      "video": "research/inputs/videos/широтыS&P2.mp4",
+      "transcript": "research/artifacts/Breeze_AI_2/transcript/transcript.txt",
       "frame_dirs": [
-        "artifacts/Breeze_AI_2/frames"
+        "research/artifacts/Breeze_AI_2/frames"
       ],
       "video_sha256": "a8433096fc4bb31de71035597484337ed9097ef97647ef2351d3ab3a86887712",
       "transcript_sha256": "780ff69c9298f184b8d3c79862e09594df966f62e0d40800ae12a08dea8265b8",
@@ -43,11 +43,11 @@
     },
     "C": {
       "title": "Contango 1",
-      "video": "Исходные видео для обучения/contango1.mp4",
-      "transcript": "artifacts/Contango_1/transcript/transcript.txt",
+      "video": "research/inputs/videos/contango1.mp4",
+      "transcript": "research/artifacts/Contango_1/transcript/transcript.txt",
       "frame_dirs": [
-        "artifacts/Contango_1/hold_frames",
-        "artifacts/Contango_1/anchor_frames"
+        "research/artifacts/Contango_1/hold_frames",
+        "research/artifacts/Contango_1/anchor_frames"
       ],
       "video_sha256": "3e84d1387a01b85edab8f485f6d4e62c720b8d4170fcc133d6f1f58f9a9e7d3a",
       "transcript_sha256": "1ed8e13dd52ac7220c4588e65c0e32f6b845fbfb2a365c7779e786dcb7086991",
@@ -58,11 +58,11 @@
     },
     "P": {
       "title": "Подхват 1",
-      "video": "Исходные видео для обучения/подхват1.mp4",
-      "transcript": "artifacts/Podhvat_1/transcript/transcript.txt",
+      "video": "research/inputs/videos/подхват1.mp4",
+      "transcript": "research/artifacts/Podhvat_1/transcript/transcript.txt",
       "frame_dirs": [
-        "artifacts/Podhvat_1/hold_frames",
-        "artifacts/Podhvat_1/anchor_frames"
+        "research/artifacts/Podhvat_1/hold_frames",
+        "research/artifacts/Podhvat_1/anchor_frames"
       ],
       "video_sha256": "416428bf0d702960673a59ea9303edd665f377702e4bfe418059d3ca1e8a4a1e",
       "transcript_sha256": "4713fabc357fa6a3529856835e888fcdb229370d826bcbacae24961531b9b129",
@@ -107,7 +107,7 @@
       "transcript_line_start": 5,
       "navigation_frames": [
         {
-          "path": "artifacts/Podhvat_1/hold_frames/hold_003_00-01-36.jpg",
+          "path": "research/artifacts/Podhvat_1/hold_frames/hold_003_00-01-36.jpg",
           "timestamp": "00:01:36",
           "status": "temporal_navigation_not_semantically_verified"
         }
@@ -149,17 +149,17 @@
       "transcript_line_start": 5,
       "navigation_frames": [
         {
-          "path": "artifacts/Podhvat_1/hold_frames/hold_007_00-03-12.jpg",
+          "path": "research/artifacts/Podhvat_1/hold_frames/hold_007_00-03-12.jpg",
           "timestamp": "00:03:12",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/Podhvat_1/anchor_frames/anchor_003_00-03-13.jpg",
+          "path": "research/artifacts/Podhvat_1/anchor_frames/anchor_003_00-03-13.jpg",
           "timestamp": "00:03:13",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/Podhvat_1/anchor_frames/anchor_002_00-02-45.jpg",
+          "path": "research/artifacts/Podhvat_1/anchor_frames/anchor_002_00-02-45.jpg",
           "timestamp": "00:02:45",
           "status": "temporal_navigation_not_semantically_verified"
         }
@@ -198,17 +198,17 @@
       "transcript_line_start": 5,
       "navigation_frames": [
         {
-          "path": "artifacts/Podhvat_1/hold_frames/hold_006_00-02-42.jpg",
+          "path": "research/artifacts/Podhvat_1/hold_frames/hold_006_00-02-42.jpg",
           "timestamp": "00:02:42",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/Podhvat_1/anchor_frames/anchor_002_00-02-45.jpg",
+          "path": "research/artifacts/Podhvat_1/anchor_frames/anchor_002_00-02-45.jpg",
           "timestamp": "00:02:45",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/Podhvat_1/hold_frames/hold_005_00-02-26.jpg",
+          "path": "research/artifacts/Podhvat_1/hold_frames/hold_005_00-02-26.jpg",
           "timestamp": "00:02:26",
           "status": "temporal_navigation_not_semantically_verified"
         }
@@ -242,17 +242,17 @@
       "transcript_line_start": 13,
       "navigation_frames": [
         {
-          "path": "artifacts/Podhvat_1/anchor_frames/anchor_005_00-04-26.jpg",
+          "path": "research/artifacts/Podhvat_1/anchor_frames/anchor_005_00-04-26.jpg",
           "timestamp": "00:04:26",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/Podhvat_1/hold_frames/hold_010_00-04-26.jpg",
+          "path": "research/artifacts/Podhvat_1/hold_frames/hold_010_00-04-26.jpg",
           "timestamp": "00:04:26",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/Podhvat_1/hold_frames/hold_011_00-04-53.jpg",
+          "path": "research/artifacts/Podhvat_1/hold_frames/hold_011_00-04-53.jpg",
           "timestamp": "00:04:53",
           "status": "temporal_navigation_not_semantically_verified"
         }
@@ -291,17 +291,17 @@
       "transcript_line_start": 39,
       "navigation_frames": [
         {
-          "path": "artifacts/Podhvat_1/hold_frames/hold_036_00-12-52.jpg",
+          "path": "research/artifacts/Podhvat_1/hold_frames/hold_036_00-12-52.jpg",
           "timestamp": "00:12:52",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/Podhvat_1/hold_frames/hold_035_00-12-38.jpg",
+          "path": "research/artifacts/Podhvat_1/hold_frames/hold_035_00-12-38.jpg",
           "timestamp": "00:12:38",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/Podhvat_1/anchor_frames/anchor_012_00-13-08.jpg",
+          "path": "research/artifacts/Podhvat_1/anchor_frames/anchor_012_00-13-08.jpg",
           "timestamp": "00:13:08",
           "status": "temporal_navigation_not_semantically_verified"
         }
@@ -339,17 +339,17 @@
       "transcript_line_start": 41,
       "navigation_frames": [
         {
-          "path": "artifacts/Podhvat_1/anchor_frames/anchor_012_00-13-08.jpg",
+          "path": "research/artifacts/Podhvat_1/anchor_frames/anchor_012_00-13-08.jpg",
           "timestamp": "00:13:08",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/Podhvat_1/hold_frames/hold_036_00-12-52.jpg",
+          "path": "research/artifacts/Podhvat_1/hold_frames/hold_036_00-12-52.jpg",
           "timestamp": "00:12:52",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/Podhvat_1/hold_frames/hold_037_00-13-17.jpg",
+          "path": "research/artifacts/Podhvat_1/hold_frames/hold_037_00-13-17.jpg",
           "timestamp": "00:13:17",
           "status": "temporal_navigation_not_semantically_verified"
         }
@@ -396,17 +396,17 @@
       "transcript_line_start": 71,
       "navigation_frames": [
         {
-          "path": "artifacts/Breeze_AI_2/frames/hold_070_00-21-19.jpg",
+          "path": "research/artifacts/Breeze_AI_2/frames/hold_070_00-21-19.jpg",
           "timestamp": "00:21:19",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/Breeze_AI_2/frames/hold_071_00-21-30.jpg",
+          "path": "research/artifacts/Breeze_AI_2/frames/hold_071_00-21-30.jpg",
           "timestamp": "00:21:30",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/Breeze_AI_2/frames/hold_069_00-21-00.jpg",
+          "path": "research/artifacts/Breeze_AI_2/frames/hold_069_00-21-00.jpg",
           "timestamp": "00:21:00",
           "status": "temporal_navigation_not_semantically_verified"
         }
@@ -440,12 +440,12 @@
       "transcript_line_start": 253,
       "navigation_frames": [
         {
-          "path": "artifacts/Contango_1/hold_frames/hold_062_00-34-55.jpg",
+          "path": "research/artifacts/Contango_1/hold_frames/hold_062_00-34-55.jpg",
           "timestamp": "00:34:55",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/Contango_1/hold_frames/hold_063_00-35-14.jpg",
+          "path": "research/artifacts/Contango_1/hold_frames/hold_063_00-35-14.jpg",
           "timestamp": "00:35:14",
           "status": "temporal_navigation_not_semantically_verified"
         }
@@ -717,17 +717,17 @@
       "transcript_line_start": 564,
       "navigation_frames": [
         {
-          "path": "artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_073_00-29-41.jpg",
+          "path": "research/artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_073_00-29-41.jpg",
           "timestamp": "00:29:41",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_074_00-29-53.jpg",
+          "path": "research/artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_074_00-29-53.jpg",
           "timestamp": "00:29:53",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/breeze_ai_reprocessed_20261012/anchor_frames/anchor_010_00-29-59.jpg",
+          "path": "research/artifacts/breeze_ai_reprocessed_20261012/anchor_frames/anchor_010_00-29-59.jpg",
           "timestamp": "00:29:59",
           "status": "temporal_navigation_not_semantically_verified"
         }
@@ -784,17 +784,17 @@
       "transcript_line_start": 779,
       "navigation_frames": [
         {
-          "path": "artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_084_00-34-29.jpg",
+          "path": "research/artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_084_00-34-29.jpg",
           "timestamp": "00:34:29",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_083_00-33-58.jpg",
+          "path": "research/artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_083_00-33-58.jpg",
           "timestamp": "00:33:58",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_085_00-34-46.jpg",
+          "path": "research/artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_085_00-34-46.jpg",
           "timestamp": "00:34:46",
           "status": "temporal_navigation_not_semantically_verified"
         }
@@ -828,17 +828,17 @@
       "transcript_line_start": 21,
       "navigation_frames": [
         {
-          "path": "artifacts/Breeze_AI_2/frames/hold_020_00-05-32.jpg",
+          "path": "research/artifacts/Breeze_AI_2/frames/hold_020_00-05-32.jpg",
           "timestamp": "00:05:32",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/Breeze_AI_2/frames/hold_019_00-05-14.jpg",
+          "path": "research/artifacts/Breeze_AI_2/frames/hold_019_00-05-14.jpg",
           "timestamp": "00:05:14",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/Breeze_AI_2/frames/hold_021_00-05-44.jpg",
+          "path": "research/artifacts/Breeze_AI_2/frames/hold_021_00-05-44.jpg",
           "timestamp": "00:05:44",
           "status": "temporal_navigation_not_semantically_verified"
         }
@@ -870,17 +870,17 @@
       "transcript_line_start": 21,
       "navigation_frames": [
         {
-          "path": "artifacts/Podhvat_1/hold_frames/hold_016_00-06-42.jpg",
+          "path": "research/artifacts/Podhvat_1/hold_frames/hold_016_00-06-42.jpg",
           "timestamp": "00:06:42",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/Podhvat_1/hold_frames/hold_015_00-06-26.jpg",
+          "path": "research/artifacts/Podhvat_1/hold_frames/hold_015_00-06-26.jpg",
           "timestamp": "00:06:26",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/Podhvat_1/hold_frames/hold_017_00-06-56.jpg",
+          "path": "research/artifacts/Podhvat_1/hold_frames/hold_017_00-06-56.jpg",
           "timestamp": "00:06:56",
           "status": "temporal_navigation_not_semantically_verified"
         }
@@ -924,17 +924,17 @@
       "transcript_line_start": 51,
       "navigation_frames": [
         {
-          "path": "artifacts/Podhvat_1/anchor_frames/anchor_016_00-16-52.jpg",
+          "path": "research/artifacts/Podhvat_1/anchor_frames/anchor_016_00-16-52.jpg",
           "timestamp": "00:16:52",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/Podhvat_1/hold_frames/hold_047_00-16-53.jpg",
+          "path": "research/artifacts/Podhvat_1/hold_frames/hold_047_00-16-53.jpg",
           "timestamp": "00:16:53",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/Podhvat_1/hold_frames/hold_046_00-16-38.jpg",
+          "path": "research/artifacts/Podhvat_1/hold_frames/hold_046_00-16-38.jpg",
           "timestamp": "00:16:38",
           "status": "temporal_navigation_not_semantically_verified"
         }
@@ -968,17 +968,17 @@
       "transcript_line_start": 21,
       "navigation_frames": [
         {
-          "path": "artifacts/Breeze_AI_2/frames/hold_020_00-05-32.jpg",
+          "path": "research/artifacts/Breeze_AI_2/frames/hold_020_00-05-32.jpg",
           "timestamp": "00:05:32",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/Breeze_AI_2/frames/hold_019_00-05-14.jpg",
+          "path": "research/artifacts/Breeze_AI_2/frames/hold_019_00-05-14.jpg",
           "timestamp": "00:05:14",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/Breeze_AI_2/frames/hold_021_00-05-44.jpg",
+          "path": "research/artifacts/Breeze_AI_2/frames/hold_021_00-05-44.jpg",
           "timestamp": "00:05:44",
           "status": "temporal_navigation_not_semantically_verified"
         }
@@ -1012,17 +1012,17 @@
       "transcript_line_start": 56,
       "navigation_frames": [
         {
-          "path": "artifacts/Breeze_AI_2/frames/hold_048_00-15-38.jpg",
+          "path": "research/artifacts/Breeze_AI_2/frames/hold_048_00-15-38.jpg",
           "timestamp": "00:15:38",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/Breeze_AI_2/frames/hold_049_00-15-50.jpg",
+          "path": "research/artifacts/Breeze_AI_2/frames/hold_049_00-15-50.jpg",
           "timestamp": "00:15:50",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/Breeze_AI_2/frames/hold_047_00-15-24.jpg",
+          "path": "research/artifacts/Breeze_AI_2/frames/hold_047_00-15-24.jpg",
           "timestamp": "00:15:24",
           "status": "temporal_navigation_not_semantically_verified"
         }
@@ -1085,12 +1085,12 @@
       "transcript_line_start": 799,
       "navigation_frames": [
         {
-          "path": "artifacts/Contango_1/hold_frames/hold_096_01-01-32.jpg",
+          "path": "research/artifacts/Contango_1/hold_frames/hold_096_01-01-32.jpg",
           "timestamp": "01:01:32",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/Contango_1/hold_frames/hold_097_01-02-17.jpg",
+          "path": "research/artifacts/Contango_1/hold_frames/hold_097_01-02-17.jpg",
           "timestamp": "01:02:17",
           "status": "temporal_navigation_not_semantically_verified"
         }
@@ -1136,7 +1136,7 @@
       "transcript_line_start": 799,
       "navigation_frames": [
         {
-          "path": "artifacts/Contango_1/hold_frames/hold_096_01-01-32.jpg",
+          "path": "research/artifacts/Contango_1/hold_frames/hold_096_01-01-32.jpg",
           "timestamp": "01:01:32",
           "status": "temporal_navigation_not_semantically_verified"
         }
@@ -1172,17 +1172,17 @@
       "transcript_line_start": 4,
       "navigation_frames": [
         {
-          "path": "artifacts/Breeze_AI_2/frames/hold_004_00-01-11.jpg",
+          "path": "research/artifacts/Breeze_AI_2/frames/hold_004_00-01-11.jpg",
           "timestamp": "00:01:11",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/Breeze_AI_2/frames/hold_003_00-01-00.jpg",
+          "path": "research/artifacts/Breeze_AI_2/frames/hold_003_00-01-00.jpg",
           "timestamp": "00:01:00",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/Breeze_AI_2/frames/hold_005_00-01-24.jpg",
+          "path": "research/artifacts/Breeze_AI_2/frames/hold_005_00-01-24.jpg",
           "timestamp": "00:01:24",
           "status": "temporal_navigation_not_semantically_verified"
         }
@@ -1223,17 +1223,17 @@
       "transcript_line_start": 11,
       "navigation_frames": [
         {
-          "path": "artifacts/Breeze_AI_2/frames/hold_013_00-03-30.jpg",
+          "path": "research/artifacts/Breeze_AI_2/frames/hold_013_00-03-30.jpg",
           "timestamp": "00:03:30",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/Breeze_AI_2/frames/hold_012_00-03-17.jpg",
+          "path": "research/artifacts/Breeze_AI_2/frames/hold_012_00-03-17.jpg",
           "timestamp": "00:03:17",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/Breeze_AI_2/frames/hold_014_00-03-54.jpg",
+          "path": "research/artifacts/Breeze_AI_2/frames/hold_014_00-03-54.jpg",
           "timestamp": "00:03:54",
           "status": "temporal_navigation_not_semantically_verified"
         }
@@ -1268,17 +1268,17 @@
       "transcript_line_start": 74,
       "navigation_frames": [
         {
-          "path": "artifacts/Breeze_AI_2/frames/hold_066_00-20-14.jpg",
+          "path": "research/artifacts/Breeze_AI_2/frames/hold_066_00-20-14.jpg",
           "timestamp": "00:20:14",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/Breeze_AI_2/frames/hold_067_00-20-30.jpg",
+          "path": "research/artifacts/Breeze_AI_2/frames/hold_067_00-20-30.jpg",
           "timestamp": "00:20:30",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/Breeze_AI_2/frames/hold_065_00-20-04.jpg",
+          "path": "research/artifacts/Breeze_AI_2/frames/hold_065_00-20-04.jpg",
           "timestamp": "00:20:04",
           "status": "temporal_navigation_not_semantically_verified"
         }
@@ -1323,17 +1323,17 @@
       "transcript_line_start": 45,
       "navigation_frames": [
         {
-          "path": "artifacts/Breeze_AI_2/frames/hold_041_00-14-04.jpg",
+          "path": "research/artifacts/Breeze_AI_2/frames/hold_041_00-14-04.jpg",
           "timestamp": "00:14:04",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/Breeze_AI_2/frames/hold_042_00-14-24.jpg",
+          "path": "research/artifacts/Breeze_AI_2/frames/hold_042_00-14-24.jpg",
           "timestamp": "00:14:24",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/Breeze_AI_2/frames/hold_040_00-13-45.jpg",
+          "path": "research/artifacts/Breeze_AI_2/frames/hold_040_00-13-45.jpg",
           "timestamp": "00:13:45",
           "status": "temporal_navigation_not_semantically_verified"
         }
@@ -1372,17 +1372,17 @@
       "transcript_line_start": 43,
       "navigation_frames": [
         {
-          "path": "artifacts/Contango_1/hold_frames/hold_009_00-07-11.jpg",
+          "path": "research/artifacts/Contango_1/hold_frames/hold_009_00-07-11.jpg",
           "timestamp": "00:07:11",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/Contango_1/hold_frames/hold_008_00-06-31.jpg",
+          "path": "research/artifacts/Contango_1/hold_frames/hold_008_00-06-31.jpg",
           "timestamp": "00:06:31",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/Contango_1/hold_frames/hold_010_00-07-31.jpg",
+          "path": "research/artifacts/Contango_1/hold_frames/hold_010_00-07-31.jpg",
           "timestamp": "00:07:31",
           "status": "temporal_navigation_not_semantically_verified"
         }
@@ -1425,7 +1425,7 @@
       "transcript_line_start": 543,
       "navigation_frames": [
         {
-          "path": "artifacts/Contango_1/anchor_frames/anchor_052_00-50-16.jpg",
+          "path": "research/artifacts/Contango_1/anchor_frames/anchor_052_00-50-16.jpg",
           "timestamp": "00:50:16",
           "status": "temporal_navigation_not_semantically_verified"
         }
@@ -1462,12 +1462,12 @@
       "transcript_line_start": 156,
       "navigation_frames": [
         {
-          "path": "artifacts/Contango_1/anchor_frames/anchor_013_00-24-06.jpg",
+          "path": "research/artifacts/Contango_1/anchor_frames/anchor_013_00-24-06.jpg",
           "timestamp": "00:24:06",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/Contango_1/hold_frames/hold_041_00-23-55.jpg",
+          "path": "research/artifacts/Contango_1/hold_frames/hold_041_00-23-55.jpg",
           "timestamp": "00:23:55",
           "status": "temporal_navigation_not_semantically_verified"
         }
@@ -1540,17 +1540,17 @@
       "transcript_line_start": 833,
       "navigation_frames": [
         {
-          "path": "artifacts/Contango_1/anchor_frames/anchor_073_01-03-01.jpg",
+          "path": "research/artifacts/Contango_1/anchor_frames/anchor_073_01-03-01.jpg",
           "timestamp": "01:03:01",
           "status": "full_frame_inspected_not_detector_validated"
         },
         {
-          "path": "artifacts/Contango_1/hold_frames/hold_100_01-03-17.jpg",
+          "path": "research/artifacts/Contango_1/hold_frames/hold_100_01-03-17.jpg",
           "timestamp": "01:03:17",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/Contango_1/hold_frames/hold_101_01-03-32.jpg",
+          "path": "research/artifacts/Contango_1/hold_frames/hold_101_01-03-32.jpg",
           "timestamp": "01:03:32",
           "status": "temporal_navigation_not_semantically_verified"
         }
@@ -1815,17 +1815,17 @@
       "transcript_line_start": 178,
       "navigation_frames": [
         {
-          "path": "artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_030_00-13-00.jpg",
+          "path": "research/artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_030_00-13-00.jpg",
           "timestamp": "00:13:00",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_029_00-12-47.jpg",
+          "path": "research/artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_029_00-12-47.jpg",
           "timestamp": "00:12:47",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_031_00-13-14.jpg",
+          "path": "research/artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_031_00-13-14.jpg",
           "timestamp": "00:13:14",
           "status": "temporal_navigation_not_semantically_verified"
         }
@@ -2097,17 +2097,17 @@
       "transcript_line_start": 564,
       "navigation_frames": [
         {
-          "path": "artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_073_00-29-41.jpg",
+          "path": "research/artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_073_00-29-41.jpg",
           "timestamp": "00:29:41",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_074_00-29-53.jpg",
+          "path": "research/artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_074_00-29-53.jpg",
           "timestamp": "00:29:53",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/breeze_ai_reprocessed_20261012/anchor_frames/anchor_010_00-29-59.jpg",
+          "path": "research/artifacts/breeze_ai_reprocessed_20261012/anchor_frames/anchor_010_00-29-59.jpg",
           "timestamp": "00:29:59",
           "status": "temporal_navigation_not_semantically_verified"
         }
@@ -2162,17 +2162,17 @@
       "transcript_line_start": 664,
       "navigation_frames": [
         {
-          "path": "artifacts/breeze_ai_reprocessed_20261012/anchor_frames/anchor_009_00-29-26.jpg",
+          "path": "research/artifacts/breeze_ai_reprocessed_20261012/anchor_frames/anchor_009_00-29-26.jpg",
           "timestamp": "00:29:26",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_072_00-29-20.jpg",
+          "path": "research/artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_072_00-29-20.jpg",
           "timestamp": "00:29:20",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_073_00-29-41.jpg",
+          "path": "research/artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_073_00-29-41.jpg",
           "timestamp": "00:29:41",
           "status": "temporal_navigation_not_semantically_verified"
         }
@@ -2205,12 +2205,12 @@
       "transcript_line_start": 28,
       "navigation_frames": [
         {
-          "path": "artifacts/Podhvat_1/hold_frames/hold_026_00-09-12.jpg",
+          "path": "research/artifacts/Podhvat_1/hold_frames/hold_026_00-09-12.jpg",
           "timestamp": "00:09:12",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/Podhvat_1/hold_frames/hold_025_00-08-56.jpg",
+          "path": "research/artifacts/Podhvat_1/hold_frames/hold_025_00-08-56.jpg",
           "timestamp": "00:08:56",
           "status": "temporal_navigation_not_semantically_verified"
         }
@@ -2254,17 +2254,17 @@
       "transcript_line_start": 25,
       "navigation_frames": [
         {
-          "path": "artifacts/Breeze_AI_2/frames/hold_026_00-07-20.jpg",
+          "path": "research/artifacts/Breeze_AI_2/frames/hold_026_00-07-20.jpg",
           "timestamp": "00:07:20",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/Breeze_AI_2/frames/hold_025_00-06-56.jpg",
+          "path": "research/artifacts/Breeze_AI_2/frames/hold_025_00-06-56.jpg",
           "timestamp": "00:06:56",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/Breeze_AI_2/frames/hold_024_00-06-44.jpg",
+          "path": "research/artifacts/Breeze_AI_2/frames/hold_024_00-06-44.jpg",
           "timestamp": "00:06:44",
           "status": "temporal_navigation_not_semantically_verified"
         }
@@ -2303,17 +2303,17 @@
       "transcript_line_start": 102,
       "navigation_frames": [
         {
-          "path": "artifacts/Breeze_AI_2/frames/hold_091_00-28-17.jpg",
+          "path": "research/artifacts/Breeze_AI_2/frames/hold_091_00-28-17.jpg",
           "timestamp": "00:28:17",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/Breeze_AI_2/frames/hold_090_00-27-54.jpg",
+          "path": "research/artifacts/Breeze_AI_2/frames/hold_090_00-27-54.jpg",
           "timestamp": "00:27:54",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/Breeze_AI_2/frames/hold_089_00-27-38.jpg",
+          "path": "research/artifacts/Breeze_AI_2/frames/hold_089_00-27-38.jpg",
           "timestamp": "00:27:38",
           "status": "temporal_navigation_not_semantically_verified"
         }
@@ -2423,17 +2423,17 @@
       "transcript_line_start": 942,
       "navigation_frames": [
         {
-          "path": "artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_099_00-41-30.jpg",
+          "path": "research/artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_099_00-41-30.jpg",
           "timestamp": "00:41:30",
           "status": "full_frame_inspected_not_detector_validated"
         },
         {
-          "path": "artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_100_00-42-06.jpg",
+          "path": "research/artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_100_00-42-06.jpg",
           "timestamp": "00:42:06",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_101_00-42-20.jpg",
+          "path": "research/artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_101_00-42-20.jpg",
           "timestamp": "00:42:20",
           "status": "temporal_navigation_not_semantically_verified"
         }
@@ -2480,17 +2480,17 @@
       "transcript_line_start": 208,
       "navigation_frames": [
         {
-          "path": "artifacts/Contango_1/hold_frames/hold_053_00-30-31.jpg",
+          "path": "research/artifacts/Contango_1/hold_frames/hold_053_00-30-31.jpg",
           "timestamp": "00:30:31",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/Contango_1/anchor_frames/anchor_016_00-29-36.jpg",
+          "path": "research/artifacts/Contango_1/anchor_frames/anchor_016_00-29-36.jpg",
           "timestamp": "00:29:36",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/Contango_1/anchor_frames/anchor_017_00-31-21.jpg",
+          "path": "research/artifacts/Contango_1/anchor_frames/anchor_017_00-31-21.jpg",
           "timestamp": "00:31:21",
           "status": "temporal_navigation_not_semantically_verified"
         }
@@ -2603,17 +2603,17 @@
       "transcript_line_start": 859,
       "navigation_frames": [
         {
-          "path": "artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_094_00-38-26.jpg",
+          "path": "research/artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_094_00-38-26.jpg",
           "timestamp": "00:38:26",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_095_00-38-38.jpg",
+          "path": "research/artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_095_00-38-38.jpg",
           "timestamp": "00:38:38",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_096_00-38-50.jpg",
+          "path": "research/artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_096_00-38-50.jpg",
           "timestamp": "00:38:50",
           "status": "temporal_navigation_not_semantically_verified"
         }
@@ -2748,17 +2748,17 @@
       "transcript_line_start": 1081,
       "navigation_frames": [
         {
-          "path": "artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_112_00-47-50.jpg",
+          "path": "research/artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_112_00-47-50.jpg",
           "timestamp": "00:47:50",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_113_00-48-16.jpg",
+          "path": "research/artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_113_00-48-16.jpg",
           "timestamp": "00:48:16",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_111_00-47-20.jpg",
+          "path": "research/artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_111_00-47-20.jpg",
           "timestamp": "00:47:20",
           "status": "temporal_navigation_not_semantically_verified"
         }
@@ -2815,17 +2815,17 @@
       "transcript_line_start": 614,
       "navigation_frames": [
         {
-          "path": "artifacts/Contango_1/anchor_frames/anchor_056_00-54-06.jpg",
+          "path": "research/artifacts/Contango_1/anchor_frames/anchor_056_00-54-06.jpg",
           "timestamp": "00:54:06",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/Contango_1/anchor_frames/anchor_057_00-54-10.jpg",
+          "path": "research/artifacts/Contango_1/anchor_frames/anchor_057_00-54-10.jpg",
           "timestamp": "00:54:10",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/Contango_1/hold_frames/hold_090_00-53-44.jpg",
+          "path": "research/artifacts/Contango_1/hold_frames/hold_090_00-53-44.jpg",
           "timestamp": "00:53:44",
           "status": "temporal_navigation_not_semantically_verified"
         }
@@ -2871,12 +2871,12 @@
       "transcript_line_start": 744,
       "navigation_frames": [
         {
-          "path": "artifacts/breeze_ai_reprocessed_20261012/anchor_frames/anchor_012_00-32-44.jpg",
+          "path": "research/artifacts/breeze_ai_reprocessed_20261012/anchor_frames/anchor_012_00-32-44.jpg",
           "timestamp": "00:32:44",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_080_00-32-46.jpg",
+          "path": "research/artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_080_00-32-46.jpg",
           "timestamp": "00:32:46",
           "status": "temporal_navigation_not_semantically_verified"
         }
@@ -2928,17 +2928,17 @@
       "transcript_line_start": 391,
       "navigation_frames": [
         {
-          "path": "artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_041_00-17-14.jpg",
+          "path": "research/artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_041_00-17-14.jpg",
           "timestamp": "00:17:14",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_040_00-16-50.jpg",
+          "path": "research/artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_040_00-16-50.jpg",
           "timestamp": "00:16:50",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_042_00-17-29.jpg",
+          "path": "research/artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_042_00-17-29.jpg",
           "timestamp": "00:17:29",
           "status": "temporal_navigation_not_semantically_verified"
         }
@@ -3019,17 +3019,17 @@
       "transcript_line_start": 1081,
       "navigation_frames": [
         {
-          "path": "artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_110_00-46-44.jpg",
+          "path": "research/artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_110_00-46-44.jpg",
           "timestamp": "00:46:44",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_109_00-46-25.jpg",
+          "path": "research/artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_109_00-46-25.jpg",
           "timestamp": "00:46:25",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_111_00-47-20.jpg",
+          "path": "research/artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_111_00-47-20.jpg",
           "timestamp": "00:47:20",
           "status": "temporal_navigation_not_semantically_verified"
         }
@@ -3063,12 +3063,12 @@
       "transcript_line_start": 51,
       "navigation_frames": [
         {
-          "path": "artifacts/Podhvat_1/hold_frames/hold_042_00-15-26.jpg",
+          "path": "research/artifacts/Podhvat_1/hold_frames/hold_042_00-15-26.jpg",
           "timestamp": "00:15:26",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/Podhvat_1/hold_frames/hold_043_00-15-42.jpg",
+          "path": "research/artifacts/Podhvat_1/hold_frames/hold_043_00-15-42.jpg",
           "timestamp": "00:15:42",
           "status": "temporal_navigation_not_semantically_verified"
         }
@@ -3105,17 +3105,17 @@
       "transcript_line_start": 88,
       "navigation_frames": [
         {
-          "path": "artifacts/Podhvat_1/hold_frames/hold_067_00-25-42.jpg",
+          "path": "research/artifacts/Podhvat_1/hold_frames/hold_067_00-25-42.jpg",
           "timestamp": "00:25:42",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/Podhvat_1/hold_frames/hold_066_00-25-23.jpg",
+          "path": "research/artifacts/Podhvat_1/hold_frames/hold_066_00-25-23.jpg",
           "timestamp": "00:25:23",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/Podhvat_1/hold_frames/hold_068_00-26-02.jpg",
+          "path": "research/artifacts/Podhvat_1/hold_frames/hold_068_00-26-02.jpg",
           "timestamp": "00:26:02",
           "status": "temporal_navigation_not_semantically_verified"
         }
@@ -3149,17 +3149,17 @@
       "transcript_line_start": 25,
       "navigation_frames": [
         {
-          "path": "artifacts/Podhvat_1/anchor_frames/anchor_008_00-08-08.jpg",
+          "path": "research/artifacts/Podhvat_1/anchor_frames/anchor_008_00-08-08.jpg",
           "timestamp": "00:08:08",
           "status": "full_frame_inspected_not_detector_validated"
         },
         {
-          "path": "artifacts/Podhvat_1/hold_frames/hold_023_00-08-26.jpg",
+          "path": "research/artifacts/Podhvat_1/hold_frames/hold_023_00-08-26.jpg",
           "timestamp": "00:08:26",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/Podhvat_1/hold_frames/hold_024_00-08-42.jpg",
+          "path": "research/artifacts/Podhvat_1/hold_frames/hold_024_00-08-42.jpg",
           "timestamp": "00:08:42",
           "status": "temporal_navigation_not_semantically_verified"
         }
@@ -3227,17 +3227,17 @@
       "transcript_line_start": 556,
       "navigation_frames": [
         {
-          "path": "artifacts/Contango_1/hold_frames/hold_086_00-51-50.jpg",
+          "path": "research/artifacts/Contango_1/hold_frames/hold_086_00-51-50.jpg",
           "timestamp": "00:51:50",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/Contango_1/hold_frames/hold_085_00-51-14.jpg",
+          "path": "research/artifacts/Contango_1/hold_frames/hold_085_00-51-14.jpg",
           "timestamp": "00:51:14",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/Contango_1/anchor_frames/anchor_053_00-50-56.jpg",
+          "path": "research/artifacts/Contango_1/anchor_frames/anchor_053_00-50-56.jpg",
           "timestamp": "00:50:56",
           "status": "temporal_navigation_not_semantically_verified"
         }
@@ -3271,17 +3271,17 @@
       "transcript_line_start": 109,
       "navigation_frames": [
         {
-          "path": "artifacts/Podhvat_1/anchor_frames/anchor_035_00-29-24.jpg",
+          "path": "research/artifacts/Podhvat_1/anchor_frames/anchor_035_00-29-24.jpg",
           "timestamp": "00:29:24",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/Podhvat_1/hold_frames/hold_079_00-29-41.jpg",
+          "path": "research/artifacts/Podhvat_1/hold_frames/hold_079_00-29-41.jpg",
           "timestamp": "00:29:41",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/Podhvat_1/anchor_frames/anchor_034_00-29-16.jpg",
+          "path": "research/artifacts/Podhvat_1/anchor_frames/anchor_034_00-29-16.jpg",
           "timestamp": "00:29:16",
           "status": "temporal_navigation_not_semantically_verified"
         }
@@ -3363,17 +3363,17 @@
       "transcript_line_start": 859,
       "navigation_frames": [
         {
-          "path": "artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_093_00-37-56.jpg",
+          "path": "research/artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_093_00-37-56.jpg",
           "timestamp": "00:37:56",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_092_00-37-32.jpg",
+          "path": "research/artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_092_00-37-32.jpg",
           "timestamp": "00:37:32",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_094_00-38-26.jpg",
+          "path": "research/artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_094_00-38-26.jpg",
           "timestamp": "00:38:26",
           "status": "temporal_navigation_not_semantically_verified"
         }
@@ -3412,17 +3412,17 @@
       "transcript_line_start": 54,
       "navigation_frames": [
         {
-          "path": "artifacts/Contango_1/anchor_frames/anchor_006_00-09-25.jpg",
+          "path": "research/artifacts/Contango_1/anchor_frames/anchor_006_00-09-25.jpg",
           "timestamp": "00:09:25",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/Contango_1/hold_frames/hold_014_00-09-26.jpg",
+          "path": "research/artifacts/Contango_1/hold_frames/hold_014_00-09-26.jpg",
           "timestamp": "00:09:26",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/Contango_1/hold_frames/hold_015_00-09-44.jpg",
+          "path": "research/artifacts/Contango_1/hold_frames/hold_015_00-09-44.jpg",
           "timestamp": "00:09:44",
           "status": "temporal_navigation_not_semantically_verified"
         }
@@ -3511,17 +3511,17 @@
       "transcript_line_start": 126,
       "navigation_frames": [
         {
-          "path": "artifacts/Contango_1/hold_frames/hold_040_00-23-05.jpg",
+          "path": "research/artifacts/Contango_1/hold_frames/hold_040_00-23-05.jpg",
           "timestamp": "00:23:05",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/Contango_1/hold_frames/hold_041_00-23-55.jpg",
+          "path": "research/artifacts/Contango_1/hold_frames/hold_041_00-23-55.jpg",
           "timestamp": "00:23:55",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/Contango_1/anchor_frames/anchor_013_00-24-06.jpg",
+          "path": "research/artifacts/Contango_1/anchor_frames/anchor_013_00-24-06.jpg",
           "timestamp": "00:24:06",
           "status": "temporal_navigation_not_semantically_verified"
         }
@@ -3562,17 +3562,17 @@
       "transcript_line_start": 238,
       "navigation_frames": [
         {
-          "path": "artifacts/Contango_1/hold_frames/hold_059_00-33-31.jpg",
+          "path": "research/artifacts/Contango_1/hold_frames/hold_059_00-33-31.jpg",
           "timestamp": "00:33:31",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/Contango_1/hold_frames/hold_060_00-34-11.jpg",
+          "path": "research/artifacts/Contango_1/hold_frames/hold_060_00-34-11.jpg",
           "timestamp": "00:34:11",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/Contango_1/hold_frames/hold_061_00-34-25.jpg",
+          "path": "research/artifacts/Contango_1/hold_frames/hold_061_00-34-25.jpg",
           "timestamp": "00:34:25",
           "status": "temporal_navigation_not_semantically_verified"
         }
@@ -3621,17 +3621,17 @@
       "transcript_line_start": 294,
       "navigation_frames": [
         {
-          "path": "artifacts/Contango_1/anchor_frames/anchor_024_00-39-05.jpg",
+          "path": "research/artifacts/Contango_1/anchor_frames/anchor_024_00-39-05.jpg",
           "timestamp": "00:39:05",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/Contango_1/hold_frames/hold_071_00-38-55.jpg",
+          "path": "research/artifacts/Contango_1/hold_frames/hold_071_00-38-55.jpg",
           "timestamp": "00:38:55",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/Contango_1/hold_frames/hold_072_00-39-25.jpg",
+          "path": "research/artifacts/Contango_1/hold_frames/hold_072_00-39-25.jpg",
           "timestamp": "00:39:25",
           "status": "temporal_navigation_not_semantically_verified"
         }
@@ -3773,17 +3773,17 @@
       "transcript_line_start": 502,
       "navigation_frames": [
         {
-          "path": "artifacts/Contango_1/anchor_frames/anchor_053_00-50-56.jpg",
+          "path": "research/artifacts/Contango_1/anchor_frames/anchor_053_00-50-56.jpg",
           "timestamp": "00:50:56",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/Contango_1/hold_frames/hold_085_00-51-14.jpg",
+          "path": "research/artifacts/Contango_1/hold_frames/hold_085_00-51-14.jpg",
           "timestamp": "00:51:14",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/Contango_1/anchor_frames/anchor_052_00-50-16.jpg",
+          "path": "research/artifacts/Contango_1/anchor_frames/anchor_052_00-50-16.jpg",
           "timestamp": "00:50:16",
           "status": "temporal_navigation_not_semantically_verified"
         }
@@ -3876,17 +3876,17 @@
       "transcript_line_start": 936,
       "navigation_frames": [
         {
-          "path": "artifacts/Contango_1/hold_frames/hold_110_01-08-42.jpg",
+          "path": "research/artifacts/Contango_1/hold_frames/hold_110_01-08-42.jpg",
           "timestamp": "01:08:42",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/Contango_1/hold_frames/hold_109_01-07-42.jpg",
+          "path": "research/artifacts/Contango_1/hold_frames/hold_109_01-07-42.jpg",
           "timestamp": "01:07:42",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/Contango_1/anchor_frames/anchor_079_01-09-04.jpg",
+          "path": "research/artifacts/Contango_1/anchor_frames/anchor_079_01-09-04.jpg",
           "timestamp": "01:09:04",
           "status": "temporal_navigation_not_semantically_verified"
         }
@@ -3953,12 +3953,12 @@
       "transcript_line_start": 951,
       "navigation_frames": [
         {
-          "path": "artifacts/Contango_1/hold_frames/hold_110_01-08-42.jpg",
+          "path": "research/artifacts/Contango_1/hold_frames/hold_110_01-08-42.jpg",
           "timestamp": "01:08:42",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/Contango_1/hold_frames/hold_109_01-07-42.jpg",
+          "path": "research/artifacts/Contango_1/hold_frames/hold_109_01-07-42.jpg",
           "timestamp": "01:07:42",
           "status": "temporal_navigation_not_semantically_verified"
         }
@@ -4029,17 +4029,17 @@
       "transcript_line_start": 164,
       "navigation_frames": [
         {
-          "path": "artifacts/Contango_1/hold_frames/hold_047_00-26-25.jpg",
+          "path": "research/artifacts/Contango_1/hold_frames/hold_047_00-26-25.jpg",
           "timestamp": "00:26:25",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/Contango_1/hold_frames/hold_048_00-27-14.jpg",
+          "path": "research/artifacts/Contango_1/hold_frames/hold_048_00-27-14.jpg",
           "timestamp": "00:27:14",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/Contango_1/hold_frames/hold_046_00-25-55.jpg",
+          "path": "research/artifacts/Contango_1/hold_frames/hold_046_00-25-55.jpg",
           "timestamp": "00:25:55",
           "status": "temporal_navigation_not_semantically_verified"
         }
@@ -4107,17 +4107,17 @@
       "transcript_line_start": 645,
       "navigation_frames": [
         {
-          "path": "artifacts/Contango_1/anchor_frames/anchor_059_00-55-35.jpg",
+          "path": "research/artifacts/Contango_1/anchor_frames/anchor_059_00-55-35.jpg",
           "timestamp": "00:55:35",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/Contango_1/anchor_frames/anchor_060_00-55-46.jpg",
+          "path": "research/artifacts/Contango_1/anchor_frames/anchor_060_00-55-46.jpg",
           "timestamp": "00:55:46",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/Contango_1/anchor_frames/anchor_061_00-56-02.jpg",
+          "path": "research/artifacts/Contango_1/anchor_frames/anchor_061_00-56-02.jpg",
           "timestamp": "00:56:02",
           "status": "temporal_navigation_not_semantically_verified"
         }
@@ -4161,12 +4161,12 @@
       "transcript_line_start": 683,
       "navigation_frames": [
         {
-          "path": "artifacts/Contango_1/anchor_frames/anchor_062_00-56-45.jpg",
+          "path": "research/artifacts/Contango_1/anchor_frames/anchor_062_00-56-45.jpg",
           "timestamp": "00:56:45",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/Contango_1/hold_frames/hold_093_00-56-26.jpg",
+          "path": "research/artifacts/Contango_1/hold_frames/hold_093_00-56-26.jpg",
           "timestamp": "00:56:26",
           "status": "temporal_navigation_not_semantically_verified"
         }
@@ -4229,12 +4229,12 @@
       "transcript_line_start": 730,
       "navigation_frames": [
         {
-          "path": "artifacts/Contango_1/anchor_frames/anchor_065_00-58-38.jpg",
+          "path": "research/artifacts/Contango_1/anchor_frames/anchor_065_00-58-38.jpg",
           "timestamp": "00:58:38",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/Contango_1/anchor_frames/anchor_064_00-58-23.jpg",
+          "path": "research/artifacts/Contango_1/anchor_frames/anchor_064_00-58-23.jpg",
           "timestamp": "00:58:23",
           "status": "temporal_navigation_not_semantically_verified"
         }
@@ -4333,17 +4333,17 @@
       "transcript_line_start": 763,
       "navigation_frames": [
         {
-          "path": "artifacts/Contango_1/anchor_frames/anchor_069_01-00-50.jpg",
+          "path": "research/artifacts/Contango_1/anchor_frames/anchor_069_01-00-50.jpg",
           "timestamp": "01:00:50",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/Contango_1/anchor_frames/anchor_070_01-01-11.jpg",
+          "path": "research/artifacts/Contango_1/anchor_frames/anchor_070_01-01-11.jpg",
           "timestamp": "01:01:11",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/Contango_1/hold_frames/hold_095_01-00-35.jpg",
+          "path": "research/artifacts/Contango_1/hold_frames/hold_095_01-00-35.jpg",
           "timestamp": "01:00:35",
           "status": "temporal_navigation_not_semantically_verified"
         }
@@ -4390,17 +4390,17 @@
       "transcript_line_start": 1108,
       "navigation_frames": [
         {
-          "path": "artifacts/Contango_1/hold_frames/hold_119_01-14-56.jpg",
+          "path": "research/artifacts/Contango_1/hold_frames/hold_119_01-14-56.jpg",
           "timestamp": "01:14:56",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/Contango_1/anchor_frames/anchor_089_01-14-44.jpg",
+          "path": "research/artifacts/Contango_1/anchor_frames/anchor_089_01-14-44.jpg",
           "timestamp": "01:14:44",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/Contango_1/anchor_frames/anchor_090_01-15-07.jpg",
+          "path": "research/artifacts/Contango_1/anchor_frames/anchor_090_01-15-07.jpg",
           "timestamp": "01:15:07",
           "status": "temporal_navigation_not_semantically_verified"
         }
@@ -4453,12 +4453,12 @@
       "transcript_line_start": 1125,
       "navigation_frames": [
         {
-          "path": "artifacts/Contango_1/anchor_frames/anchor_092_01-15-47.jpg",
+          "path": "research/artifacts/Contango_1/anchor_frames/anchor_092_01-15-47.jpg",
           "timestamp": "01:15:47",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/Contango_1/anchor_frames/anchor_091_01-15-18.jpg",
+          "path": "research/artifacts/Contango_1/anchor_frames/anchor_091_01-15-18.jpg",
           "timestamp": "01:15:18",
           "status": "temporal_navigation_not_semantically_verified"
         }
@@ -4505,17 +4505,17 @@
       "transcript_line_start": 1108,
       "navigation_frames": [
         {
-          "path": "artifacts/Contango_1/hold_frames/hold_119_01-14-56.jpg",
+          "path": "research/artifacts/Contango_1/hold_frames/hold_119_01-14-56.jpg",
           "timestamp": "01:14:56",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/Contango_1/anchor_frames/anchor_089_01-14-44.jpg",
+          "path": "research/artifacts/Contango_1/anchor_frames/anchor_089_01-14-44.jpg",
           "timestamp": "01:14:44",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/Contango_1/anchor_frames/anchor_090_01-15-07.jpg",
+          "path": "research/artifacts/Contango_1/anchor_frames/anchor_090_01-15-07.jpg",
           "timestamp": "01:15:07",
           "status": "temporal_navigation_not_semantically_verified"
         }
@@ -4550,17 +4550,17 @@
       "transcript_line_start": 97,
       "navigation_frames": [
         {
-          "path": "artifacts/Breeze_AI_2/frames/hold_085_00-26-30.jpg",
+          "path": "research/artifacts/Breeze_AI_2/frames/hold_085_00-26-30.jpg",
           "timestamp": "00:26:30",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/Breeze_AI_2/frames/hold_086_00-26-44.jpg",
+          "path": "research/artifacts/Breeze_AI_2/frames/hold_086_00-26-44.jpg",
           "timestamp": "00:26:44",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/Breeze_AI_2/frames/hold_084_00-26-05.jpg",
+          "path": "research/artifacts/Breeze_AI_2/frames/hold_084_00-26-05.jpg",
           "timestamp": "00:26:05",
           "status": "temporal_navigation_not_semantically_verified"
         }
@@ -4682,17 +4682,17 @@
       "transcript_line_start": 396,
       "navigation_frames": [
         {
-          "path": "artifacts/Contango_1/anchor_frames/anchor_039_00-45-49.jpg",
+          "path": "research/artifacts/Contango_1/anchor_frames/anchor_039_00-45-49.jpg",
           "timestamp": "00:45:49",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/Contango_1/hold_frames/hold_076_00-45-52.jpg",
+          "path": "research/artifacts/Contango_1/hold_frames/hold_076_00-45-52.jpg",
           "timestamp": "00:45:52",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/Contango_1/anchor_frames/anchor_040_00-45-58.jpg",
+          "path": "research/artifacts/Contango_1/anchor_frames/anchor_040_00-45-58.jpg",
           "timestamp": "00:45:58",
           "status": "temporal_navigation_not_semantically_verified"
         }
@@ -4736,17 +4736,17 @@
       "transcript_line_start": 74,
       "navigation_frames": [
         {
-          "path": "artifacts/Breeze_AI_2/frames/hold_072_00-21-50.jpg",
+          "path": "research/artifacts/Breeze_AI_2/frames/hold_072_00-21-50.jpg",
           "timestamp": "00:21:50",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/Breeze_AI_2/frames/hold_071_00-21-30.jpg",
+          "path": "research/artifacts/Breeze_AI_2/frames/hold_071_00-21-30.jpg",
           "timestamp": "00:21:30",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/Breeze_AI_2/frames/hold_073_00-22-00.jpg",
+          "path": "research/artifacts/Breeze_AI_2/frames/hold_073_00-22-00.jpg",
           "timestamp": "00:22:00",
           "status": "temporal_navigation_not_semantically_verified"
         }
@@ -4781,17 +4781,17 @@
       "transcript_line_start": 38,
       "navigation_frames": [
         {
-          "path": "artifacts/Breeze_AI_2/frames/hold_030_00-10-44.jpg",
+          "path": "research/artifacts/Breeze_AI_2/frames/hold_030_00-10-44.jpg",
           "timestamp": "00:10:44",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/Breeze_AI_2/frames/hold_031_00-11-00.jpg",
+          "path": "research/artifacts/Breeze_AI_2/frames/hold_031_00-11-00.jpg",
           "timestamp": "00:11:00",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/Breeze_AI_2/frames/hold_029_00-10-24.jpg",
+          "path": "research/artifacts/Breeze_AI_2/frames/hold_029_00-10-24.jpg",
           "timestamp": "00:10:24",
           "status": "temporal_navigation_not_semantically_verified"
         }
@@ -4827,17 +4827,17 @@
       "transcript_line_start": 17,
       "navigation_frames": [
         {
-          "path": "artifacts/Podhvat_1/hold_frames/hold_015_00-06-26.jpg",
+          "path": "research/artifacts/Podhvat_1/hold_frames/hold_015_00-06-26.jpg",
           "timestamp": "00:06:26",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/Podhvat_1/hold_frames/hold_014_00-06-12.jpg",
+          "path": "research/artifacts/Podhvat_1/hold_frames/hold_014_00-06-12.jpg",
           "timestamp": "00:06:12",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/Podhvat_1/hold_frames/hold_016_00-06-42.jpg",
+          "path": "research/artifacts/Podhvat_1/hold_frames/hold_016_00-06-42.jpg",
           "timestamp": "00:06:42",
           "status": "temporal_navigation_not_semantically_verified"
         }
@@ -4875,17 +4875,17 @@
       "transcript_line_start": 23,
       "navigation_frames": [
         {
-          "path": "artifacts/Podhvat_1/anchor_frames/anchor_008_00-08-08.jpg",
+          "path": "research/artifacts/Podhvat_1/anchor_frames/anchor_008_00-08-08.jpg",
           "timestamp": "00:08:08",
           "status": "full_frame_inspected_not_detector_validated"
         },
         {
-          "path": "artifacts/Podhvat_1/hold_frames/hold_023_00-08-26.jpg",
+          "path": "research/artifacts/Podhvat_1/hold_frames/hold_023_00-08-26.jpg",
           "timestamp": "00:08:26",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/Podhvat_1/hold_frames/hold_022_00-08-12.jpg",
+          "path": "research/artifacts/Podhvat_1/hold_frames/hold_022_00-08-12.jpg",
           "timestamp": "00:08:12",
           "status": "temporal_navigation_not_semantically_verified"
         }
@@ -4922,17 +4922,17 @@
       "transcript_line_start": 33,
       "navigation_frames": [
         {
-          "path": "artifacts/Podhvat_1/hold_frames/hold_030_00-11-05.jpg",
+          "path": "research/artifacts/Podhvat_1/hold_frames/hold_030_00-11-05.jpg",
           "timestamp": "00:11:05",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/Podhvat_1/hold_frames/hold_029_00-10-35.jpg",
+          "path": "research/artifacts/Podhvat_1/hold_frames/hold_029_00-10-35.jpg",
           "timestamp": "00:10:35",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/Podhvat_1/anchor_frames/anchor_010_00-11-33.jpg",
+          "path": "research/artifacts/Podhvat_1/anchor_frames/anchor_010_00-11-33.jpg",
           "timestamp": "00:11:33",
           "status": "temporal_navigation_not_semantically_verified"
         }
@@ -5005,17 +5005,17 @@
       "transcript_line_start": 833,
       "navigation_frames": [
         {
-          "path": "artifacts/Contango_1/anchor_frames/anchor_073_01-03-01.jpg",
+          "path": "research/artifacts/Contango_1/anchor_frames/anchor_073_01-03-01.jpg",
           "timestamp": "01:03:01",
           "status": "full_frame_inspected_not_detector_validated"
         },
         {
-          "path": "artifacts/Contango_1/hold_frames/hold_100_01-03-17.jpg",
+          "path": "research/artifacts/Contango_1/hold_frames/hold_100_01-03-17.jpg",
           "timestamp": "01:03:17",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/Contango_1/hold_frames/hold_101_01-03-32.jpg",
+          "path": "research/artifacts/Contango_1/hold_frames/hold_101_01-03-32.jpg",
           "timestamp": "01:03:32",
           "status": "temporal_navigation_not_semantically_verified"
         }
@@ -5153,17 +5153,17 @@
       "transcript_line_start": 925,
       "navigation_frames": [
         {
-          "path": "artifacts/Contango_1/hold_frames/hold_110_01-08-42.jpg",
+          "path": "research/artifacts/Contango_1/hold_frames/hold_110_01-08-42.jpg",
           "timestamp": "01:08:42",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/Contango_1/anchor_frames/anchor_079_01-09-04.jpg",
+          "path": "research/artifacts/Contango_1/anchor_frames/anchor_079_01-09-04.jpg",
           "timestamp": "01:09:04",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/Contango_1/hold_frames/hold_111_01-09-26.jpg",
+          "path": "research/artifacts/Contango_1/hold_frames/hold_111_01-09-26.jpg",
           "timestamp": "01:09:26",
           "status": "temporal_navigation_not_semantically_verified"
         }
@@ -5247,17 +5247,17 @@
       "transcript_line_start": 488,
       "navigation_frames": [
         {
-          "path": "artifacts/Contango_1/hold_frames/hold_081_00-48-50.jpg",
+          "path": "research/artifacts/Contango_1/hold_frames/hold_081_00-48-50.jpg",
           "timestamp": "00:48:50",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/Contango_1/anchor_frames/anchor_049_00-49-10.jpg",
+          "path": "research/artifacts/Contango_1/anchor_frames/anchor_049_00-49-10.jpg",
           "timestamp": "00:49:10",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/Contango_1/anchor_frames/anchor_048_00-48-40.jpg",
+          "path": "research/artifacts/Contango_1/anchor_frames/anchor_048_00-48-40.jpg",
           "timestamp": "00:48:40",
           "status": "temporal_navigation_not_semantically_verified"
         }
@@ -5390,17 +5390,17 @@
       "transcript_line_start": 556,
       "navigation_frames": [
         {
-          "path": "artifacts/Contango_1/hold_frames/hold_088_00-52-50.jpg",
+          "path": "research/artifacts/Contango_1/hold_frames/hold_088_00-52-50.jpg",
           "timestamp": "00:52:50",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/Contango_1/hold_frames/hold_089_00-53-14.jpg",
+          "path": "research/artifacts/Contango_1/hold_frames/hold_089_00-53-14.jpg",
           "timestamp": "00:53:14",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/Contango_1/anchor_frames/anchor_054_00-52-32.jpg",
+          "path": "research/artifacts/Contango_1/anchor_frames/anchor_054_00-52-32.jpg",
           "timestamp": "00:52:32",
           "status": "temporal_navigation_not_semantically_verified"
         }
@@ -5479,17 +5479,17 @@
       "transcript_line_start": 208,
       "navigation_frames": [
         {
-          "path": "artifacts/Contango_1/hold_frames/hold_057_00-32-25.jpg",
+          "path": "research/artifacts/Contango_1/hold_frames/hold_057_00-32-25.jpg",
           "timestamp": "00:32:25",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/Contango_1/hold_frames/hold_056_00-32-05.jpg",
+          "path": "research/artifacts/Contango_1/hold_frames/hold_056_00-32-05.jpg",
           "timestamp": "00:32:05",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/Contango_1/anchor_frames/anchor_019_00-32-56.jpg",
+          "path": "research/artifacts/Contango_1/anchor_frames/anchor_019_00-32-56.jpg",
           "timestamp": "00:32:56",
           "status": "temporal_navigation_not_semantically_verified"
         }
@@ -5542,17 +5542,17 @@
       "transcript_line_start": 49,
       "navigation_frames": [
         {
-          "path": "artifacts/Podhvat_1/hold_frames/hold_049_00-17-26.jpg",
+          "path": "research/artifacts/Podhvat_1/hold_frames/hold_049_00-17-26.jpg",
           "timestamp": "00:17:26",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/Podhvat_1/hold_frames/hold_050_00-17-47.jpg",
+          "path": "research/artifacts/Podhvat_1/hold_frames/hold_050_00-17-47.jpg",
           "timestamp": "00:17:47",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/Podhvat_1/anchor_frames/anchor_017_00-17-19.jpg",
+          "path": "research/artifacts/Podhvat_1/anchor_frames/anchor_017_00-17-19.jpg",
           "timestamp": "00:17:19",
           "status": "temporal_navigation_not_semantically_verified"
         }
@@ -5599,17 +5599,17 @@
       "transcript_line_start": 71,
       "navigation_frames": [
         {
-          "path": "artifacts/Podhvat_1/hold_frames/hold_059_00-22-42.jpg",
+          "path": "research/artifacts/Podhvat_1/hold_frames/hold_059_00-22-42.jpg",
           "timestamp": "00:22:42",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/Podhvat_1/hold_frames/hold_058_00-22-12.jpg",
+          "path": "research/artifacts/Podhvat_1/hold_frames/hold_058_00-22-12.jpg",
           "timestamp": "00:22:12",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/Podhvat_1/anchor_frames/anchor_022_00-23-05.jpg",
+          "path": "research/artifacts/Podhvat_1/anchor_frames/anchor_022_00-23-05.jpg",
           "timestamp": "00:23:05",
           "status": "temporal_navigation_not_semantically_verified"
         }
@@ -5644,17 +5644,17 @@
       "transcript_line_start": 109,
       "navigation_frames": [
         {
-          "path": "artifacts/Podhvat_1/hold_frames/hold_079_00-29-41.jpg",
+          "path": "research/artifacts/Podhvat_1/hold_frames/hold_079_00-29-41.jpg",
           "timestamp": "00:29:41",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/Podhvat_1/anchor_frames/anchor_035_00-29-24.jpg",
+          "path": "research/artifacts/Podhvat_1/anchor_frames/anchor_035_00-29-24.jpg",
           "timestamp": "00:29:24",
           "status": "temporal_navigation_not_semantically_verified"
         },
         {
-          "path": "artifacts/Podhvat_1/anchor_frames/anchor_036_00-29-55.jpg",
+          "path": "research/artifacts/Podhvat_1/anchor_frames/anchor_036_00-29-55.jpg",
           "timestamp": "00:29:55",
           "status": "temporal_navigation_not_semantically_verified"
         }
@@ -5693,6 +5693,27 @@
       "proposed_definition": "T01[t-1], цена вчера выше всех EMA, V01[t-1]>0, Z_density[t-1] около 30; сегодня E03 и V04. Значения Цвейга 0/5/15/30 — варианты контекста, не заранее заданные веса.",
       "lifecycle": "Событие текущего дня; вчерашние показатели не заменяются сегодняшними или завтрашними.",
       "unresolved": "Допуск к 30, обязательность всех частей, сколько независимых повторений. Отдельный вес взаимодействия не равен сумме весов его частей.",
+      "family": "Дополнительные конструкции из текущего чата",
+      "origin": "user_chat_example",
+      "weight": null,
+      "detector_implemented": false,
+      "numerical_event_verified": false,
+      "definition_status": "proposal_with_explicit_unresolved_parameters",
+      "role": "candidate_market_feature",
+      "navigation_frames": [],
+      "source_segment_ids": []
+    },
+    {
+      "id": "U03",
+      "name": "Месячная экспирация SPX",
+      "kind": "event",
+      "source": "U",
+      "start": null,
+      "end": null,
+      "source_meaning": "Стандартная месячная экспирация SPX исторически чаще завершалась снижением, но не показала повышения дневной волатильности или устойчивого эффекта следующего дня.",
+      "proposed_definition": "Скорректированная третья пятница месяца: если она не торговая, используется предыдущий торговый день. Признак равен 1 только в день экспирации.",
+      "lifecycle": "Календарное событие текущего дня; праздничный перенос определяется только по уже известному торговому календарю.",
+      "unresolved": "Исследовательский признак с весом 0 во всех профилях. Ненулевой вес допустим только после независимого walk-forward подтверждения; не смешивать с VIX DTE и календарём расчёта VX.",
       "family": "Дополнительные конструкции из текущего чата",
       "origin": "user_chat_example",
       "weight": null,

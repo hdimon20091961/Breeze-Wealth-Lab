@@ -1,0 +1,4324 @@
+{
+  "schema_version": "1.1.0",
+  "catalog_version": "1.1.0",
+  "updated": "2026-10-22",
+  "status": "runtime_connected",
+  "purpose": "Single human-readable catalogue of Breeze market rules and their independent use in Breeze scoring and TorchSharp threshold correction.",
+  "invariants": [
+    "number is permanent and never reused",
+    "id is the stable code key",
+    "detector is shared; Breeze and TorchSharp applications are independent",
+    "Breeze frozen weights must not be changed by TorchSharp experiments",
+    "TorchSharp calibration is stored independently for ZZ1, ZZ2 and ZZ3 and for trading modes 0 and 1",
+    "Boss is a derived composition of ZZ1, ZZ2 and ZZ3 and never owns an independent calibration cell",
+    "weight_threshold_pp changes the TorchSharp ensemble threshold in percentage points",
+    "Help documents this file but is not executable source code"
+  ],
+  "torchsharp_threshold_model": {
+    "target": "ensemble_classification_threshold_percent",
+    "baseline_percent": 50,
+    "formula": "threshold_t = clip(baseline_percent + sum(weight_threshold_pp_i * active_value_i_t), min_percent, max_percent)",
+    "min_percent": null,
+    "max_percent": null,
+    "sign": {
+      "negative": "lower threshold: easier entry and longer holding",
+      "positive": "raise threshold: harder entry and earlier exit",
+      "zero": "no TorchSharp effect"
+    },
+    "timing": "Use only values known after the close of bar t; orders are formed for the next executable bar."
+  },
+  "torchsharp_research_matrix": {
+    "applies_to": "every rules[*].torchsharp calibration",
+    "cell_identity": "rule_id + trading_package + trading_mode + base_threshold_percent",
+    "trading_packages": [
+      "ZZ1",
+      "ZZ2",
+      "ZZ3"
+    ],
+    "excluded_package": {
+      "name": "Boss",
+      "reason": "Boss is composed from the independently calibrated ZZ1, ZZ2 and ZZ3 cells."
+    },
+    "trading_modes": {
+      "0": "package ensemble trades as one 10-position block",
+      "1": "ten deciles trade independently"
+    },
+    "base_threshold_percent": {
+      "default": 50,
+      "minimum": 40,
+      "maximum": 60,
+      "step": 2
+    },
+    "event_threshold_percent": {
+      "default": 50,
+      "minimum": 38,
+      "maximum": 70,
+      "step": 2
+    },
+    "materiality_percent": 2,
+    "storage": "Each tested rule may add torchsharp.calibration_by_context keyed by ZZ1/ZZ2/ZZ3 and mode_0/mode_1. Missing cells mean not tested. Results at different base thresholds are separate observations and must not overwrite one another.",
+    "required_result_fields": [
+      "base_threshold_percent",
+      "selected_event_threshold_percent",
+      "baseline_profit",
+      "selected_profit",
+      "profit_delta_percent",
+      "baseline_position_count",
+      "selected_position_count",
+      "max_drawdown_percent",
+      "decision",
+      "date"
+    ]
+  },
+  "field_guide": {
+    "number": "Permanent sequential human reference.",
+    "id": "Stable program key such as R03 or Z02.",
+    "detector": "One shared causal calculation of the event/state.",
+    "breeze": "Existing frozen Breeze score usage.",
+    "torchsharp": "Independent threshold correction and its own lifecycle.",
+    "activation": "How an observed event remains active for TorchSharp.",
+    "calibration_by_context": "Sparse per-rule results for ZZ1/ZZ2/ZZ3 and trading modes 0/1; Boss is derived and is never stored here.",
+    "documentation": "Human explanation and research provenance."
+  },
+  "rules": [
+    {
+      "number": 1,
+      "id": "T01",
+      "names": {
+        "ru": "Бычий порядок EMA",
+        "code": "EMA order"
+      },
+      "classification": {
+        "family": "T",
+        "kind": "state"
+      },
+      "detector": {
+        "implemented_formula": "1 if E20>E50>E100>E200; price above E20 recorded separately",
+        "output": "existing Breeze feature value",
+        "calculation_status": "implemented"
+      },
+      "breeze": {
+        "enabled": true,
+        "frozen": true,
+        "weight_unit": "score_points",
+        "weights": {
+          "soft": 0,
+          "standard": 0,
+          "hard": 0
+        },
+        "lifecycle": "existing Breeze calculation; unchanged by TorchSharp settings"
+      },
+      "torchsharp": {
+        "enabled": false,
+        "weight_threshold_pp": 0,
+        "weight_status": "not_calibrated",
+        "value_source": "T01",
+        "application": "dynamic_ensemble_threshold",
+        "activation": {
+          "mode": "while_source_nonzero",
+          "duration_bars": null,
+          "duration_candidates": [],
+          "retrigger": "not_applicable",
+          "cancellation": "source_value_returns_to_zero",
+          "status": "default_not_calibrated"
+        },
+        "note": "Disabled until this rule is calibrated for TorchSharp."
+      },
+      "documentation": {
+        "source": "P",
+        "source_time": {
+          "start": "00:01:11",
+          "end": "00:01:54"
+        },
+        "meaning": "Порядок средних и положение цены — основа структуры роста.",
+        "proposed_definition": "Хранить отдельно E20>E50>E100>E200 и C>E20; степень порядка — доля правильных соседних пар и их нормированные расстояния.",
+        "lifecycle": "Ежедневно; дополнительно начало/нарушение и длина серии.",
+        "unresolved": "Допуск равенства и нормировка расстояний; не смешивать порядок с наклонами."
+      }
+    },
+    {
+      "number": 2,
+      "id": "T02",
+      "names": {
+        "ru": "Все четыре EMA растут",
+        "code": "EMA rising"
+      },
+      "classification": {
+        "family": "T",
+        "kind": "state"
+      },
+      "detector": {
+        "implemented_formula": "Fraction of four one-bar EMA slopes >0",
+        "output": "existing Breeze feature value",
+        "calculation_status": "implemented"
+      },
+      "breeze": {
+        "enabled": true,
+        "frozen": true,
+        "weight_unit": "score_points",
+        "weights": {
+          "soft": 0,
+          "standard": 0,
+          "hard": 0
+        },
+        "lifecycle": "existing Breeze calculation; unchanged by TorchSharp settings"
+      },
+      "torchsharp": {
+        "enabled": false,
+        "weight_threshold_pp": 0,
+        "weight_status": "not_calibrated",
+        "value_source": "T02",
+        "application": "dynamic_ensemble_threshold",
+        "activation": {
+          "mode": "while_source_nonzero",
+          "duration_bars": null,
+          "duration_candidates": [],
+          "retrigger": "not_applicable",
+          "cancellation": "source_value_returns_to_zero",
+          "status": "default_not_calibrated"
+        },
+        "note": "Disabled until this rule is calibrated for TorchSharp."
+      },
+      "documentation": {
+        "source": "P",
+        "source_time": {
+          "start": "00:01:11",
+          "end": "00:04:55"
+        },
+        "meaning": "Сегодняшнее значение каждой EMA выше вчерашнего.",
+        "proposed_definition": "Вектор ΔE20,ΔE50,ΔE100,ΔE200 и число положительных наклонов; базовый лаг 1 день, без замены пятидневным наклоном.",
+        "lifecycle": "Ежедневно и число подряд дней.",
+        "unresolved": "Нормировка наклона; многодневный наклон — отдельный вариант, не исходное определение."
+      }
+    },
+    {
+      "number": 3,
+      "id": "T03",
+      "names": {
+        "ru": "Устойчивый рост с широкой поддержкой",
+        "code": "Stable growth"
+      },
+      "classification": {
+        "family": "T",
+        "kind": "composite"
+      },
+      "detector": {
+        "implemented_formula": "Order + rising slopes + C>E20 + all breadth>=50 + ATRP1<=2, observed streak/5 capped at 1",
+        "output": "existing Breeze feature value",
+        "calculation_status": "implemented"
+      },
+      "breeze": {
+        "enabled": true,
+        "frozen": true,
+        "weight_unit": "score_points",
+        "weights": {
+          "soft": 15.0,
+          "standard": 15.0,
+          "hard": 15.0
+        },
+        "lifecycle": "existing Breeze calculation; unchanged by TorchSharp settings"
+      },
+      "torchsharp": {
+        "enabled": false,
+        "weight_threshold_pp": 0,
+        "weight_status": "not_calibrated",
+        "value_source": "T03",
+        "application": "dynamic_ensemble_threshold",
+        "activation": {
+          "mode": "while_source_nonzero",
+          "duration_bars": null,
+          "duration_candidates": [],
+          "retrigger": "not_applicable",
+          "cancellation": "source_value_returns_to_zero",
+          "status": "default_not_calibrated"
+        },
+        "note": "Disabled until this rule is calibrated for TorchSharp."
+      },
+      "documentation": {
+        "source": "P",
+        "source_time": {
+          "start": "00:01:11",
+          "end": "00:04:08"
+        },
+        "meaning": "Порядок, положительные наклоны, цена выше EMA20, высокая широта и низкая волатильность сохраняются несколько дней.",
+        "proposed_definition": "Совместить T01,T02,C>E20, уровни четырёх B и ATRP1; хранить длительность выполненной структуры. Ориентиры B около/выше 50 и 5–15 дней — исходные кандидаты.",
+        "lifecycle": "Счётчик только уже прошедших дней; нарушение каждого компонента хранить отдельно.",
+        "unresolved": "Порог спокойной волатильности и допустимые краткие нарушения; не требовать будущих 15 дней."
+      }
+    },
+    {
+      "number": 4,
+      "id": "T04",
+      "names": {
+        "ru": "Быстрые EMA падают, медленные растут",
+        "code": "Fast EMA falling"
+      },
+      "classification": {
+        "family": "T",
+        "kind": "state"
+      },
+      "detector": {
+        "implemented_formula": "E20 falling with E50/100/200 rising OR E20/50 falling with E100/200 rising",
+        "output": "existing Breeze feature value",
+        "calculation_status": "implemented"
+      },
+      "breeze": {
+        "enabled": true,
+        "frozen": true,
+        "weight_unit": "score_points",
+        "weights": {
+          "soft": 0,
+          "standard": 0,
+          "hard": 0
+        },
+        "lifecycle": "existing Breeze calculation; unchanged by TorchSharp settings"
+      },
+      "torchsharp": {
+        "enabled": false,
+        "weight_threshold_pp": 0,
+        "weight_status": "not_calibrated",
+        "value_source": "T04",
+        "application": "dynamic_ensemble_threshold",
+        "activation": {
+          "mode": "while_source_nonzero",
+          "duration_bars": null,
+          "duration_candidates": [],
+          "retrigger": "not_applicable",
+          "cancellation": "source_value_returns_to_zero",
+          "status": "default_not_calibrated"
+        },
+        "note": "Disabled until this rule is calibrated for TorchSharp."
+      },
+      "documentation": {
+        "source": "P",
+        "source_time": {
+          "start": "00:04:08",
+          "end": "00:04:55"
+        },
+        "meaning": "Порядок ещё правильный, но сначала EMA20, затем EMA50 становятся падающими.",
+        "proposed_definition": "Отдельные конфигурации: ΔE20<0 при ΔE50,100,200>0; ΔE20,50<0 при ΔE100,200>0. Не объединять с полным разворотом тренда.",
+        "lifecycle": "Ежедневно; начало и длительность конфигурации.",
+        "unresolved": "Равенство нулю и минимально значимый наклон."
+      }
+    },
+    {
+      "number": 5,
+      "id": "T05",
+      "names": {
+        "ru": "Растянутый веер EMA",
+        "code": "EMA fan"
+      },
+      "classification": {
+        "family": "T",
+        "kind": "state"
+      },
+      "detector": {
+        "implemented_formula": "Positive EMA adjacent gaps + positive C-E20, divided by C and 10%, clipped to 1",
+        "output": "existing Breeze feature value",
+        "calculation_status": "implemented"
+      },
+      "breeze": {
+        "enabled": true,
+        "frozen": true,
+        "weight_unit": "score_points",
+        "weights": {
+          "soft": 5.0,
+          "standard": 5.0,
+          "hard": 5.0
+        },
+        "lifecycle": "existing Breeze calculation; unchanged by TorchSharp settings"
+      },
+      "torchsharp": {
+        "enabled": false,
+        "weight_threshold_pp": 0,
+        "weight_status": "not_calibrated",
+        "value_source": "T05",
+        "application": "dynamic_ensemble_threshold",
+        "activation": {
+          "mode": "while_source_nonzero",
+          "duration_bars": null,
+          "duration_candidates": [],
+          "retrigger": "not_applicable",
+          "cancellation": "source_value_returns_to_zero",
+          "status": "default_not_calibrated"
+        },
+        "note": "Disabled until this rule is calibrated for TorchSharp."
+      },
+      "documentation": {
+        "source": "P",
+        "source_time": {
+          "start": "00:11:54",
+          "end": "00:13:41"
+        },
+        "meaning": "Большие расстояния между ценой и средними описывают отрыв и возможность паузы.",
+        "proposed_definition": "Вектор (C-E20,E20-E50,E50-E100,E100-E200)/C и сумма положительных частей; нормировку на ATR рассматривать отдельно.",
+        "lifecycle": "Ежедневно, также изменение ширины и её прошлый процентиль.",
+        "unresolved": "Границы сильного растяжения; процентиль только по доступному прошлому, не по всей истории."
+      }
+    },
+    {
+      "number": 6,
+      "id": "T06",
+      "names": {
+        "ru": "Сжатый бычий веер",
+        "code": "Compressed fan"
+      },
+      "classification": {
+        "family": "T",
+        "kind": "state"
+      },
+      "detector": {
+        "implemented_formula": "Bull order and (E20-E200)/C<=2%",
+        "output": "existing Breeze feature value",
+        "calculation_status": "implemented"
+      },
+      "breeze": {
+        "enabled": true,
+        "frozen": true,
+        "weight_unit": "score_points",
+        "weights": {
+          "soft": 10.0,
+          "standard": 10.0,
+          "hard": 10.0
+        },
+        "lifecycle": "existing Breeze calculation; unchanged by TorchSharp settings"
+      },
+      "torchsharp": {
+        "enabled": false,
+        "weight_threshold_pp": 0,
+        "weight_status": "not_calibrated",
+        "value_source": "T06",
+        "application": "dynamic_ensemble_threshold",
+        "activation": {
+          "mode": "while_source_nonzero",
+          "duration_bars": null,
+          "duration_candidates": [],
+          "retrigger": "not_applicable",
+          "cancellation": "source_value_returns_to_zero",
+          "status": "default_not_calibrated"
+        },
+        "note": "Disabled until this rule is calibrated for TorchSharp."
+      },
+      "documentation": {
+        "source": "P",
+        "source_time": {
+          "start": "00:12:06",
+          "end": "00:13:54"
+        },
+        "meaning": "При правильном порядке средние расположены плотно; пример ранней структуры продолжения роста.",
+        "proposed_definition": "T01 плюс малые положительные межлинейные расстояния из T05; сохранять также расстояние цены до E20.",
+        "lifecycle": "Пересчёт ежедневно; выход из сжатия — отдельное событие.",
+        "unresolved": "Порог сжатия и отличие от пересечения/переплетения EMA."
+      }
+    },
+    {
+      "number": 7,
+      "id": "T07",
+      "names": {
+        "ru": "Цена ниже всех EMA и нарушенный порядок",
+        "code": "Below all EMA"
+      },
+      "classification": {
+        "family": "T",
+        "kind": "state"
+      },
+      "detector": {
+        "implemented_formula": "C below all four EMA",
+        "output": "existing Breeze feature value",
+        "calculation_status": "implemented"
+      },
+      "breeze": {
+        "enabled": true,
+        "frozen": true,
+        "weight_unit": "score_points",
+        "weights": {
+          "soft": -10.0,
+          "standard": -10.0,
+          "hard": -10.0
+        },
+        "lifecycle": "existing Breeze calculation; unchanged by TorchSharp settings"
+      },
+      "torchsharp": {
+        "enabled": false,
+        "weight_threshold_pp": 0,
+        "weight_status": "not_calibrated",
+        "value_source": "T07",
+        "application": "dynamic_ensemble_threshold",
+        "activation": {
+          "mode": "while_source_nonzero",
+          "duration_bars": null,
+          "duration_candidates": [],
+          "retrigger": "not_applicable",
+          "cancellation": "source_value_returns_to_zero",
+          "status": "default_not_calibrated"
+        },
+        "note": "Disabled until this rule is calibrated for TorchSharp."
+      },
+      "documentation": {
+        "source": "B2",
+        "source_time": {
+          "start": "00:19:04",
+          "end": "00:23:28"
+        },
+        "meaning": "Глубокое падение может закончиться раньше восстановления бычьего порядка.",
+        "proposed_definition": "C ниже E20,E50,E100,E200; хранить каждое сравнение, обратный порядок и степень нарушения, не назначать вечный запрет на положительную цель.",
+        "lifecycle": "Состояние до восстановления соответствующих сравнений.",
+        "unresolved": "Полностью медвежий порядок не равен любому нарушению бычьего."
+      }
+    },
+    {
+      "number": 8,
+      "id": "T08",
+      "names": {
+        "ru": "Глубина, скорость и длительность снижения",
+        "code": "Drawdown depth"
+      },
+      "classification": {
+        "family": "T",
+        "kind": "state"
+      },
+      "detector": {
+        "implemented_formula": "Drawdown from trailing 252-close peak /20%, clipped to 1",
+        "output": "existing Breeze feature value",
+        "calculation_status": "implemented"
+      },
+      "breeze": {
+        "enabled": true,
+        "frozen": true,
+        "weight_unit": "score_points",
+        "weights": {
+          "soft": 5.0,
+          "standard": 5.0,
+          "hard": 5.0
+        },
+        "lifecycle": "existing Breeze calculation; unchanged by TorchSharp settings"
+      },
+      "torchsharp": {
+        "enabled": false,
+        "weight_threshold_pp": 0,
+        "weight_status": "not_calibrated",
+        "value_source": "T08",
+        "application": "dynamic_ensemble_threshold",
+        "activation": {
+          "mode": "while_source_nonzero",
+          "duration_bars": null,
+          "duration_candidates": [],
+          "retrigger": "not_applicable",
+          "cancellation": "source_value_returns_to_zero",
+          "status": "default_not_calibrated"
+        },
+        "note": "Disabled until this rule is calibrated for TorchSharp."
+      },
+      "documentation": {
+        "source": "C",
+        "source_time": {
+          "start": "00:34:45",
+          "end": "00:35:18"
+        },
+        "meaning": "Долгое падение — больше 10 торговых дней; ориентиры глубины 5%, сильнее 8–12%.",
+        "proposed_definition": "Просадка от доступного прошлого пика, дней с пика, доходности за прошлые окна и скорость падения. Сохранить отдельный вариант пика 252 дней.",
+        "lifecycle": "Пересчёт ежедневно; новый подтверждённый прошлым пик меняет опору.",
+        "unresolved": "Определение локального пика; 10–15% из первого ролика и 5–12% здесь — разные уровни контекста, не один жёсткий порог."
+      }
+    },
+    {
+      "number": 9,
+      "id": "T09",
+      "names": {
+        "ru": "Многоволновое снижение",
+        "code": "Down waves"
+      },
+      "classification": {
+        "family": "T",
+        "kind": "sequence"
+      },
+      "detector": {
+        "implemented_formula": "Down-leg starts with >=1% drop in last 20 bars /3; new leg after >=1% rebound",
+        "output": "existing Breeze feature value",
+        "calculation_status": "implemented"
+      },
+      "breeze": {
+        "enabled": true,
+        "frozen": true,
+        "weight_unit": "score_points",
+        "weights": {
+          "soft": -10.0,
+          "standard": -10.0,
+          "hard": -10.0
+        },
+        "lifecycle": "existing Breeze calculation; unchanged by TorchSharp settings"
+      },
+      "torchsharp": {
+        "enabled": false,
+        "weight_threshold_pp": 0,
+        "weight_status": "not_calibrated",
+        "value_source": "T09",
+        "application": "dynamic_ensemble_threshold",
+        "activation": {
+          "mode": "while_source_nonzero",
+          "duration_bars": null,
+          "duration_candidates": [],
+          "retrigger": "not_applicable",
+          "cancellation": "source_value_returns_to_zero",
+          "status": "default_not_calibrated"
+        },
+        "note": "Disabled until this rule is calibrated for TorchSharp."
+      },
+      "documentation": {
+        "source": "B1",
+        "source_time": {
+          "start": "00:24:37",
+          "end": "00:34:51"
+        },
+        "meaning": "Несколько движений вниз и характер падения важнее одного значения широты.",
+        "proposed_definition": "Счётчик уже подтверждённых нисходящих волн, их глубины и промежуточных отскоков; отдельный вариант трёх последовательных падающих баров.",
+        "lifecycle": "Сигнал волны появляется в день её причинного подтверждения, не задним числом.",
+        "unresolved": "Что считать волной и величиной отскока; три бара не равны трём волнам."
+      }
+    },
+    {
+      "number": 10,
+      "id": "T10",
+      "names": {
+        "ru": "Падение от недавнего исторического максимума",
+        "code": "Loaded-history drawdown"
+      },
+      "classification": {
+        "family": "T",
+        "kind": "state"
+      },
+      "detector": {
+        "implemented_formula": "Drawdown from loaded-history close peak /20%; NOT asserted true all-time high",
+        "output": "existing Breeze feature value",
+        "calculation_status": "implemented"
+      },
+      "breeze": {
+        "enabled": true,
+        "frozen": true,
+        "weight_unit": "score_points",
+        "weights": {
+          "soft": 0,
+          "standard": 0,
+          "hard": 0
+        },
+        "lifecycle": "existing Breeze calculation; unchanged by TorchSharp settings"
+      },
+      "torchsharp": {
+        "enabled": false,
+        "weight_threshold_pp": 0,
+        "weight_status": "not_calibrated",
+        "value_source": "T10",
+        "application": "dynamic_ensemble_threshold",
+        "activation": {
+          "mode": "while_source_nonzero",
+          "duration_bars": null,
+          "duration_candidates": [],
+          "retrigger": "not_applicable",
+          "cancellation": "source_value_returns_to_zero",
+          "status": "default_not_calibrated"
+        },
+        "note": "Disabled until this rule is calibrated for TorchSharp."
+      },
+      "documentation": {
+        "source": "B1",
+        "source_time": {
+          "start": "00:33:51",
+          "end": "00:34:51"
+        },
+        "meaning": "Автор выделяет снижение на 10–15–20% именно от недавнего all-time high.",
+        "proposed_definition": "Сохранить максимум всей доступной прошлой истории и дату его достижения; просадку и давность этого пика. Отдельно обозначить, что максимум ограниченной загрузки не обязательно исторический.",
+        "lifecycle": "Пересчёт ежедневно; новая высшая цена обновляет опорный максимум.",
+        "unresolved": "High или Close, насколько полна история и что означает недавний; не подменять all-time high максимумом 252 дней без явного флага."
+      }
+    },
+    {
+      "number": 11,
+      "id": "E01",
+      "names": {
+        "ru": "Пробой EMA на закрытии",
+        "code": "EMA breaks down"
+      },
+      "classification": {
+        "family": "E",
+        "kind": "event"
+      },
+      "detector": {
+        "implemented_formula": "Fraction of four close-vs-own-day-EMA downward crosses",
+        "output": "existing Breeze feature value",
+        "calculation_status": "implemented"
+      },
+      "breeze": {
+        "enabled": true,
+        "frozen": true,
+        "weight_unit": "score_points",
+        "weights": {
+          "soft": -5.0,
+          "standard": -5.0,
+          "hard": -5.0
+        },
+        "lifecycle": "existing Breeze calculation; unchanged by TorchSharp settings"
+      },
+      "torchsharp": {
+        "enabled": false,
+        "weight_threshold_pp": 0,
+        "weight_status": "not_calibrated",
+        "value_source": "E01",
+        "application": "dynamic_ensemble_threshold",
+        "activation": {
+          "mode": "current_bar_only",
+          "duration_bars": 1,
+          "duration_candidates": [],
+          "retrigger": "new_observation",
+          "cancellation": "source_value_returns_to_zero",
+          "status": "default_not_calibrated"
+        },
+        "note": "Disabled until this rule is calibrated for TorchSharp."
+      },
+      "documentation": {
+        "source": "B2",
+        "source_time": {
+          "start": "00:04:59",
+          "end": "00:05:58"
+        },
+        "meaning": "Закрытие ниже средней существенно отличается от внутридневного прокола.",
+        "proposed_definition": "Для n=20,50,100,200: C[t-1]>=E_n[t-1] и C[t]<E_n[t]. Отдельно хранить состояние C<E_n и расстояние.",
+        "lifecycle": "Отметка в день пробоя; состояние ниже EMA продолжается отдельно.",
+        "unresolved": "Допуск на границе; источник описывает особенно EMA20/50, глубина расширяется по иерархии R14 прежней разметки."
+      }
+    },
+    {
+      "number": 12,
+      "id": "E02",
+      "names": {
+        "ru": "Прокол средней тенью с удержанием закрытия",
+        "code": "EMA wick support"
+      },
+      "classification": {
+        "family": "E",
+        "kind": "event"
+      },
+      "detector": {
+        "implemented_formula": "Fraction of EMA with L<EMA and C>=EMA",
+        "output": "existing Breeze feature value",
+        "calculation_status": "implemented"
+      },
+      "breeze": {
+        "enabled": true,
+        "frozen": true,
+        "weight_unit": "score_points",
+        "weights": {
+          "soft": 10.0,
+          "standard": 5.0,
+          "hard": 10.0
+        },
+        "lifecycle": "existing Breeze calculation; unchanged by TorchSharp settings"
+      },
+      "torchsharp": {
+        "enabled": false,
+        "weight_threshold_pp": 0,
+        "weight_status": "not_calibrated",
+        "value_source": "E02",
+        "application": "dynamic_ensemble_threshold",
+        "activation": {
+          "mode": "current_bar_only",
+          "duration_bars": 1,
+          "duration_candidates": [],
+          "retrigger": "new_observation",
+          "cancellation": "source_value_returns_to_zero",
+          "status": "default_not_calibrated"
+        },
+        "note": "Disabled until this rule is calibrated for TorchSharp."
+      },
+      "documentation": {
+        "source": "P",
+        "source_time": {
+          "start": "00:06:26",
+          "end": "00:06:56"
+        },
+        "meaning": "Low ниже EMA50, но закрытие остаётся выше — поддержка не пробита по закрытию.",
+        "proposed_definition": "L[t]<E_n[t] и C[t]>=E_n[t]; глубина прокола и длина нижней тени отдельно, n=20/50/100/200.",
+        "lifecycle": "Однодневное наблюдение; подтверждение следующего дня не переносить назад.",
+        "unresolved": "Сравнение с E_n[t] является EOD-описанием, не доказательством внутридневного порядка касаний."
+      }
+    },
+    {
+      "number": 13,
+      "id": "E03",
+      "names": {
+        "ru": "За день пробиты EMA20 и EMA50",
+        "code": "Double EMA break"
+      },
+      "classification": {
+        "family": "E",
+        "kind": "event"
+      },
+      "detector": {
+        "implemented_formula": "C yesterday>=E20/E50 yesterday, today below both",
+        "output": "existing Breeze feature value",
+        "calculation_status": "implemented"
+      },
+      "breeze": {
+        "enabled": true,
+        "frozen": true,
+        "weight_unit": "score_points",
+        "weights": {
+          "soft": 0,
+          "standard": 0,
+          "hard": 0
+        },
+        "lifecycle": "existing Breeze calculation; unchanged by TorchSharp settings"
+      },
+      "torchsharp": {
+        "enabled": false,
+        "weight_threshold_pp": 0,
+        "weight_status": "not_calibrated",
+        "value_source": "E03",
+        "application": "dynamic_ensemble_threshold",
+        "activation": {
+          "mode": "current_bar_only",
+          "duration_bars": 1,
+          "duration_candidates": [],
+          "retrigger": "new_observation",
+          "cancellation": "source_value_returns_to_zero",
+          "status": "default_not_calibrated"
+        },
+        "note": "Disabled until this rule is calibrated for TorchSharp."
+      },
+      "documentation": {
+        "source": "P",
+        "source_time": {
+          "start": "00:15:15",
+          "end": "00:18:29"
+        },
+        "meaning": "Сильный бар или гэп проходит несколько уровней сразу.",
+        "proposed_definition": "Вчера C>=max(E20,E50), сегодня C<min(E20,E50); отдельно флаг O выше обеих средних сегодня и флаг гэпового открытия ниже них.",
+        "lifecycle": "Однодневное событие; затем глубина повреждения структуры.",
+        "unresolved": "Разделить close-to-close переход, движение внутри тела и гэп; дневной OHLC не даёт точного времени пробоя."
+      }
+    },
+    {
+      "number": 14,
+      "id": "E04",
+      "names": {
+        "ru": "После пробоя EMA20 EMA50 пока удержана",
+        "code": "EMA50 grace"
+      },
+      "classification": {
+        "family": "E",
+        "kind": "sequence"
+      },
+      "detector": {
+        "implemented_formula": "EMA20 break episode age<=4, no close below EMA50; resets on C>=EMA20",
+        "output": "existing Breeze feature value",
+        "calculation_status": "implemented"
+      },
+      "breeze": {
+        "enabled": true,
+        "frozen": true,
+        "weight_unit": "score_points",
+        "weights": {
+          "soft": 0,
+          "standard": 0,
+          "hard": 0
+        },
+        "lifecycle": "existing Breeze calculation; unchanged by TorchSharp settings"
+      },
+      "torchsharp": {
+        "enabled": false,
+        "weight_threshold_pp": 0,
+        "weight_status": "not_calibrated",
+        "value_source": "E04",
+        "application": "dynamic_ensemble_threshold",
+        "activation": {
+          "mode": "while_source_nonzero",
+          "duration_bars": null,
+          "duration_candidates": [],
+          "retrigger": "not_applicable",
+          "cancellation": "source_value_returns_to_zero",
+          "status": "default_not_calibrated"
+        },
+        "note": "Disabled until this rule is calibrated for TorchSharp."
+      },
+      "documentation": {
+        "source": "B2",
+        "source_time": {
+          "start": "00:04:59",
+          "end": "00:05:58"
+        },
+        "meaning": "Отсутствие закрытия ниже EMA50 в ближайшие 3–4 бара оставляет локальную коррекцию.",
+        "proposed_definition": "После E01(20) хранить возраст эпизода и факт отсутствия C<E50 на уже наблюдённых барах; completed_window отдельно становится истинным через выбранные 3 или 4 бара.",
+        "lifecycle": "Отмена при C<E50; завершение наблюдённого окна не известно в первый день.",
+        "unresolved": "Начало счёта окна, 3 или 4 бара, сброс при возврате выше E20."
+      }
+    },
+    {
+      "number": 15,
+      "id": "E05",
+      "names": {
+        "ru": "Возврат над пробитой EMA",
+        "code": "EMA reclaim"
+      },
+      "classification": {
+        "family": "E",
+        "kind": "event"
+      },
+      "detector": {
+        "implemented_formula": "Fraction of four upward close/EMA crosses",
+        "output": "existing Breeze feature value",
+        "calculation_status": "implemented"
+      },
+      "breeze": {
+        "enabled": true,
+        "frozen": true,
+        "weight_unit": "score_points",
+        "weights": {
+          "soft": 5.0,
+          "standard": 10.0,
+          "hard": 10.0
+        },
+        "lifecycle": "existing Breeze calculation; unchanged by TorchSharp settings"
+      },
+      "torchsharp": {
+        "enabled": false,
+        "weight_threshold_pp": 0,
+        "weight_status": "not_calibrated",
+        "value_source": "E05",
+        "application": "dynamic_ensemble_threshold",
+        "activation": {
+          "mode": "current_bar_only",
+          "duration_bars": 1,
+          "duration_candidates": [],
+          "retrigger": "new_observation",
+          "cancellation": "source_value_returns_to_zero",
+          "status": "default_not_calibrated"
+        },
+        "note": "Disabled until this rule is calibrated for TorchSharp."
+      },
+      "documentation": {
+        "source": "B2",
+        "source_time": {
+          "start": "00:15:23",
+          "end": "00:16:02"
+        },
+        "meaning": "Ослабление ниже EMA20 может отмениться возвратом выше неё.",
+        "proposed_definition": "C[t-1]<=E_n[t-1], C[t]>E_n[t]; дополнительно расстояние, цвет свечи и давность предшествующего пробоя.",
+        "lifecycle": "Однодневный переход и дальнейшее состояние над EMA.",
+        "unresolved": "Ложный пробой требует заранее выбранного прошлого окна, а не будущего успеха возврата."
+      }
+    },
+    {
+      "number": 16,
+      "id": "E06",
+      "names": {
+        "ru": "Пересечения самих EMA",
+        "code": "EMA pair crosses"
+      },
+      "classification": {
+        "family": "E",
+        "kind": "event"
+      },
+      "detector": {
+        "implemented_formula": "(up crosses-down crosses)/4 for 20/50,50/100,100/200,50/200",
+        "output": "existing Breeze feature value",
+        "calculation_status": "implemented"
+      },
+      "breeze": {
+        "enabled": true,
+        "frozen": true,
+        "weight_unit": "score_points",
+        "weights": {
+          "soft": 10.0,
+          "standard": 10.0,
+          "hard": 10.0
+        },
+        "lifecycle": "existing Breeze calculation; unchanged by TorchSharp settings"
+      },
+      "torchsharp": {
+        "enabled": false,
+        "weight_threshold_pp": 0,
+        "weight_status": "not_calibrated",
+        "value_source": "E06",
+        "application": "dynamic_ensemble_threshold",
+        "activation": {
+          "mode": "current_bar_only",
+          "duration_bars": 1,
+          "duration_candidates": [],
+          "retrigger": "new_observation",
+          "cancellation": "source_value_returns_to_zero",
+          "status": "default_not_calibrated"
+        },
+        "note": "Disabled until this rule is calibrated for TorchSharp."
+      },
+      "documentation": {
+        "source": "C",
+        "source_time": {
+          "start": "01:01:17",
+          "end": "01:02:23"
+        },
+        "meaning": "При разрушении структуры пересекаются средние, оба RSI уходят ниже нуля.",
+        "proposed_definition": "Для пар соседних EMA фиксировать смену знака E_fast-E_slow в обе стороны; глубокие пары 50/200 отдельно. RSI — дополнительный контекст.",
+        "lifecycle": "Однодневные пересечения; состояние порядка сохраняется отдельно.",
+        "unresolved": "Какие пары включать; не начислять несколько независимых полных весов за одно разрушение порядка."
+      }
+    },
+    {
+      "number": 17,
+      "id": "E07",
+      "names": {
+        "ru": "Неудачное восстановление между EMA100 и EMA50",
+        "code": "Failed EMA100 rebound"
+      },
+      "classification": {
+        "family": "E",
+        "kind": "sequence"
+      },
+      "detector": {
+        "implemented_formula": "Down cross E100 after C between E100 and E50 and prior C<E100 within 20 bars",
+        "output": "existing Breeze feature value",
+        "calculation_status": "implemented"
+      },
+      "breeze": {
+        "enabled": true,
+        "frozen": true,
+        "weight_unit": "score_points",
+        "weights": {
+          "soft": 0,
+          "standard": 0,
+          "hard": 0
+        },
+        "lifecycle": "existing Breeze calculation; unchanged by TorchSharp settings"
+      },
+      "torchsharp": {
+        "enabled": false,
+        "weight_threshold_pp": 0,
+        "weight_status": "not_calibrated",
+        "value_source": "E07",
+        "application": "dynamic_ensemble_threshold",
+        "activation": {
+          "mode": "while_source_nonzero",
+          "duration_bars": null,
+          "duration_candidates": [],
+          "retrigger": "not_applicable",
+          "cancellation": "source_value_returns_to_zero",
+          "status": "default_not_calibrated"
+        },
+        "note": "Disabled until this rule is calibrated for TorchSharp."
+      },
+      "documentation": {
+        "source": "C",
+        "source_time": {
+          "start": "01:01:17",
+          "end": "01:01:48"
+        },
+        "meaning": "После пробоя EMA100 отскок возвращается над ней, но не преодолевает EMA50 и снова срывается.",
+        "proposed_definition": "В прошлом эпизоде C<E100, затем E100<C<E50, сегодня возврат C<E100; сохранять порядок EMA и длительность отскока.",
+        "lifecycle": "Только после сегодняшнего повторного срыва; до него — незавершённый кандидат.",
+        "unresolved": "Окно поиска последовательности, сравнения при необычном порядке EMA."
+      }
+    },
+    {
+      "number": 18,
+      "id": "R01",
+      "names": {
+        "ru": "Нижнее насыщение MyRSI",
+        "code": "RSI lower saturation"
+      },
+      "classification": {
+        "family": "R",
+        "kind": "state"
+      },
+      "detector": {
+        "implemented_formula": "Fraction of RSI 14/8 and 10/8 <=-0.999; NOT automatic buy",
+        "output": "existing Breeze feature value",
+        "calculation_status": "implemented"
+      },
+      "breeze": {
+        "enabled": true,
+        "frozen": true,
+        "weight_unit": "score_points",
+        "weights": {
+          "soft": 10.0,
+          "standard": 10.0,
+          "hard": 10.0
+        },
+        "lifecycle": "existing Breeze calculation; unchanged by TorchSharp settings"
+      },
+      "torchsharp": {
+        "enabled": false,
+        "weight_threshold_pp": 0,
+        "weight_status": "not_calibrated",
+        "value_source": "R01",
+        "application": "dynamic_ensemble_threshold",
+        "activation": {
+          "mode": "while_source_nonzero",
+          "duration_bars": null,
+          "duration_candidates": [],
+          "retrigger": "not_applicable",
+          "cancellation": "source_value_returns_to_zero",
+          "status": "default_not_calibrated"
+        },
+        "note": "Disabled until this rule is calibrated for TorchSharp."
+      },
+      "documentation": {
+        "source": "B2",
+        "source_time": {
+          "start": "00:00:31",
+          "end": "00:01:52"
+        },
+        "meaning": "RSI может долго оставаться на -1, пока рынок продолжает падать.",
+        "proposed_definition": "R<=-1+eps для каждого периода, длина насыщения и предыдущее движение цены.",
+        "lifecycle": "Активно до выхода из зоны; само по себе не команда повысить позицию.",
+        "unresolved": "eps и независимая фиксация периода RSI/AGC."
+      }
+    },
+    {
+      "number": 19,
+      "id": "R02",
+      "names": {
+        "ru": "Верхнее насыщение MyRSI",
+        "code": "RSI upper saturation"
+      },
+      "classification": {
+        "family": "R",
+        "kind": "state"
+      },
+      "detector": {
+        "implemented_formula": "Fraction >=0.999; NOT automatic sell",
+        "output": "existing Breeze feature value",
+        "calculation_status": "implemented"
+      },
+      "breeze": {
+        "enabled": true,
+        "frozen": true,
+        "weight_unit": "score_points",
+        "weights": {
+          "soft": 0,
+          "standard": 0,
+          "hard": 0
+        },
+        "lifecycle": "existing Breeze calculation; unchanged by TorchSharp settings"
+      },
+      "torchsharp": {
+        "enabled": false,
+        "weight_threshold_pp": 0,
+        "weight_status": "not_calibrated",
+        "value_source": "R02",
+        "application": "dynamic_ensemble_threshold",
+        "activation": {
+          "mode": "while_source_nonzero",
+          "duration_bars": null,
+          "duration_candidates": [],
+          "retrigger": "not_applicable",
+          "cancellation": "source_value_returns_to_zero",
+          "status": "default_not_calibrated"
+        },
+        "note": "Disabled until this rule is calibrated for TorchSharp."
+      },
+      "documentation": {
+        "source": "B2",
+        "source_time": {
+          "start": "00:02:07",
+          "end": "00:04:59"
+        },
+        "meaning": "+1 не требует автоматической продажи при сильной структуре.",
+        "proposed_definition": "R>=1-eps по каждому периоду; длительность, порядок/наклоны EMA и положение C отдельно.",
+        "lifecycle": "До выхода из верхней зоны; никакого автоматического обнуления позиции.",
+        "unresolved": "Допуск eps; знак веса зависит от контекста."
+      }
+    },
+    {
+      "number": 20,
+      "id": "R03",
+      "names": {
+        "ru": "Отрыв MyRSI от -1 вверх",
+        "code": "RSI lower release"
+      },
+      "classification": {
+        "family": "R",
+        "kind": "event"
+      },
+      "detector": {
+        "implemented_formula": "Fraction crossing up from <=-0.999 to >-0.999",
+        "output": "existing Breeze feature value",
+        "calculation_status": "implemented"
+      },
+      "breeze": {
+        "enabled": true,
+        "frozen": true,
+        "weight_unit": "score_points",
+        "weights": {
+          "soft": 15.0,
+          "standard": 15.0,
+          "hard": 15.0
+        },
+        "lifecycle": "existing Breeze calculation; unchanged by TorchSharp settings"
+      },
+      "torchsharp": {
+        "enabled": false,
+        "weight_threshold_pp": 0,
+        "weight_status": "not_calibrated",
+        "value_source": "R03",
+        "application": "dynamic_ensemble_threshold",
+        "activation": {
+          "mode": "fixed_bars_to_calibrate",
+          "duration_bars": null,
+          "duration_candidates": [
+            1,
+            2,
+            3,
+            5,
+            10
+          ],
+          "retrigger": "restart_without_accumulation",
+          "cancellation": "new_lower_saturation_R01",
+          "status": "candidate_design"
+        },
+        "note": "Candidate: preserve the release effect for H trading bars; H and threshold weight remain to be calibrated."
+      },
+      "documentation": {
+        "source": "B2",
+        "source_time": {
+          "start": "00:19:58",
+          "end": "00:20:45"
+        },
+        "meaning": "Первый отрыв от насыщения — отдельное разворотное событие.",
+        "proposed_definition": "R[t-1]<=-1+eps и R[t]>-1+eps; амплитуда ΔR и длина предшествующего насыщения.",
+        "lifecycle": "Отметка сегодня; возраст после отрыва отдельно, отмена контекста при новом насыщении.",
+        "unresolved": "eps и минимальная амплитуда; нельзя автоматически переносить сигнал на предшествующий минимум."
+      }
+    },
+    {
+      "number": 21,
+      "id": "R04",
+      "names": {
+        "ru": "Отрыв MyRSI от +1 вниз",
+        "code": "RSI upper release"
+      },
+      "classification": {
+        "family": "R",
+        "kind": "event"
+      },
+      "detector": {
+        "implemented_formula": "Fraction crossing down from >=0.999 to <0.999",
+        "output": "existing Breeze feature value",
+        "calculation_status": "implemented"
+      },
+      "breeze": {
+        "enabled": true,
+        "frozen": true,
+        "weight_unit": "score_points",
+        "weights": {
+          "soft": 0,
+          "standard": 0,
+          "hard": 0
+        },
+        "lifecycle": "existing Breeze calculation; unchanged by TorchSharp settings"
+      },
+      "torchsharp": {
+        "enabled": false,
+        "weight_threshold_pp": 0,
+        "weight_status": "not_calibrated",
+        "value_source": "R04",
+        "application": "dynamic_ensemble_threshold",
+        "activation": {
+          "mode": "current_bar_only",
+          "duration_bars": 1,
+          "duration_candidates": [],
+          "retrigger": "new_observation",
+          "cancellation": "source_value_returns_to_zero",
+          "status": "default_not_calibrated"
+        },
+        "note": "Disabled until this rule is calibrated for TorchSharp."
+      },
+      "documentation": {
+        "source": "B2",
+        "source_time": {
+          "start": "00:12:10",
+          "end": "00:16:02"
+        },
+        "meaning": "Отрыв может сопровождаться только небольшим откатом, а не сменой тренда.",
+        "proposed_definition": "R[t-1]>=1-eps и R[t]<1-eps; оценивать с ценой и EMA, не как готовый Sell.",
+        "lifecycle": "Событие сегодня плюс возраст; повторное насыщение начинает новый эпизод.",
+        "unresolved": "eps; минимальное снижение и контекст сильной структуры."
+      }
+    },
+    {
+      "number": 22,
+      "id": "R05",
+      "names": {
+        "ru": "Переход RSI через ноль",
+        "code": "RSI zero crosses"
+      },
+      "classification": {
+        "family": "R",
+        "kind": "event"
+      },
+      "detector": {
+        "implemented_formula": "(up zero crosses-down zero crosses)/2",
+        "output": "existing Breeze feature value",
+        "calculation_status": "implemented"
+      },
+      "breeze": {
+        "enabled": true,
+        "frozen": true,
+        "weight_unit": "score_points",
+        "weights": {
+          "soft": 0,
+          "standard": 0,
+          "hard": 0
+        },
+        "lifecycle": "existing Breeze calculation; unchanged by TorchSharp settings"
+      },
+      "torchsharp": {
+        "enabled": false,
+        "weight_threshold_pp": 0,
+        "weight_status": "not_calibrated",
+        "value_source": "R05",
+        "application": "dynamic_ensemble_threshold",
+        "activation": {
+          "mode": "current_bar_only",
+          "duration_bars": 1,
+          "duration_candidates": [],
+          "retrigger": "new_observation",
+          "cancellation": "source_value_returns_to_zero",
+          "status": "default_not_calibrated"
+        },
+        "note": "Disabled until this rule is calibrated for TorchSharp."
+      },
+      "documentation": {
+        "source": "C",
+        "source_time": {
+          "start": "00:06:05",
+          "end": "00:07:44"
+        },
+        "meaning": "Быстрый RSI пересекает ноль раньше медленного; это отдельная характеристика.",
+        "proposed_definition": "Пересечения 0 вверх/вниз для R_f и R_s; состояние каждого по знаку и расстояние между ними.",
+        "lifecycle": "Однодневный переход; знак остаётся ежедневным состоянием.",
+        "unresolved": "Равенство нулю и диапазон шума; 7/8 — эксперимент, не подмена 10/8."
+      }
+    },
+    {
+      "number": 23,
+      "id": "R06",
+      "names": {
+        "ru": "Опережение быстрого RSI относительно медленного",
+        "code": "Fast RSI leads"
+      },
+      "classification": {
+        "family": "R",
+        "kind": "sequence"
+      },
+      "detector": {
+        "implemented_formula": "Fast RSI>0 and slow RSI<=0; observed zero-cross lag recorded",
+        "output": "existing Breeze feature value",
+        "calculation_status": "implemented"
+      },
+      "breeze": {
+        "enabled": true,
+        "frozen": true,
+        "weight_unit": "score_points",
+        "weights": {
+          "soft": 0,
+          "standard": 0,
+          "hard": 0
+        },
+        "lifecycle": "existing Breeze calculation; unchanged by TorchSharp settings"
+      },
+      "torchsharp": {
+        "enabled": false,
+        "weight_threshold_pp": 0,
+        "weight_status": "not_calibrated",
+        "value_source": "R06",
+        "application": "dynamic_ensemble_threshold",
+        "activation": {
+          "mode": "while_source_nonzero",
+          "duration_bars": null,
+          "duration_candidates": [],
+          "retrigger": "not_applicable",
+          "cancellation": "source_value_returns_to_zero",
+          "status": "default_not_calibrated"
+        },
+        "note": "Disabled until this rule is calibrated for TorchSharp."
+      },
+      "documentation": {
+        "source": "C",
+        "source_time": {
+          "start": "00:50:14",
+          "end": "00:50:44"
+        },
+        "meaning": "Быстрый RSI уже выше нуля, медленный ещё ниже.",
+        "proposed_definition": "Сочетания знаков, насыщения и отрывов R_f/R_s; лаг последнего одноимённого события в торговых днях.",
+        "lifecycle": "Только события с датами <=t; после подтверждения медленным сохранить наблюдённый лаг.",
+        "unresolved": "Максимальный лаг сопряжения, недопустимо искать будущий отрыв медленного в текущей дате."
+      }
+    },
+    {
+      "number": 24,
+      "id": "R07",
+      "names": {
+        "ru": "Одновременное насыщение двух RSI",
+        "code": "RSI joint saturation"
+      },
+      "classification": {
+        "family": "R",
+        "kind": "state"
+      },
+      "detector": {
+        "implemented_formula": "+1 both upper, -1 both lower, 0 otherwise",
+        "output": "existing Breeze feature value",
+        "calculation_status": "implemented"
+      },
+      "breeze": {
+        "enabled": true,
+        "frozen": true,
+        "weight_unit": "score_points",
+        "weights": {
+          "soft": 0,
+          "standard": 0,
+          "hard": 0
+        },
+        "lifecycle": "existing Breeze calculation; unchanged by TorchSharp settings"
+      },
+      "torchsharp": {
+        "enabled": false,
+        "weight_threshold_pp": 0,
+        "weight_status": "not_calibrated",
+        "value_source": "R07",
+        "application": "dynamic_ensemble_threshold",
+        "activation": {
+          "mode": "while_source_nonzero",
+          "duration_bars": null,
+          "duration_candidates": [],
+          "retrigger": "not_applicable",
+          "cancellation": "source_value_returns_to_zero",
+          "status": "default_not_calibrated"
+        },
+        "note": "Disabled until this rule is calibrated for TorchSharp."
+      },
+      "documentation": {
+        "source": "C",
+        "source_time": {
+          "start": "00:23:42",
+          "end": "00:24:22"
+        },
+        "meaning": "Оба MyRSI в нижней зоне при глубоком падении; оба в верхней зоне в другом эпизоде.",
+        "proposed_definition": "Пары R_f,R_s около -1 и около +1 как разные поля; продолжительность совпадения.",
+        "lifecycle": "Ежедневное состояние до нарушения одним из RSI.",
+        "unresolved": "Это составной признак, не два независимых подтверждения без учёта корреляции."
+      }
+    },
+    {
+      "number": 25,
+      "id": "R08",
+      "names": {
+        "ru": "Одновременный выход обоих RSI из верхней зоны",
+        "code": "Both RSI leave upper"
+      },
+      "classification": {
+        "family": "R",
+        "kind": "event"
+      },
+      "detector": {
+        "implemented_formula": "Both yesterday>=0.999 and both today<0.999",
+        "output": "existing Breeze feature value",
+        "calculation_status": "implemented"
+      },
+      "breeze": {
+        "enabled": true,
+        "frozen": true,
+        "weight_unit": "score_points",
+        "weights": {
+          "soft": 0,
+          "standard": 0,
+          "hard": 0
+        },
+        "lifecycle": "existing Breeze calculation; unchanged by TorchSharp settings"
+      },
+      "torchsharp": {
+        "enabled": false,
+        "weight_threshold_pp": 0,
+        "weight_status": "not_calibrated",
+        "value_source": "R08",
+        "application": "dynamic_ensemble_threshold",
+        "activation": {
+          "mode": "current_bar_only",
+          "duration_bars": 1,
+          "duration_candidates": [],
+          "retrigger": "new_observation",
+          "cancellation": "source_value_returns_to_zero",
+          "status": "default_not_calibrated"
+        },
+        "note": "Disabled until this rule is calibrated for TorchSharp."
+      },
+      "documentation": {
+        "source": "C",
+        "source_time": {
+          "start": "01:02:32",
+          "end": "01:04:11"
+        },
+        "meaning": "Совместное ослабление быстрого и медленного RSI усиливает комплекс с красным баром и EMA20.",
+        "proposed_definition": "Вчера оба >=1-eps, сегодня оба <1-eps; несинхронный выход за короткое прошлое окно — отдельный вариант.",
+        "lifecycle": "Один день; дальнейшее действие через возраст и текущую структуру.",
+        "unresolved": "Окно синхронности; событие без свечи/EMA не приравнивать к полному комплексу C08."
+      }
+    },
+    {
+      "number": 26,
+      "id": "B01",
+      "names": {
+        "ru": "Уровни четырёх широт",
+        "code": "Breadth level"
+      },
+      "classification": {
+        "family": "B",
+        "kind": "state"
+      },
+      "detector": {
+        "implemented_formula": "Mean of four breadth closes /100; individual values also retained",
+        "output": "existing Breeze feature value",
+        "calculation_status": "implemented"
+      },
+      "breeze": {
+        "enabled": true,
+        "frozen": true,
+        "weight_unit": "score_points",
+        "weights": {
+          "soft": 15.0,
+          "standard": 15.0,
+          "hard": 15.0
+        },
+        "lifecycle": "existing Breeze calculation; unchanged by TorchSharp settings"
+      },
+      "torchsharp": {
+        "enabled": false,
+        "weight_threshold_pp": 0,
+        "weight_status": "not_calibrated",
+        "value_source": "B01",
+        "application": "dynamic_ensemble_threshold",
+        "activation": {
+          "mode": "while_source_nonzero",
+          "duration_bars": null,
+          "duration_candidates": [],
+          "retrigger": "not_applicable",
+          "cancellation": "source_value_returns_to_zero",
+          "status": "default_not_calibrated"
+        },
+        "note": "Disabled until this rule is calibrated for TorchSharp."
+      },
+      "documentation": {
+        "source": "B1",
+        "source_time": {
+          "start": "00:08:19",
+          "end": "00:17:37"
+        },
+        "meaning": "Быстрая и медленная широты описывают разные части внутренней структуры рынка.",
+        "proposed_definition": "B50,B100,B200,BN в процентах; расстояния до выбранных зон, а не только заранее усреднённое число.",
+        "lifecycle": "Каждый день; доступность и число пригодных компонентов отдельно.",
+        "unresolved": "Не смешивать EMA цены с SMA широты; история состава индекса и качество OHLC."
+      }
+    },
+    {
+      "number": 27,
+      "id": "B02",
+      "names": {
+        "ru": "Совместный экстремум низкой широты",
+        "code": "Breadth washout"
+      },
+      "classification": {
+        "family": "B",
+        "kind": "composite"
+      },
+      "detector": {
+        "implemented_formula": "Mean clipped low memberships: B50 3..8, B100 7..12, B200 10..20",
+        "output": "existing Breeze feature value",
+        "calculation_status": "implemented"
+      },
+      "breeze": {
+        "enabled": true,
+        "frozen": true,
+        "weight_unit": "score_points",
+        "weights": {
+          "soft": 20.0,
+          "standard": 20.0,
+          "hard": 20.0
+        },
+        "lifecycle": "existing Breeze calculation; unchanged by TorchSharp settings"
+      },
+      "torchsharp": {
+        "enabled": false,
+        "weight_threshold_pp": 0,
+        "weight_status": "not_calibrated",
+        "value_source": "B02",
+        "application": "dynamic_ensemble_threshold",
+        "activation": {
+          "mode": "while_source_nonzero",
+          "duration_bars": null,
+          "duration_candidates": [],
+          "retrigger": "not_applicable",
+          "cancellation": "source_value_returns_to_zero",
+          "status": "default_not_calibrated"
+        },
+        "note": "Disabled until this rule is calibrated for TorchSharp."
+      },
+      "documentation": {
+        "source": "B1",
+        "source_time": {
+          "start": "00:24:37",
+          "end": "00:34:51"
+        },
+        "meaning": "После сильного снижения несколько горизонтов достигают очень низких значений.",
+        "proposed_definition": "Степени низкости B50 около 3–4, B100 около 7–8, B200 ниже 15; число и сила совпадений вместе с T08.",
+        "lifecycle": "Состояние низкой широты ежедневно; разворот отдельно.",
+        "unresolved": "Числа приблизительные; не считать сам экстремум достаточным повышением целевой позиции."
+      }
+    },
+    {
+      "number": 28,
+      "id": "B03",
+      "names": {
+        "ru": "Особенно слабая медленная широта",
+        "code": "B200 extreme"
+      },
+      "classification": {
+        "family": "B",
+        "kind": "state"
+      },
+      "detector": {
+        "implemented_formula": "clip((15-B200)/10,0,1)",
+        "output": "existing Breeze feature value",
+        "calculation_status": "implemented"
+      },
+      "breeze": {
+        "enabled": true,
+        "frozen": true,
+        "weight_unit": "score_points",
+        "weights": {
+          "soft": 5.0,
+          "standard": 5.0,
+          "hard": 5.0
+        },
+        "lifecycle": "existing Breeze calculation; unchanged by TorchSharp settings"
+      },
+      "torchsharp": {
+        "enabled": false,
+        "weight_threshold_pp": 0,
+        "weight_status": "not_calibrated",
+        "value_source": "B03",
+        "application": "dynamic_ensemble_threshold",
+        "activation": {
+          "mode": "while_source_nonzero",
+          "duration_bars": null,
+          "duration_candidates": [],
+          "retrigger": "not_applicable",
+          "cancellation": "source_value_returns_to_zero",
+          "status": "default_not_calibrated"
+        },
+        "note": "Disabled until this rule is calibrated for TorchSharp."
+      },
+      "documentation": {
+        "source": "B1",
+        "source_time": {
+          "start": "00:28:48",
+          "end": "00:30:00"
+        },
+        "meaning": "B200 ниже 10% — особенно глубокое состояние внутри падения.",
+        "proposed_definition": "Непрерывный B200 и мягкая степень низкости около 10%; длительность и контекст просадки.",
+        "lifecycle": "Ежедневно до выхода; отмена экстремума не является автоматически продажей.",
+        "unresolved": "Граница и ширина мягкого перехода; отличие от B02 как части того же комплекса."
+      }
+    },
+    {
+      "number": 29,
+      "id": "B04",
+      "names": {
+        "ru": "Широта растёт относительно вчера",
+        "code": "Breadth rising"
+      },
+      "classification": {
+        "family": "B",
+        "kind": "state"
+      },
+      "detector": {
+        "implemented_formula": "Fraction of four breadth closes greater than previous close",
+        "output": "existing Breeze feature value",
+        "calculation_status": "implemented"
+      },
+      "breeze": {
+        "enabled": true,
+        "frozen": true,
+        "weight_unit": "score_points",
+        "weights": {
+          "soft": 0,
+          "standard": 0,
+          "hard": 0
+        },
+        "lifecycle": "existing Breeze calculation; unchanged by TorchSharp settings"
+      },
+      "torchsharp": {
+        "enabled": false,
+        "weight_threshold_pp": 0,
+        "weight_status": "not_calibrated",
+        "value_source": "B04",
+        "application": "dynamic_ensemble_threshold",
+        "activation": {
+          "mode": "while_source_nonzero",
+          "duration_bars": null,
+          "duration_candidates": [],
+          "retrigger": "not_applicable",
+          "cancellation": "source_value_returns_to_zero",
+          "status": "default_not_calibrated"
+        },
+        "note": "Disabled until this rule is calibrated for TorchSharp."
+      },
+      "documentation": {
+        "source": "P",
+        "source_time": {
+          "start": "00:08:52",
+          "end": "00:09:24"
+        },
+        "meaning": "Текущее значение быстрой широты выше прошлого подтверждает подхват.",
+        "proposed_definition": "ΔB_i=B_i[t]-B_i[t-1] по всем рядам; величина в п.п., число растущих и последовательность положительных изменений.",
+        "lifecycle": "Пересчёт каждый день.",
+        "unresolved": "Не путать с цветом свечи: Close>Open — B05."
+      }
+    },
+    {
+      "number": 30,
+      "id": "B05",
+      "names": {
+        "ru": "Растущие свечи нескольких широт",
+        "code": "Breadth green candles"
+      },
+      "classification": {
+        "family": "B",
+        "kind": "state"
+      },
+      "detector": {
+        "implemented_formula": "Fraction of authentic breadth Close>Open",
+        "output": "existing Breeze feature value",
+        "calculation_status": "implemented"
+      },
+      "breeze": {
+        "enabled": true,
+        "frozen": true,
+        "weight_unit": "score_points",
+        "weights": {
+          "soft": 0,
+          "standard": 0,
+          "hard": 0
+        },
+        "lifecycle": "existing Breeze calculation; unchanged by TorchSharp settings"
+      },
+      "torchsharp": {
+        "enabled": false,
+        "weight_threshold_pp": 0,
+        "weight_status": "not_calibrated",
+        "value_source": "B05",
+        "application": "dynamic_ensemble_threshold",
+        "activation": {
+          "mode": "while_source_nonzero",
+          "duration_bars": null,
+          "duration_candidates": [],
+          "retrigger": "not_applicable",
+          "cancellation": "source_value_returns_to_zero",
+          "status": "default_not_calibrated"
+        },
+        "note": "Disabled until this rule is calibrated for TorchSharp."
+      },
+      "documentation": {
+        "source": "B2",
+        "source_time": {
+          "start": "00:06:15",
+          "end": "00:10:15"
+        },
+        "meaning": "Белые свечи широт подтверждают зелёную свечу цены.",
+        "proposed_definition": "Для настоящих OHLC широты: B_Close>B_Open; тело, число совпадений и отличие от ΔB>0 хранить раздельно.",
+        "lifecycle": "На завершившемся баре; при отсутствии Open признак unknown.",
+        "unresolved": "Допуски тела, число рядов; не вводить жёсткий фильтр 3 из 4 как установленный автором закон."
+      }
+    },
+    {
+      "number": 31,
+      "id": "B06",
+      "names": {
+        "ru": "Запаздывающее подтверждение широтой",
+        "code": "Late breadth confirmation"
+      },
+      "classification": {
+        "family": "B",
+        "kind": "sequence"
+      },
+      "detector": {
+        "implemented_formula": "Yesterday RSI lower release or green recovery after falling bar; today >=2 breadth rising and C>=yesterday C",
+        "output": "existing Breeze feature value",
+        "calculation_status": "implemented"
+      },
+      "breeze": {
+        "enabled": true,
+        "frozen": true,
+        "weight_unit": "score_points",
+        "weights": {
+          "soft": 0,
+          "standard": 0,
+          "hard": 0
+        },
+        "lifecycle": "existing Breeze calculation; unchanged by TorchSharp settings"
+      },
+      "torchsharp": {
+        "enabled": false,
+        "weight_threshold_pp": 0,
+        "weight_status": "not_calibrated",
+        "value_source": "B06",
+        "application": "dynamic_ensemble_threshold",
+        "activation": {
+          "mode": "while_source_nonzero",
+          "duration_bars": null,
+          "duration_candidates": [],
+          "retrigger": "not_applicable",
+          "cancellation": "source_value_returns_to_zero",
+          "status": "default_not_calibrated"
+        },
+        "note": "Disabled until this rule is calibrated for TorchSharp."
+      },
+      "documentation": {
+        "source": "B2",
+        "source_time": {
+          "start": "00:27:07",
+          "end": "00:29:13"
+        },
+        "meaning": "Цена/RSI разворачиваются раньше части широт на один день.",
+        "proposed_definition": "Сегодня B04/B05 подтверждают вчерашний R03 или ценовой разворот; лаг и количество подтвердивших рядов.",
+        "lifecycle": "Активировать сегодня, а не вчера; при отмене исходного движения хранить конфликт.",
+        "unresolved": "Окно 1 день — ориентир; расширение окна требует отдельного варианта."
+      }
+    },
+    {
+      "number": 32,
+      "id": "B07",
+      "names": {
+        "ru": "Истончение у ценового максимума",
+        "code": "Top thinning"
+      },
+      "classification": {
+        "family": "B",
+        "kind": "sequence"
+      },
+      "detector": {
+        "implemented_formula": "New 20-bar close high; fraction of breadth lower than on previous 20-bar price peak",
+        "output": "existing Breeze feature value",
+        "calculation_status": "implemented"
+      },
+      "breeze": {
+        "enabled": true,
+        "frozen": true,
+        "weight_unit": "score_points",
+        "weights": {
+          "soft": -10.0,
+          "standard": -10.0,
+          "hard": -10.0
+        },
+        "lifecycle": "existing Breeze calculation; unchanged by TorchSharp settings"
+      },
+      "torchsharp": {
+        "enabled": false,
+        "weight_threshold_pp": 0,
+        "weight_status": "not_calibrated",
+        "value_source": "B07",
+        "application": "dynamic_ensemble_threshold",
+        "activation": {
+          "mode": "while_source_nonzero",
+          "duration_bars": null,
+          "duration_candidates": [],
+          "retrigger": "not_applicable",
+          "cancellation": "source_value_returns_to_zero",
+          "status": "default_not_calibrated"
+        },
+        "note": "Disabled until this rule is calibrated for TorchSharp."
+      },
+      "documentation": {
+        "source": "B1",
+        "source_time": {
+          "start": "00:40:18",
+          "end": "00:43:12"
+        },
+        "meaning": "Цена обновляет максимум, широты не подтверждают или снижаются; это предупреждение, не автоматическая продажа.",
+        "proposed_definition": "Новый максимум C относительно прошлого окна и значения B на нынешнем и предыдущем доступном ценовом максимуме; число отрицательных расхождений и их амплитуды.",
+        "lifecycle": "Доступно на сегодняшнем новом максимуме; повторные даты одного эпизода группировать.",
+        "unresolved": "Окно максимумов, High или Close, минимальная амплитуда; уровень 75 сам по себе не означает истончение."
+      }
+    },
+    {
+      "number": 33,
+      "id": "B08",
+      "names": {
+        "ru": "Новый минимум цены без нового минимума широты",
+        "code": "Bullish breadth divergence"
+      },
+      "classification": {
+        "family": "B",
+        "kind": "sequence"
+      },
+      "detector": {
+        "implemented_formula": "C tests/breaks prior close low (0.5% tolerance); prior low 3..20 bars ago and intervening rebound>=1%; fraction breadth higher",
+        "output": "existing Breeze feature value",
+        "calculation_status": "implemented"
+      },
+      "breeze": {
+        "enabled": true,
+        "frozen": true,
+        "weight_unit": "score_points",
+        "weights": {
+          "soft": 10.0,
+          "standard": 10.0,
+          "hard": 10.0
+        },
+        "lifecycle": "existing Breeze calculation; unchanged by TorchSharp settings"
+      },
+      "torchsharp": {
+        "enabled": false,
+        "weight_threshold_pp": 0,
+        "weight_status": "not_calibrated",
+        "value_source": "B08",
+        "application": "dynamic_ensemble_threshold",
+        "activation": {
+          "mode": "while_source_nonzero",
+          "duration_bars": null,
+          "duration_candidates": [],
+          "retrigger": "not_applicable",
+          "cancellation": "source_value_returns_to_zero",
+          "status": "default_not_calibrated"
+        },
+        "note": "Disabled until this rule is calibrated for TorchSharp."
+      },
+      "documentation": {
+        "source": "C",
+        "source_time": {
+          "start": "00:29:20",
+          "end": "00:31:32"
+        },
+        "meaning": "Двойное дно широты при более низкой цене; B50 может не подтвердить минимум, даже если B200 подтвердил.",
+        "proposed_definition": "Сопоставить сегодняшнюю цену с прошлым подтверждённым минимумом и B на тех же датах; вектор расхождений четырёх рядов, интервал между касаниями.",
+        "lifecycle": "Текущий второй тест может быть кандидатом; подтверждение разворота отмечается только при его появлении.",
+        "unresolved": "Выбор минимума, допуск равенства, окно; около 6 баров — пример, не универсальное число."
+      }
+    },
+    {
+      "number": 34,
+      "id": "B09",
+      "names": {
+        "ru": "Широтное блюдце и прекращение обновления минимумов",
+        "code": "Breadth saucer"
+      },
+      "classification": {
+        "family": "B",
+        "kind": "sequence"
+      },
+      "detector": {
+        "implemented_formula": "Fraction: decline t-10 to t-5, nonnegative t-5 to t slope, no new low for last 3 bars",
+        "output": "existing Breeze feature value",
+        "calculation_status": "implemented"
+      },
+      "breeze": {
+        "enabled": true,
+        "frozen": true,
+        "weight_unit": "score_points",
+        "weights": {
+          "soft": 5.0,
+          "standard": 5.0,
+          "hard": 5.0
+        },
+        "lifecycle": "existing Breeze calculation; unchanged by TorchSharp settings"
+      },
+      "torchsharp": {
+        "enabled": false,
+        "weight_threshold_pp": 0,
+        "weight_status": "not_calibrated",
+        "value_source": "B09",
+        "application": "dynamic_ensemble_threshold",
+        "activation": {
+          "mode": "while_source_nonzero",
+          "duration_bars": null,
+          "duration_candidates": [],
+          "retrigger": "not_applicable",
+          "cancellation": "source_value_returns_to_zero",
+          "status": "default_not_calibrated"
+        },
+        "note": "Disabled until this rule is calibrated for TorchSharp."
+      },
+      "documentation": {
+        "source": "B1",
+        "source_time": {
+          "start": "00:36:50",
+          "end": "00:40:11"
+        },
+        "meaning": "После падения широты перестают обновлять минимумы и формируют основание.",
+        "proposed_definition": "Падающий прошлый участок, затем уменьшение отрицательного наклона и последовательность удержанных минимумов; текущий положительный наклон отдельно.",
+        "lifecycle": "Нарастающая степень сформированности только по наблюдённой части.",
+        "unresolved": "Длина участков, способ причинной оценки наклона и допустимые новые минимумы; форма пока качественная."
+      }
+    },
+    {
+      "number": 35,
+      "id": "B10",
+      "names": {
+        "ru": "Слабая быстрая широта при сильной медленной",
+        "code": "Fast weak slow strong"
+      },
+      "classification": {
+        "family": "B",
+        "kind": "composite"
+      },
+      "detector": {
+        "implemented_formula": "B50<50, B200>=50, B200 rising",
+        "output": "existing Breeze feature value",
+        "calculation_status": "implemented"
+      },
+      "breeze": {
+        "enabled": true,
+        "frozen": true,
+        "weight_unit": "score_points",
+        "weights": {
+          "soft": 0,
+          "standard": 0,
+          "hard": 0
+        },
+        "lifecycle": "existing Breeze calculation; unchanged by TorchSharp settings"
+      },
+      "torchsharp": {
+        "enabled": false,
+        "weight_threshold_pp": 0,
+        "weight_status": "not_calibrated",
+        "value_source": "B10",
+        "application": "dynamic_ensemble_threshold",
+        "activation": {
+          "mode": "while_source_nonzero",
+          "duration_bars": null,
+          "duration_candidates": [],
+          "retrigger": "not_applicable",
+          "cancellation": "source_value_returns_to_zero",
+          "status": "default_not_calibrated"
+        },
+        "note": "Disabled until this rule is calibrated for TorchSharp."
+      },
+      "documentation": {
+        "source": "B1",
+        "source_time": {
+          "start": "00:45:38",
+          "end": "00:50:10"
+        },
+        "meaning": "Падение быстрой широты ниже 50 при сильной B200 может оказаться обычной коррекцией.",
+        "proposed_definition": "B50<50 плюс уровень/наклон B200, положение SPY относительно EMA и разность B200-B50.",
+        "lifecycle": "Ежедневно; самостоятельной команды выйти нет.",
+        "unresolved": "Что считать сильной B200; порог 50 — исходный ориентир."
+      }
+    },
+    {
+      "number": 36,
+      "id": "B11",
+      "names": {
+        "ru": "Одновременный импульс широты",
+        "code": "Broad breadth impulse"
+      },
+      "classification": {
+        "family": "B",
+        "kind": "event"
+      },
+      "detector": {
+        "implemented_formula": "Mean clipped positive daily breadth changes /10pp",
+        "output": "existing Breeze feature value",
+        "calculation_status": "implemented"
+      },
+      "breeze": {
+        "enabled": true,
+        "frozen": true,
+        "weight_unit": "score_points",
+        "weights": {
+          "soft": 0,
+          "standard": 0,
+          "hard": 0
+        },
+        "lifecycle": "existing Breeze calculation; unchanged by TorchSharp settings"
+      },
+      "torchsharp": {
+        "enabled": false,
+        "weight_threshold_pp": 0,
+        "weight_status": "not_calibrated",
+        "value_source": "B11",
+        "application": "dynamic_ensemble_threshold",
+        "activation": {
+          "mode": "current_bar_only",
+          "duration_bars": 1,
+          "duration_candidates": [],
+          "retrigger": "new_observation",
+          "cancellation": "source_value_returns_to_zero",
+          "status": "default_not_calibrated"
+        },
+        "note": "Disabled until this rule is calibrated for TorchSharp."
+      },
+      "documentation": {
+        "source": "C",
+        "source_time": {
+          "start": "00:53:21",
+          "end": "00:54:37"
+        },
+        "meaning": "Несколько горизонтов резко поднимаются вместе; расширяется участие рынка.",
+        "proposed_definition": "Вектор ΔB, число растущих рядов, амплитуда относительно прошлой изменчивости каждого ряда; BN хранить отдельно как межрыночное подтверждение.",
+        "lifecycle": "Импульс сегодня; длительность последующего участия отдельным состоянием.",
+        "unresolved": "Порог резкости; не считать зависимые широты независимыми голосами."
+      }
+    },
+    {
+      "number": 37,
+      "id": "B12",
+      "names": {
+        "ru": "Широта Nasdaq начинает восстанавливаться раньше",
+        "code": "Nasdaq breadth leads"
+      },
+      "classification": {
+        "family": "B",
+        "kind": "sequence"
+      },
+      "detector": {
+        "implemented_formula": "BN rises while fewer than 2 SP breadths rise; current observation only",
+        "output": "existing Breeze feature value",
+        "calculation_status": "implemented"
+      },
+      "breeze": {
+        "enabled": true,
+        "frozen": true,
+        "weight_unit": "score_points",
+        "weights": {
+          "soft": 0,
+          "standard": 0,
+          "hard": 0
+        },
+        "lifecycle": "existing Breeze calculation; unchanged by TorchSharp settings"
+      },
+      "torchsharp": {
+        "enabled": false,
+        "weight_threshold_pp": 0,
+        "weight_status": "not_calibrated",
+        "value_source": "B12",
+        "application": "dynamic_ensemble_threshold",
+        "activation": {
+          "mode": "while_source_nonzero",
+          "duration_bars": null,
+          "duration_candidates": [],
+          "retrigger": "not_applicable",
+          "cancellation": "source_value_returns_to_zero",
+          "status": "default_not_calibrated"
+        },
+        "note": "Disabled until this rule is calibrated for TorchSharp."
+      },
+      "documentation": {
+        "source": "B1",
+        "source_time": {
+          "start": "00:32:14",
+          "end": "00:32:52"
+        },
+        "meaning": "На кризисном примере Nasdaq по своей широте пошёл вверх раньше остальных.",
+        "proposed_definition": "Сопоставить уже наблюдённые начала роста BN и B50/B100/B200; пока S&P не подтвердил — текущий лаг ожидания, после подтверждения — наблюдённый лаг.",
+        "lifecycle": "Нельзя заранее вписать будущую дату подтверждения S&P; незавершённая последовательность остаётся незавершённой.",
+        "unresolved": "Определение начала восстановления и его силы; это гипотеза межрыночного опережения, не универсальное правило."
+      }
+    },
+    {
+      "number": 38,
+      "id": "B13",
+      "names": {
+        "ru": "Медленная широта на высоком плато при росте цены",
+        "code": "High B200 plateau"
+      },
+      "classification": {
+        "family": "B",
+        "kind": "state"
+      },
+      "detector": {
+        "implemented_formula": "B200>=60; last 10-bar range<=5pp and price rises over 10 bars",
+        "output": "existing Breeze feature value",
+        "calculation_status": "implemented"
+      },
+      "breeze": {
+        "enabled": true,
+        "frozen": true,
+        "weight_unit": "score_points",
+        "weights": {
+          "soft": 0,
+          "standard": 0,
+          "hard": 0
+        },
+        "lifecycle": "existing Breeze calculation; unchanged by TorchSharp settings"
+      },
+      "torchsharp": {
+        "enabled": false,
+        "weight_threshold_pp": 0,
+        "weight_status": "not_calibrated",
+        "value_source": "B13",
+        "application": "dynamic_ensemble_threshold",
+        "activation": {
+          "mode": "while_source_nonzero",
+          "duration_bars": null,
+          "duration_candidates": [],
+          "retrigger": "not_applicable",
+          "cancellation": "source_value_returns_to_zero",
+          "status": "default_not_calibrated"
+        },
+        "note": "Disabled until this rule is calibrated for TorchSharp."
+      },
+      "documentation": {
+        "source": "B1",
+        "source_time": {
+          "start": "00:16:33",
+          "end": "00:17:37"
+        },
+        "meaning": "B200 может долго стоять примерно на одном высоком уровне, пока индекс растёт.",
+        "proposed_definition": "Высокий B200, малый абсолютный наклон/размах за прошлое окно и положительное изменение C; сравнить с настоящим снижением B200.",
+        "lifecycle": "Ежедневно на заполненном прошлом окне.",
+        "unresolved": "Порог плато и высокий уровень; отсутствие дальнейшего роста широты не приравнивать к дивергенции автоматически."
+      }
+    },
+    {
+      "number": 39,
+      "id": "B14",
+      "names": {
+        "ru": "Похожая ценовая коррекция при гораздо более слабом участии",
+        "code": "Weaker participation analogue"
+      },
+      "classification": {
+        "family": "B",
+        "kind": "sequence"
+      },
+      "detector": {
+        "implemented_formula": "Current drawdown>=3%; compare to nearest-depth completed 20-bar drawdown episode in past 252 bars (within 2pp); positive mean breadth deterioration/20pp",
+        "output": "existing Breeze feature value",
+        "calculation_status": "implemented"
+      },
+      "breeze": {
+        "enabled": true,
+        "frozen": true,
+        "weight_unit": "score_points",
+        "weights": {
+          "soft": 0,
+          "standard": 0,
+          "hard": 0
+        },
+        "lifecycle": "existing Breeze calculation; unchanged by TorchSharp settings"
+      },
+      "torchsharp": {
+        "enabled": false,
+        "weight_threshold_pp": 0,
+        "weight_status": "not_calibrated",
+        "value_source": "B14",
+        "application": "dynamic_ensemble_threshold",
+        "activation": {
+          "mode": "while_source_nonzero",
+          "duration_bars": null,
+          "duration_candidates": [],
+          "retrigger": "not_applicable",
+          "cancellation": "source_value_returns_to_zero",
+          "status": "default_not_calibrated"
+        },
+        "note": "Disabled until this rule is calibrated for TorchSharp."
+      },
+      "documentation": {
+        "source": "B1",
+        "source_time": {
+          "start": "00:45:38",
+          "end": "00:47:47"
+        },
+        "meaning": "Внешне похожие падения цены отличаются тем, что во втором случае широта существенно слабее.",
+        "proposed_definition": "Сравнивать текущие B50/B100/B200 с прошлым завершённым эпизодом сопоставимой глубины цены; хранить вектор разностей и критерий выбора прошлого аналога.",
+        "lifecycle": "Аналог выбирается только из эпизодов, завершившихся к t; текущий эпизод не обязан быть завершён.",
+        "unresolved": "Метрика сходства и окно поиска ещё не заданы; нельзя выбирать прошлый аналог по будущему исходу текущей коррекции."
+      }
+    },
+    {
+      "number": 40,
+      "id": "P01",
+      "names": {
+        "ru": "Размер и направление тела свечи",
+        "code": "Candle body"
+      },
+      "classification": {
+        "family": "P",
+        "kind": "state"
+      },
+      "detector": {
+        "implemented_formula": "Signed (C-O)/O in % divided by 2, clipped -1..1",
+        "output": "existing Breeze feature value",
+        "calculation_status": "implemented"
+      },
+      "breeze": {
+        "enabled": true,
+        "frozen": true,
+        "weight_unit": "score_points",
+        "weights": {
+          "soft": 0,
+          "standard": 0,
+          "hard": 0
+        },
+        "lifecycle": "existing Breeze calculation; unchanged by TorchSharp settings"
+      },
+      "torchsharp": {
+        "enabled": false,
+        "weight_threshold_pp": 0,
+        "weight_status": "not_calibrated",
+        "value_source": "P01",
+        "application": "dynamic_ensemble_threshold",
+        "activation": {
+          "mode": "while_source_nonzero",
+          "duration_bars": null,
+          "duration_candidates": [],
+          "retrigger": "not_applicable",
+          "cancellation": "source_value_returns_to_zero",
+          "status": "default_not_calibrated"
+        },
+        "note": "Disabled until this rule is calibrated for TorchSharp."
+      },
+      "documentation": {
+        "source": "P",
+        "source_time": {
+          "start": "00:15:15",
+          "end": "00:15:48"
+        },
+        "meaning": "Сильный красный бар определяется движением от открытия к закрытию.",
+        "proposed_definition": "body_pct=100*(C-O)/O; signed и absolute варианты отдельно; относительная величина против медианы прошлых тел.",
+        "lifecycle": "На закрытии данного дня.",
+        "unresolved": "Прошлое окно нормировки; исключать текущий бар из эталонной медианы."
+      }
+    },
+    {
+      "number": 41,
+      "id": "P02",
+      "names": {
+        "ru": "Нижняя тень с новым минимумом и зелёным закрытием",
+        "code": "Green lower wick"
+      },
+      "classification": {
+        "family": "P",
+        "kind": "event"
+      },
+      "detector": {
+        "implemented_formula": "C>O, L<previous L, lower wick>=40% of H-L",
+        "output": "existing Breeze feature value",
+        "calculation_status": "implemented"
+      },
+      "breeze": {
+        "enabled": true,
+        "frozen": true,
+        "weight_unit": "score_points",
+        "weights": {
+          "soft": 10.0,
+          "standard": 10.0,
+          "hard": 10.0
+        },
+        "lifecycle": "existing Breeze calculation; unchanged by TorchSharp settings"
+      },
+      "torchsharp": {
+        "enabled": false,
+        "weight_threshold_pp": 0,
+        "weight_status": "rejected_after_test",
+        "value_source": "P02",
+        "application": "dynamic_ensemble_threshold",
+        "activation": {
+          "mode": "current_bar_only",
+          "duration_bars": 1,
+          "duration_candidates": [],
+          "retrigger": "new_observation",
+          "cancellation": "source_value_returns_to_zero",
+          "status": "rejected_after_test"
+        },
+        "note": "Проверено в TorchSharp как динамическая коррекция торгового порога совместно с R03. Диапазон порога 48..86, удержание 0..6 баров, возврат скачком или линейно. Отклонено: устойчивого улучшения доходности сверх принятого допуска 2% не получено; комбинации с формально лучшим APR существенно увеличивали количество сделок и одновременно снижали среднюю прибыль на сделку и Profit Factor. Не включать повторно без новой гипотезы или другого механизма применения.",
+        "evaluation": {
+          "date": "2026-10-22",
+          "decision": "rejected",
+          "baseline": "R03 threshold 70, hold 5 bars, jump return",
+          "tested_threshold_range": "48..86 step 2",
+          "tested_duration_range": "0..6 bars",
+          "tested_return_modes": [
+            "jump",
+            "linear"
+          ],
+          "reason": "No robust return improvement beyond the 2% materiality tolerance; apparent maxima increased position count materially and reduced average profit per position and Profit Factor."
+        }
+      },
+      "documentation": {
+        "source": "P",
+        "source_time": {
+          "start": "00:24:57",
+          "end": "00:26:23"
+        },
+        "meaning": "Во время подхвата есть новый минимум, длинная нижняя тень и возврат вверх.",
+        "proposed_definition": "C>O, L<L_prev, lower_wick=min(O,C)-L; отношение тени к диапазону и положение относительно EMA50/100.",
+        "lifecycle": "Событие сегодня; выход выше EMA20 позже — отдельное подтверждение.",
+        "unresolved": "Что считать длинной тенью; для H=L отношение unknown, не деление на ноль."
+      }
+    },
+    {
+      "number": 42,
+      "id": "P03",
+      "names": {
+        "ru": "True Range, ATRP и всплеск волатильности",
+        "code": "ATR shock"
+      },
+      "classification": {
+        "family": "P",
+        "kind": "state"
+      },
+      "detector": {
+        "implemented_formula": "clip(ATRP1 / median(previous 20 ATRP1) -1,0,1); unsigned volatility, not candle body",
+        "output": "existing Breeze feature value",
+        "calculation_status": "implemented"
+      },
+      "breeze": {
+        "enabled": true,
+        "frozen": true,
+        "weight_unit": "score_points",
+        "weights": {
+          "soft": -10.0,
+          "standard": -10.0,
+          "hard": -10.0
+        },
+        "lifecycle": "existing Breeze calculation; unchanged by TorchSharp settings"
+      },
+      "torchsharp": {
+        "enabled": false,
+        "weight_threshold_pp": 0,
+        "weight_status": "not_calibrated",
+        "value_source": "P03",
+        "application": "dynamic_ensemble_threshold",
+        "activation": {
+          "mode": "while_source_nonzero",
+          "duration_bars": null,
+          "duration_candidates": [],
+          "retrigger": "not_applicable",
+          "cancellation": "source_value_returns_to_zero",
+          "status": "default_not_calibrated"
+        },
+        "note": "Disabled until this rule is calibrated for TorchSharp."
+      },
+      "documentation": {
+        "source": "P",
+        "source_time": {
+          "start": "00:08:05",
+          "end": "00:08:52"
+        },
+        "meaning": "Зелёный импульс с ATRP более 2% усиливает показанный подхват.",
+        "proposed_definition": "TR=max(H-L,abs(H-C_prev),abs(L-C_prev)); ATRP1=100*TR/C; отдельно отношение к прошлой медиане и направление свечи.",
+        "lifecycle": "Каждый завершённый бар.",
+        "unresolved": "ATRP1 не равен телу свечи; 2% — ориентир конкретного комплекса, не универсальный штраф."
+      }
+    },
+    {
+      "number": 43,
+      "id": "P04",
+      "names": {
+        "ru": "Разрыв вверх над предыдущими диапазонами",
+        "code": "Full upward gap"
+      },
+      "classification": {
+        "family": "P",
+        "kind": "event"
+      },
+      "detector": {
+        "implemented_formula": "L>max High of preceding 5 bars",
+        "output": "existing Breeze feature value",
+        "calculation_status": "implemented"
+      },
+      "breeze": {
+        "enabled": true,
+        "frozen": true,
+        "weight_unit": "score_points",
+        "weights": {
+          "soft": 0,
+          "standard": 0,
+          "hard": 0
+        },
+        "lifecycle": "existing Breeze calculation; unchanged by TorchSharp settings"
+      },
+      "torchsharp": {
+        "enabled": false,
+        "weight_threshold_pp": 0,
+        "weight_status": "not_calibrated",
+        "value_source": "P04",
+        "application": "dynamic_ensemble_threshold",
+        "activation": {
+          "mode": "current_bar_only",
+          "duration_bars": 1,
+          "duration_candidates": [],
+          "retrigger": "new_observation",
+          "cancellation": "source_value_returns_to_zero",
+          "status": "default_not_calibrated"
+        },
+        "note": "Disabled until this rule is calibrated for TorchSharp."
+      },
+      "documentation": {
+        "source": "C",
+        "source_time": {
+          "start": "00:50:44",
+          "end": "00:52:23"
+        },
+        "meaning": "Минимум дня выше максимума вчера и нескольких предшествующих дней; цена возвращается над EMA.",
+        "proposed_definition": "Отдельно O>C_prev как обычный гэп, L>H_prev как полный разрыв и L>max(H[t-k:t-1]) для k около 5–7; возврат над EMA отдельными полями.",
+        "lifecycle": "EOD-событие; полный разрыв по Low известен только после закрытия.",
+        "unresolved": "k и минимальный размер; симметричный гэп вниз допустим как явно помеченное расширение."
+      }
+    },
+    {
+      "number": 44,
+      "id": "P05",
+      "names": {
+        "ru": "Серия сильных опорных баров",
+        "code": "Multi-bar impulse"
+      },
+      "classification": {
+        "family": "P",
+        "kind": "sequence"
+      },
+      "detector": {
+        "implemented_formula": "2- or 3-bar same-color run; signed total C/first O move /3%, clipped -1..1",
+        "output": "existing Breeze feature value",
+        "calculation_status": "implemented"
+      },
+      "breeze": {
+        "enabled": true,
+        "frozen": true,
+        "weight_unit": "score_points",
+        "weights": {
+          "soft": 5.0,
+          "standard": 5.0,
+          "hard": 5.0
+        },
+        "lifecycle": "existing Breeze calculation; unchanged by TorchSharp settings"
+      },
+      "torchsharp": {
+        "enabled": false,
+        "weight_threshold_pp": 0,
+        "weight_status": "not_calibrated",
+        "value_source": "P05",
+        "application": "dynamic_ensemble_threshold",
+        "activation": {
+          "mode": "while_source_nonzero",
+          "duration_bars": null,
+          "duration_candidates": [],
+          "retrigger": "not_applicable",
+          "cancellation": "source_value_returns_to_zero",
+          "status": "default_not_calibrated"
+        },
+        "note": "Disabled until this rule is calibrated for TorchSharp."
+      },
+      "documentation": {
+        "source": "P",
+        "source_time": {
+          "start": "00:29:13",
+          "end": "00:29:51"
+        },
+        "meaning": "Два-три бара могут образовывать единый импульс.",
+        "proposed_definition": "Причинно завершённая серия 2–3 баров; её open первого, close последнего, min Low, max High, суммарное изменение и направления каждого тела.",
+        "lifecycle": "Наращивание только при появлении очередного бара; после разворота фиксируется уже известная серия.",
+        "unresolved": "Допустимы ли смешанные цвета, критерий сильного суммарного движения."
+      }
+    },
+    {
+      "number": 45,
+      "id": "P06",
+      "names": {
+        "ru": "Доджи и длинная тень возле низкой широты — с контрпримером",
+        "code": "Low-breadth doji"
+      },
+      "classification": {
+        "family": "P",
+        "kind": "composite"
+      },
+      "detector": {
+        "implemented_formula": "Body<=20% range, lower wick>=40%, B50<20 and rising; flat bar =>0 (no pattern)",
+        "output": "existing Breeze feature value",
+        "calculation_status": "implemented"
+      },
+      "breeze": {
+        "enabled": true,
+        "frozen": true,
+        "weight_unit": "score_points",
+        "weights": {
+          "soft": 0,
+          "standard": 0,
+          "hard": 0
+        },
+        "lifecycle": "existing Breeze calculation; unchanged by TorchSharp settings"
+      },
+      "torchsharp": {
+        "enabled": false,
+        "weight_threshold_pp": 0,
+        "weight_status": "not_calibrated",
+        "value_source": "P06",
+        "application": "dynamic_ensemble_threshold",
+        "activation": {
+          "mode": "while_source_nonzero",
+          "duration_bars": null,
+          "duration_candidates": [],
+          "retrigger": "not_applicable",
+          "cancellation": "source_value_returns_to_zero",
+          "status": "default_not_calibrated"
+        },
+        "note": "Disabled until this rule is calibrated for TorchSharp."
+      },
+      "documentation": {
+        "source": "B1",
+        "source_time": {
+          "start": "00:36:50",
+          "end": "00:38:54"
+        },
+        "meaning": "Показаны доджи, длинные тени и похожие свечи, после которых снижение продолжалось. Автор подчёркивает неоднозначность.",
+        "proposed_definition": "Малое abs(C-O)/(H-L), большая нижняя тень, низкая широта и прекращение её падения как раздельные поля. Отдельно цвет/тело самой широты, если OHLC настоящие.",
+        "lifecycle": "Регистрировать на закрытии, без ярлыка подтверждённого дна; последующий исход только в проверке.",
+        "unresolved": "На каком именно ряду доджи в отдельных фразах — сверить по кадру; при H=L отношение unknown. Не задавать положительный вес по одному рисунку."
+      }
+    },
+    {
+      "number": 46,
+      "id": "V01",
+      "names": {
+        "ru": "Знак и величина фронтального контанго",
+        "code": "Front contango"
+      },
+      "classification": {
+        "family": "V",
+        "kind": "state"
+      },
+      "detector": {
+        "implemented_formula": "tanh(100*(F2/F1-1)/5); actual contracts, not 30/60 interpolation",
+        "output": "existing Breeze feature value",
+        "calculation_status": "implemented"
+      },
+      "breeze": {
+        "enabled": true,
+        "frozen": true,
+        "weight_unit": "score_points",
+        "weights": {
+          "soft": 5.0,
+          "standard": 5.0,
+          "hard": 5.0
+        },
+        "lifecycle": "existing Breeze calculation; unchanged by TorchSharp settings"
+      },
+      "torchsharp": {
+        "enabled": false,
+        "weight_threshold_pp": 0,
+        "weight_status": "not_calibrated",
+        "value_source": "V01",
+        "application": "dynamic_ensemble_threshold",
+        "activation": {
+          "mode": "while_source_nonzero",
+          "duration_bars": null,
+          "duration_candidates": [],
+          "retrigger": "not_applicable",
+          "cancellation": "source_value_returns_to_zero",
+          "status": "default_not_calibrated"
+        },
+        "note": "Disabled until this rule is calibrated for TorchSharp."
+      },
+      "documentation": {
+        "source": "C",
+        "source_time": {
+          "start": "00:08:24",
+          "end": "00:10:19"
+        },
+        "meaning": "Ближний фьючерс дешевле следующего; величина спреда существенна.",
+        "proposed_definition": "100*(F2/F1-1), абсолютный спред и DTE обоих контрактов. Константные сроки 30/60 дней хранить как отдельную интерполированную серию.",
+        "lifecycle": "По доступному снимку кривой на дату; отсутствие контракта — unknown.",
+        "unresolved": "Реальные контракты и сроки 30/60 не взаимозаменяемы; ролловер маркировать."
+      }
+    },
+    {
+      "number": 47,
+      "id": "V02",
+      "names": {
+        "ru": "Широкое контанго или широкая бэквордация",
+        "code": "Whole VIX curve"
+      },
+      "classification": {
+        "family": "V",
+        "kind": "state"
+      },
+      "detector": {
+        "implemented_formula": "(rising pairs-falling pairs)/pair count for actual contracts through 180 DTE",
+        "output": "existing Breeze feature value",
+        "calculation_status": "implemented"
+      },
+      "breeze": {
+        "enabled": true,
+        "frozen": true,
+        "weight_unit": "score_points",
+        "weights": {
+          "soft": 0,
+          "standard": 0,
+          "hard": 0
+        },
+        "lifecycle": "existing Breeze calculation; unchanged by TorchSharp settings"
+      },
+      "torchsharp": {
+        "enabled": false,
+        "weight_threshold_pp": 0,
+        "weight_status": "not_calibrated",
+        "value_source": "V02",
+        "application": "dynamic_ensemble_threshold",
+        "activation": {
+          "mode": "while_source_nonzero",
+          "duration_bars": null,
+          "duration_candidates": [],
+          "retrigger": "not_applicable",
+          "cancellation": "source_value_returns_to_zero",
+          "status": "default_not_calibrated"
+        },
+        "note": "Disabled until this rule is calibrated for TorchSharp."
+      },
+      "documentation": {
+        "source": "C",
+        "source_time": {
+          "start": "00:20:24",
+          "end": "00:26:33"
+        },
+        "meaning": "Важна форма нескольких месяцев, а не только первой пары.",
+        "proposed_definition": "Для контрактов до 180 дней вектор соседних спредов; число и доля положительных/отрицательных, амплитуда и охваченный срок.",
+        "lifecycle": "Каждый доступный дневной снимок.",
+        "unresolved": "Сколько инверсий означает широкую бэквордацию; небольшая дальняя инверсия не должна механически отменять весь режим."
+      }
+    },
+    {
+      "number": 48,
+      "id": "V03",
+      "names": {
+        "ru": "Инвертированный фронт при плоском или положительном дальнем участке",
+        "code": "Mixed curve"
+      },
+      "classification": {
+        "family": "V",
+        "kind": "state"
+      },
+      "detector": {
+        "implemented_formula": "Front spread<0 and average of pairs after the first>=-0.5%",
+        "output": "existing Breeze feature value",
+        "calculation_status": "implemented"
+      },
+      "breeze": {
+        "enabled": true,
+        "frozen": true,
+        "weight_unit": "score_points",
+        "weights": {
+          "soft": 0,
+          "standard": -5.0,
+          "hard": -5.0
+        },
+        "lifecycle": "existing Breeze calculation; unchanged by TorchSharp settings"
+      },
+      "torchsharp": {
+        "enabled": false,
+        "weight_threshold_pp": 0,
+        "weight_status": "not_calibrated",
+        "value_source": "V03",
+        "application": "dynamic_ensemble_threshold",
+        "activation": {
+          "mode": "while_source_nonzero",
+          "duration_bars": null,
+          "duration_candidates": [],
+          "retrigger": "not_applicable",
+          "cancellation": "source_value_returns_to_zero",
+          "status": "default_not_calibrated"
+        },
+        "note": "Disabled until this rule is calibrated for TorchSharp."
+      },
+      "documentation": {
+        "source": "C",
+        "source_time": {
+          "start": "00:33:13",
+          "end": "00:34:26"
+        },
+        "meaning": "Первые месяцы в бэквордации, дальше кривая почти плоская.",
+        "proposed_definition": "Отрицательные фронтальные спреды плюс дальние спреды около нуля/положительные; раздельные степени фронтального стресса и дальнего наклона.",
+        "lifecycle": "До изменения формы кривой.",
+        "unresolved": "Граница плоскости; примерно 0.5% в речи — ориентир, не готовый порог."
+      }
+    },
+    {
+      "number": 49,
+      "id": "V04",
+      "names": {
+        "ru": "Переход контанго в бэквордацию",
+        "code": "Backwardation starts"
+      },
+      "classification": {
+        "family": "V",
+        "kind": "event"
+      },
+      "detector": {
+        "implemented_formula": "Yesterday front>=0 and today<0, excluding front-expiry roll",
+        "output": "existing Breeze feature value",
+        "calculation_status": "implemented"
+      },
+      "breeze": {
+        "enabled": true,
+        "frozen": true,
+        "weight_unit": "score_points",
+        "weights": {
+          "soft": -10.0,
+          "standard": -5.0,
+          "hard": -5.0
+        },
+        "lifecycle": "existing Breeze calculation; unchanged by TorchSharp settings"
+      },
+      "torchsharp": {
+        "enabled": false,
+        "weight_threshold_pp": 0,
+        "weight_status": "not_calibrated",
+        "value_source": "V04",
+        "application": "dynamic_ensemble_threshold",
+        "activation": {
+          "mode": "current_bar_only",
+          "duration_bars": 1,
+          "duration_candidates": [],
+          "retrigger": "new_observation",
+          "cancellation": "source_value_returns_to_zero",
+          "status": "default_not_calibrated"
+        },
+        "note": "Disabled until this rule is calibrated for TorchSharp."
+      },
+      "documentation": {
+        "source": "C",
+        "source_time": {
+          "start": "00:38:35",
+          "end": "00:39:35"
+        },
+        "meaning": "После нормальной структуры появляется инверсия первой пары на фоне роста VIX.",
+        "proposed_definition": "Вчера front_spread>=0, сегодня <0; отдельно переход в широкую инверсию и дневное изменение спреда.",
+        "lifecycle": "Отметка сегодня; текущая инверсия продолжается как состояние.",
+        "unresolved": "Шум около нуля и ролловер; нельзя считать отсутствовавший вчера снимок нормальным контанго."
+      }
+    },
+    {
+      "number": 50,
+      "id": "V05",
+      "names": {
+        "ru": "Восстановление кривой после бэквордации",
+        "code": "Contango returns"
+      },
+      "classification": {
+        "family": "V",
+        "kind": "event"
+      },
+      "detector": {
+        "implemented_formula": "Yesterday front<=0 and today>0, excluding front-expiry roll",
+        "output": "existing Breeze feature value",
+        "calculation_status": "implemented"
+      },
+      "breeze": {
+        "enabled": true,
+        "frozen": true,
+        "weight_unit": "score_points",
+        "weights": {
+          "soft": 0,
+          "standard": 0,
+          "hard": 0
+        },
+        "lifecycle": "existing Breeze calculation; unchanged by TorchSharp settings"
+      },
+      "torchsharp": {
+        "enabled": false,
+        "weight_threshold_pp": 0,
+        "weight_status": "not_calibrated",
+        "value_source": "V05",
+        "application": "dynamic_ensemble_threshold",
+        "activation": {
+          "mode": "current_bar_only",
+          "duration_bars": 1,
+          "duration_candidates": [],
+          "retrigger": "new_observation",
+          "cancellation": "source_value_returns_to_zero",
+          "status": "default_not_calibrated"
+        },
+        "note": "Disabled until this rule is calibrated for TorchSharp."
+      },
+      "documentation": {
+        "source": "C",
+        "source_time": {
+          "start": "00:48:29",
+          "end": "00:53:15"
+        },
+        "meaning": "Цена уже растёт, затем восстанавливается контанго до нескольких месяцев.",
+        "proposed_definition": "Отдельные этапы: уменьшается доля инверсий; front_spread пересекает 0 вверх; все наблюдаемые спреды положительны. Фиксировать лаг от ценового разворота.",
+        "lifecycle": "Каждый переход отмечать только по текущему снимку; обратная инверсия отменяет состояние восстановления.",
+        "unresolved": "Не переносить готовый порог CurveScore=-0.18 из прежнего исследования в авторское определение."
+      }
+    },
+    {
+      "number": 51,
+      "id": "V06",
+      "names": {
+        "ru": "Spot VIX относительно фьючерсов",
+        "code": "Spot above futures"
+      },
+      "classification": {
+        "family": "V",
+        "kind": "state"
+      },
+      "detector": {
+        "implemented_formula": "clip((VIX/F1-1)/0.2,-1,1)",
+        "output": "existing Breeze feature value",
+        "calculation_status": "implemented"
+      },
+      "breeze": {
+        "enabled": true,
+        "frozen": true,
+        "weight_unit": "score_points",
+        "weights": {
+          "soft": 0,
+          "standard": 0,
+          "hard": 0
+        },
+        "lifecycle": "existing Breeze calculation; unchanged by TorchSharp settings"
+      },
+      "torchsharp": {
+        "enabled": false,
+        "weight_threshold_pp": 0,
+        "weight_status": "not_calibrated",
+        "value_source": "V06",
+        "application": "dynamic_ensemble_threshold",
+        "activation": {
+          "mode": "while_source_nonzero",
+          "duration_bars": null,
+          "duration_candidates": [],
+          "retrigger": "not_applicable",
+          "cancellation": "source_value_returns_to_zero",
+          "status": "default_not_calibrated"
+        },
+        "note": "Disabled until this rule is calibrated for TorchSharp."
+      },
+      "documentation": {
+        "source": "C",
+        "source_time": {
+          "start": "01:06:57",
+          "end": "01:09:31"
+        },
+        "meaning": "VIX превышает ближние контракты, хотя между ними ещё контанго.",
+        "proposed_definition": "VIX/F1-1, VIX/F2-1 и число контрактов ниже spot; изменения VIX и фронтального спреда независимо.",
+        "lifecycle": "На доступном дневном снимке; смена spot относительно F1 — отдельное событие.",
+        "unresolved": "Спот над F1 не равен инверсии F1/F2; временная синхронизация котировок."
+      }
+    },
+    {
+      "number": 52,
+      "id": "V07",
+      "names": {
+        "ru": "Близость экспирации меняет смысл фронтального перекоса",
+        "code": "Front expiry near"
+      },
+      "classification": {
+        "family": "V",
+        "kind": "state"
+      },
+      "detector": {
+        "implemented_formula": "Front DTE<=3; context only",
+        "output": "existing Breeze feature value",
+        "calculation_status": "implemented"
+      },
+      "breeze": {
+        "enabled": true,
+        "frozen": true,
+        "weight_unit": "score_points",
+        "weights": {
+          "soft": -5.0,
+          "standard": -5.0,
+          "hard": -5.0
+        },
+        "lifecycle": "existing Breeze calculation; unchanged by TorchSharp settings"
+      },
+      "torchsharp": {
+        "enabled": false,
+        "weight_threshold_pp": 0,
+        "weight_status": "not_calibrated",
+        "value_source": "V07",
+        "application": "dynamic_ensemble_threshold",
+        "activation": {
+          "mode": "while_source_nonzero",
+          "duration_bars": null,
+          "duration_candidates": [],
+          "retrigger": "not_applicable",
+          "cancellation": "source_value_returns_to_zero",
+          "status": "default_not_calibrated"
+        },
+        "note": "Disabled until this rule is calibrated for TorchSharp."
+      },
+      "documentation": {
+        "source": "C",
+        "source_time": {
+          "start": "01:07:39",
+          "end": "01:08:59"
+        },
+        "meaning": "Отклонение spot около экспирации и такое же отклонение далеко от неё требуют разного контекста.",
+        "proposed_definition": "DTE(F1),DTE(F2), день смены контракта; взаимодействия с V01 и V06.",
+        "lifecycle": "Пересчёт по реальному календарю экспираций, не условным календарным месяцам.",
+        "unresolved": "Граница близкой экспирации; ориентир 1–3 дня не правило доходности."
+      }
+    },
+    {
+      "number": 53,
+      "id": "V08",
+      "names": {
+        "ru": "Уровень VIX, скачок и последующее успокоение",
+        "code": "VIX stress easing"
+      },
+      "classification": {
+        "family": "V",
+        "kind": "state"
+      },
+      "detector": {
+        "implemented_formula": "Yesterday VIX>=30 and today VIX falls; raw VIX retained",
+        "output": "existing Breeze feature value",
+        "calculation_status": "implemented"
+      },
+      "breeze": {
+        "enabled": true,
+        "frozen": true,
+        "weight_unit": "score_points",
+        "weights": {
+          "soft": 10.0,
+          "standard": 10.0,
+          "hard": 10.0
+        },
+        "lifecycle": "existing Breeze calculation; unchanged by TorchSharp settings"
+      },
+      "torchsharp": {
+        "enabled": false,
+        "weight_threshold_pp": 0,
+        "weight_status": "not_calibrated",
+        "value_source": "V08",
+        "application": "dynamic_ensemble_threshold",
+        "activation": {
+          "mode": "while_source_nonzero",
+          "duration_bars": null,
+          "duration_candidates": [],
+          "retrigger": "not_applicable",
+          "cancellation": "source_value_returns_to_zero",
+          "status": "default_not_calibrated"
+        },
+        "note": "Disabled until this rule is calibrated for TorchSharp."
+      },
+      "documentation": {
+        "source": "C",
+        "source_time": {
+          "start": "00:24:35",
+          "end": "00:28:56"
+        },
+        "meaning": "Спокойные и стрессовые значения VIX, всплеск и отход от высоких уровней — разные стадии.",
+        "proposed_definition": "VIX level, ΔVIX, отношение к прошлой медиане, High-C при наличии OHLC и падение от уже наблюдённого пика. Стресс 28–32 и экстремум 60+ — ориентиры речи.",
+        "lifecycle": "Пик становится только кандидатом до наблюдения снижения; никаких будущих максимумов.",
+        "unresolved": "Нельзя приравнивать высокий VIX к немедленной положительной цели SVXY; это отдельный инструмент и гипотеза."
+      }
+    },
+    {
+      "number": 54,
+      "id": "Z01",
+      "names": {
+        "ru": "Начало импульса Цвейга по режимам",
+        "code": "Zweig starts"
+      },
+      "classification": {
+        "family": "Z",
+        "kind": "event"
+      },
+      "detector": {
+        "implemented_formula": "Fraction of Working, Strong and Classic triggers today",
+        "output": "existing Breeze feature value",
+        "calculation_status": "implemented"
+      },
+      "breeze": {
+        "enabled": true,
+        "frozen": true,
+        "weight_unit": "score_points",
+        "weights": {
+          "soft": 0,
+          "standard": 0,
+          "hard": 0
+        },
+        "lifecycle": "existing Breeze calculation; unchanged by TorchSharp settings"
+      },
+      "torchsharp": {
+        "enabled": false,
+        "weight_threshold_pp": 0,
+        "weight_status": "not_calibrated",
+        "value_source": "Z01",
+        "application": "dynamic_ensemble_threshold",
+        "activation": {
+          "mode": "current_bar_only",
+          "duration_bars": 1,
+          "duration_candidates": [],
+          "retrigger": "new_observation",
+          "cancellation": "source_value_returns_to_zero",
+          "status": "default_not_calibrated"
+        },
+        "note": "Disabled until this rule is calibrated for TorchSharp."
+      },
+      "documentation": {
+        "source": "C",
+        "source_time": {
+          "start": "00:54:47",
+          "end": "00:56:21"
+        },
+        "meaning": "Working/Strong и классический сигнал могут совпадать, но различаются.",
+        "proposed_definition": "Отдельные поля начала сигнала Working, Strong, Classic; их собственные ряды ZBT и настройки. Не извлекать смысл только из цвета.",
+        "lifecycle": "Сигнал дня плюс сохранённая дата последнего сигнала каждого режима.",
+        "unresolved": "Сверить формулы с Breeze/ZweigBreadth.cs; не считать одно совпадение трёх режимов тремя независимыми событиями."
+      }
+    },
+    {
+      "number": 55,
+      "id": "Z02",
+      "names": {
+        "ru": "Плотность и возраст Цвейга",
+        "code": "Zweig density"
+      },
+      "classification": {
+        "family": "Z",
+        "kind": "state"
+      },
+      "detector": {
+        "implemented_formula": "Working density /30; also keep Strong density and both ages",
+        "output": "existing Breeze feature value",
+        "calculation_status": "implemented"
+      },
+      "breeze": {
+        "enabled": true,
+        "frozen": true,
+        "weight_unit": "score_points",
+        "weights": {
+          "soft": 5.0,
+          "standard": 5.0,
+          "hard": 5.0
+        },
+        "lifecycle": "existing Breeze calculation; unchanged by TorchSharp settings"
+      },
+      "torchsharp": {
+        "enabled": false,
+        "weight_threshold_pp": 0,
+        "weight_status": "rejected_after_test",
+        "value_source": "Z02",
+        "application": "dynamic_ensemble_threshold",
+        "activation": {
+          "mode": "use_source_state",
+          "duration_bars": null,
+          "duration_candidates": [],
+          "retrigger": "defined_by_source_Zweig_signal",
+          "cancellation": "when_Z02_returns_to_zero",
+          "status": "rejected_after_test"
+        },
+        "note": "Z02 Working был проверен как коррекция порога TorchSharp на ZZ1, ZZ2, ZZ3 и Boss в обоих режимах торговли. Итогового устойчивого улучшения нет: в большинстве контекстов эффект не превышает практически значимые 2%, а локальные улучшения сопровождались ухудшением просадки, Sharpe или ростом числа сделок. В TorchSharp не используется; в Breeze сам индикатор остаётся без изменений.",
+        "calibration_by_context": {
+          "status": "final_rejected",
+          "test_enabled": false,
+          "event_threshold_search": {
+            "default": 50,
+            "minimum": 38,
+            "maximum": 70,
+            "step": 2
+          },
+          "base_threshold_search": {
+            "default": 50,
+            "minimum": 40,
+            "maximum": 60,
+            "step": 2
+          },
+          "final_decision": "rejected_for_torchsharp",
+          "next_step": "None. Remove Z02 from the TorchSharp threshold and retain this record as rejected research history.",
+          "ZZ1": {
+            "mode_0": {
+              "base_threshold_percent": 50,
+              "selected_event_threshold_percent": 50,
+              "baseline_profit": 10079.601,
+              "selected_profit": 10079.601,
+              "profit_delta_percent": 0.0,
+              "baseline_position_count": 410,
+              "selected_position_count": 410,
+              "max_drawdown_percent": -10.966,
+              "decision": "no_material_effect",
+              "date": "2026-10-22"
+            },
+            "mode_1": {
+              "base_threshold_percent": 50,
+              "selected_event_threshold_percent": 56,
+              "baseline_profit": 9398.386,
+              "selected_profit": 9766.214,
+              "profit_delta_percent": 3.914,
+              "baseline_position_count": 444,
+              "selected_position_count": 475,
+              "max_drawdown_percent": -13.085,
+              "decision": "provisionally_accepted",
+              "date": "2026-10-22"
+            }
+          },
+          "ZZ2": {
+            "mode_0": {
+              "base_threshold_percent": 50,
+              "selected_event_threshold_percent": 56,
+              "baseline_profit": 8651.101,
+              "selected_profit": 9000.451,
+              "profit_delta_percent": 4.038,
+              "baseline_position_count": 430,
+              "selected_position_count": 420,
+              "max_drawdown_percent": -15.943,
+              "decision": "provisionally_accepted",
+              "date": "2026-10-22"
+            },
+            "mode_1": {
+              "base_threshold_percent": 50,
+              "selected_event_threshold_percent": 50,
+              "baseline_profit": 8662.066,
+              "selected_profit": 8662.066,
+              "profit_delta_percent": 0.0,
+              "baseline_position_count": 485,
+              "selected_position_count": 485,
+              "max_drawdown_percent": -13.423,
+              "decision": "no_material_effect",
+              "date": "2026-10-22"
+            }
+          },
+          "ZZ3": {
+            "mode_0": {
+              "base_threshold_percent": 50,
+              "selected_event_threshold_percent": 50,
+              "baseline_profit": 11016.4,
+              "selected_profit": 11016.4,
+              "profit_delta_percent": 0.0,
+              "baseline_position_count": 370,
+              "selected_position_count": 370,
+              "max_drawdown_percent": -11.295,
+              "decision": "no_material_effect",
+              "date": "2026-10-22"
+            },
+            "mode_1": {
+              "base_threshold_percent": 50,
+              "selected_event_threshold_percent": 62,
+              "baseline_profit": 10273.97,
+              "selected_profit": 10723.782,
+              "profit_delta_percent": 4.378,
+              "baseline_position_count": 413,
+              "selected_position_count": 461,
+              "max_drawdown_percent": -12.41,
+              "decision": "provisionally_accepted",
+              "date": "2026-10-22"
+            }
+          }
+        }
+      },
+      "documentation": {
+        "source": "C",
+        "source_time": {
+          "start": "00:56:22",
+          "end": "00:56:54"
+        },
+        "meaning": "При плотности 5 влияние слабее, чем в начале активной зоны.",
+        "proposed_definition": "Density, BarsSinceSignal, mode; в текущем коде возраст 0–50 даёт 30, 51–65 даёт 15, 66–85 даёт 5, затем 0.",
+        "lifecycle": "Снижение плотности по известному возрасту, сброс возраста при новом сигнале.",
+        "unresolved": "Это текущая кодовая ступенчатая шкала, не доказанные рыночные веса; возраст и плотность зависимы."
+      }
+    },
+    {
+      "number": 56,
+      "id": "Z03",
+      "names": {
+        "ru": "Совпадение и расхождение режимов Цвейга",
+        "code": "Zweig modes overlap"
+      },
+      "classification": {
+        "family": "Z",
+        "kind": "state"
+      },
+      "detector": {
+        "implemented_formula": "Working and Strong densities both>0",
+        "output": "existing Breeze feature value",
+        "calculation_status": "implemented"
+      },
+      "breeze": {
+        "enabled": true,
+        "frozen": true,
+        "weight_unit": "score_points",
+        "weights": {
+          "soft": 5.0,
+          "standard": 5.0,
+          "hard": 5.0
+        },
+        "lifecycle": "existing Breeze calculation; unchanged by TorchSharp settings"
+      },
+      "torchsharp": {
+        "enabled": false,
+        "weight_threshold_pp": 0,
+        "weight_status": "not_calibrated",
+        "value_source": "Z03",
+        "application": "dynamic_ensemble_threshold",
+        "activation": {
+          "mode": "while_source_nonzero",
+          "duration_bars": null,
+          "duration_candidates": [],
+          "retrigger": "not_applicable",
+          "cancellation": "source_value_returns_to_zero",
+          "status": "default_not_calibrated"
+        },
+        "note": "Disabled until this rule is calibrated for TorchSharp."
+      },
+      "documentation": {
+        "source": "C",
+        "source_time": {
+          "start": "00:58:15",
+          "end": "00:59:35"
+        },
+        "meaning": "Working, Strong и классический режим обсуждаются отдельно.",
+        "proposed_definition": "Маска активных режимов, даты и плотности по каждому; состояния only Working, Working+Strong, совпадение Classic сохранять раздельно.",
+        "lifecycle": "Ежедневное состояние по прошлым сигналам.",
+        "unresolved": "Речь о включении одного режима в другой неоднозначна; проверять формулы, не закреплять неточное включение как аксиому."
+      }
+    },
+    {
+      "number": 57,
+      "id": "Z04",
+      "names": {
+        "ru": "Ухудшение рынка внутри активного Цвейга",
+        "code": "Damage during Zweig"
+      },
+      "classification": {
+        "family": "Z",
+        "kind": "composite"
+      },
+      "detector": {
+        "implemented_formula": "Working density>0, >=2 breadth falling, EMA close break and broken bull order",
+        "output": "existing Breeze feature value",
+        "calculation_status": "implemented"
+      },
+      "breeze": {
+        "enabled": true,
+        "frozen": true,
+        "weight_unit": "score_points",
+        "weights": {
+          "soft": 0,
+          "standard": 0,
+          "hard": 0
+        },
+        "lifecycle": "existing Breeze calculation; unchanged by TorchSharp settings"
+      },
+      "torchsharp": {
+        "enabled": false,
+        "weight_threshold_pp": 0,
+        "weight_status": "not_calibrated",
+        "value_source": "Z04",
+        "application": "dynamic_ensemble_threshold",
+        "activation": {
+          "mode": "while_source_nonzero",
+          "duration_bars": null,
+          "duration_candidates": [],
+          "retrigger": "not_applicable",
+          "cancellation": "source_value_returns_to_zero",
+          "status": "default_not_calibrated"
+        },
+        "note": "Disabled until this rule is calibrated for TorchSharp."
+      },
+      "documentation": {
+        "source": "C",
+        "source_time": {
+          "start": "00:59:35",
+          "end": "01:02:23"
+        },
+        "meaning": "Падение широт и разрушение EMA происходят даже внутри Working-зоны.",
+        "proposed_definition": "Активный Z, его возраст/плотность вместе с ΔB<0 на нескольких рядах, E01 и нарушением T01; знак эффекта взаимодействия обучается отдельно.",
+        "lifecycle": "Состояние пока обе части наблюдаются; активный Цвейг не запрещает сокращение целевого процента.",
+        "unresolved": "Сколько дней ухудшения и какие широты; не фиксировать вечный положительный бонус от одного старого сигнала."
+      }
+    },
+    {
+      "number": 58,
+      "id": "I01",
+      "names": {
+        "ru": "Первый день Titanic",
+        "code": "Titanic starts"
+      },
+      "classification": {
+        "family": "I",
+        "kind": "event"
+      },
+      "detector": {
+        "implemented_formula": "Titanic today true and yesterday false",
+        "output": "existing Breeze feature value",
+        "calculation_status": "implemented"
+      },
+      "breeze": {
+        "enabled": true,
+        "frozen": true,
+        "weight_unit": "score_points",
+        "weights": {
+          "soft": -5.0,
+          "standard": -5.0,
+          "hard": -5.0
+        },
+        "lifecycle": "existing Breeze calculation; unchanged by TorchSharp settings"
+      },
+      "torchsharp": {
+        "enabled": false,
+        "weight_threshold_pp": 0,
+        "weight_status": "not_calibrated",
+        "value_source": "I01",
+        "application": "dynamic_ensemble_threshold",
+        "activation": {
+          "mode": "current_bar_only",
+          "duration_bars": 1,
+          "duration_candidates": [],
+          "retrigger": "new_observation",
+          "cancellation": "source_value_returns_to_zero",
+          "status": "default_not_calibrated"
+        },
+        "note": "Disabled until this rule is calibrated for TorchSharp."
+      },
+      "documentation": {
+        "source": "C",
+        "source_time": {
+          "start": "01:14:33",
+          "end": "01:15:13"
+        },
+        "meaning": "Titanic может предупреждать в начале ухудшения, а не на самом дне.",
+        "proposed_definition": "Signal[t] и не Signal[t-1] с сохранением RecentlyAtHigh, NewLows>NewHighs; параметры индикатора фиксировать отдельной версией.",
+        "lifecycle": "Однодневное начало; возраст и текущая активность отдельно.",
+        "unresolved": "Формула в Breeze/TitanicSyndrome.cs: 252-дневный максимум, окно 7, допуск 3%; это происхождение кода, не числа из данного фрагмента речи."
+      }
+    },
+    {
+      "number": 59,
+      "id": "I02",
+      "names": {
+        "ru": "Устойчивый Titanic",
+        "code": "Titanic persistent"
+      },
+      "classification": {
+        "family": "I",
+        "kind": "state"
+      },
+      "detector": {
+        "implemented_formula": "Observed Titanic run>=7 (boundary choice explicitly 7)",
+        "output": "existing Breeze feature value",
+        "calculation_status": "implemented"
+      },
+      "breeze": {
+        "enabled": true,
+        "frozen": true,
+        "weight_unit": "score_points",
+        "weights": {
+          "soft": 0,
+          "standard": 0,
+          "hard": 0
+        },
+        "lifecycle": "existing Breeze calculation; unchanged by TorchSharp settings"
+      },
+      "torchsharp": {
+        "enabled": false,
+        "weight_threshold_pp": 0,
+        "weight_status": "not_calibrated",
+        "value_source": "I02",
+        "application": "dynamic_ensemble_threshold",
+        "activation": {
+          "mode": "while_source_nonzero",
+          "duration_bars": null,
+          "duration_candidates": [],
+          "retrigger": "not_applicable",
+          "cancellation": "source_value_returns_to_zero",
+          "status": "default_not_calibrated"
+        },
+        "note": "Disabled until this rule is calibrated for TorchSharp."
+      },
+      "documentation": {
+        "source": "C",
+        "source_time": {
+          "start": "01:15:15",
+          "end": "01:16:12"
+        },
+        "meaning": "Длительная зона больше недели иногда совпадает с ростом, иногда с дальнейшим падением; однозначного вывода нет.",
+        "proposed_definition": "RunLength и Persistent отдельно от факта первого дня; текущий код использует >=7, в речи сказано больше 7.",
+        "lifecycle": "На наблюдённой длине серии; при прекращении сигнала серия сбрасывается.",
+        "unresolved": "Граница 7 или 8 дней; цвет не означает автоматический положительный вес."
+      }
+    },
+    {
+      "number": 60,
+      "id": "I03",
+      "names": {
+        "ru": "Предшествующий Titanic уже закончился",
+        "code": "Titanic recently ended"
+      },
+      "classification": {
+        "family": "I",
+        "kind": "sequence"
+      },
+      "detector": {
+        "implemented_formula": "No signal today, last ended signal within 20 bars",
+        "output": "existing Breeze feature value",
+        "calculation_status": "implemented"
+      },
+      "breeze": {
+        "enabled": true,
+        "frozen": true,
+        "weight_unit": "score_points",
+        "weights": {
+          "soft": 0,
+          "standard": 0,
+          "hard": 0
+        },
+        "lifecycle": "existing Breeze calculation; unchanged by TorchSharp settings"
+      },
+      "torchsharp": {
+        "enabled": false,
+        "weight_threshold_pp": 0,
+        "weight_status": "not_calibrated",
+        "value_source": "I03",
+        "application": "dynamic_ensemble_threshold",
+        "activation": {
+          "mode": "while_source_nonzero",
+          "duration_bars": null,
+          "duration_candidates": [],
+          "retrigger": "not_applicable",
+          "cancellation": "source_value_returns_to_zero",
+          "status": "default_not_calibrated"
+        },
+        "note": "Disabled until this rule is calibrated for TorchSharp."
+      },
+      "documentation": {
+        "source": "C",
+        "source_time": {
+          "start": "01:14:33",
+          "end": "01:15:13"
+        },
+        "meaning": "В точке обсуждаемого минимума Titanic отсутствует, но предупреждение было раньше.",
+        "proposed_definition": "Текущий Signal=0, возраст последнего начала/окончания Titanic и его длина; текущая цена, RSI и кривая как контекст.",
+        "lifecycle": "Прошлое событие остаётся в памяти с возрастом; отсутствие текущего сигнала не стирает его историю.",
+        "unresolved": "Окно действия прошлой информации; отсутствие Titanic не доказывает безопасность."
+      }
+    },
+    {
+      "number": 61,
+      "id": "C01",
+      "names": {
+        "ru": "Сильный RSI при сохранном бычьем тренде",
+        "code": "Strong RSI and trend"
+      },
+      "classification": {
+        "family": "C",
+        "kind": "composite"
+      },
+      "detector": {
+        "implemented_formula": "At least one upper RSI (or upper release) + bull order + all slopes rising + C>=E20",
+        "output": "existing Breeze feature value",
+        "calculation_status": "implemented"
+      },
+      "breeze": {
+        "enabled": true,
+        "frozen": true,
+        "weight_unit": "score_points",
+        "weights": {
+          "soft": 15.0,
+          "standard": 10.0,
+          "hard": 10.0
+        },
+        "lifecycle": "existing Breeze calculation; unchanged by TorchSharp settings"
+      },
+      "torchsharp": {
+        "enabled": false,
+        "weight_threshold_pp": 0,
+        "weight_status": "not_calibrated",
+        "value_source": "C01",
+        "application": "dynamic_ensemble_threshold",
+        "activation": {
+          "mode": "while_source_nonzero",
+          "duration_bars": null,
+          "duration_candidates": [],
+          "retrigger": "not_applicable",
+          "cancellation": "source_value_returns_to_zero",
+          "status": "default_not_calibrated"
+        },
+        "note": "Disabled until this rule is calibrated for TorchSharp."
+      },
+      "documentation": {
+        "source": "B2",
+        "source_time": {
+          "start": "00:25:58",
+          "end": "00:26:53"
+        },
+        "meaning": "RSI +1 или небольшой выход из +1 при цене над EMA20 и хорошем порядке не требует продажи.",
+        "proposed_definition": "R02/R04 вместе с T01,T02 и C>=E20; ширина веера хранится отдельно, не смешивается с порядком.",
+        "lifecycle": "Ежедневная оценка состояния; цель доступна и при фактически нулевой позиции.",
+        "unresolved": "Не задавать жёсткое 100%; проверить конкурирующие признаки риска."
+      }
+    },
+    {
+      "number": 62,
+      "id": "C02",
+      "names": {
+        "ru": "Цена и широты разворачиваются раньше обоих RSI",
+        "code": "Recovery before RSI"
+      },
+      "classification": {
+        "family": "C",
+        "kind": "composite"
+      },
+      "detector": {
+        "implemented_formula": "Drawdown>=5%, green price, >=2 breadth rising, both RSI lower",
+        "output": "existing Breeze feature value",
+        "calculation_status": "implemented"
+      },
+      "breeze": {
+        "enabled": true,
+        "frozen": true,
+        "weight_unit": "score_points",
+        "weights": {
+          "soft": 0,
+          "standard": 0,
+          "hard": 0
+        },
+        "lifecycle": "existing Breeze calculation; unchanged by TorchSharp settings"
+      },
+      "torchsharp": {
+        "enabled": false,
+        "weight_threshold_pp": 0,
+        "weight_status": "not_calibrated",
+        "value_source": "C02",
+        "application": "dynamic_ensemble_threshold",
+        "activation": {
+          "mode": "while_source_nonzero",
+          "duration_bars": null,
+          "duration_candidates": [],
+          "retrigger": "not_applicable",
+          "cancellation": "source_value_returns_to_zero",
+          "status": "default_not_calibrated"
+        },
+        "note": "Disabled until this rule is calibrated for TorchSharp."
+      },
+      "documentation": {
+        "source": "C",
+        "source_time": {
+          "start": "00:43:41",
+          "end": "00:47:44"
+        },
+        "meaning": "Зелёная цена и белые широты появляются, пока оба RSI ещё на -1.",
+        "proposed_definition": "После падения T08: C>O, B04/B05 по нескольким рядам, R07 внизу; отдельно хранить тяжесть падения и контанго.",
+        "lifecycle": "Состояние комплекса на текущем дне; последующий R03 — подтверждение на его собственной дате.",
+        "unresolved": "Количество широт и критерий предшествующего снижения; не ждать обязательного полного бычьего порядка EMA."
+      }
+    },
+    {
+      "number": 63,
+      "id": "C03",
+      "names": {
+        "ru": "Отрыв RSI с подтверждением широтой и ценой",
+        "code": "Confirmed RSI release"
+      },
+      "classification": {
+        "family": "C",
+        "kind": "composite"
+      },
+      "detector": {
+        "implemented_formula": "At least one RSI lower release or yesterday release; green price and >=2 breadth rising",
+        "output": "existing Breeze feature value",
+        "calculation_status": "implemented"
+      },
+      "breeze": {
+        "enabled": true,
+        "frozen": true,
+        "weight_unit": "score_points",
+        "weights": {
+          "soft": 0,
+          "standard": 0,
+          "hard": 0
+        },
+        "lifecycle": "existing Breeze calculation; unchanged by TorchSharp settings"
+      },
+      "torchsharp": {
+        "enabled": false,
+        "weight_threshold_pp": 0,
+        "weight_status": "not_calibrated",
+        "value_source": "C03",
+        "application": "dynamic_ensemble_threshold",
+        "activation": {
+          "mode": "while_source_nonzero",
+          "duration_bars": null,
+          "duration_candidates": [],
+          "retrigger": "not_applicable",
+          "cancellation": "source_value_returns_to_zero",
+          "status": "default_not_calibrated"
+        },
+        "note": "Disabled until this rule is calibrated for TorchSharp."
+      },
+      "documentation": {
+        "source": "B2",
+        "source_time": {
+          "start": "00:19:58",
+          "end": "00:23:28"
+        },
+        "meaning": "Отрыв от -1, разворот SPY и рост широт формируют положительный комплекс даже при сломанном порядке EMA.",
+        "proposed_definition": "R03, C>O/ΔC>0 как раздельные варианты и B04/B05 сегодня либо уже наблюдённое B06; T08 как контекст.",
+        "lifecycle": "Подтверждённость растёт по мере появления данных; назад не перерисовывать.",
+        "unresolved": "Веса синхронного и запаздывающего подтверждения; объединять близкие дни в один эпизод для статистики."
+      }
+    },
+    {
+      "number": 64,
+      "id": "C04",
+      "names": {
+        "ru": "Отскок от EMA100 без достижения RSI=-1",
+        "code": "EMA100 bounce no saturation"
+      },
+      "classification": {
+        "family": "C",
+        "kind": "composite"
+      },
+      "detector": {
+        "implemented_formula": "Recent EMA20/50 break; closes hold E100 within 5 bars, touched within 1%, price and slow RSI rising, no lower saturation",
+        "output": "existing Breeze feature value",
+        "calculation_status": "implemented"
+      },
+      "breeze": {
+        "enabled": true,
+        "frozen": true,
+        "weight_unit": "score_points",
+        "weights": {
+          "soft": 0,
+          "standard": 0,
+          "hard": 0
+        },
+        "lifecycle": "existing Breeze calculation; unchanged by TorchSharp settings"
+      },
+      "torchsharp": {
+        "enabled": false,
+        "weight_threshold_pp": 0,
+        "weight_status": "not_calibrated",
+        "value_source": "C04",
+        "application": "dynamic_ensemble_threshold",
+        "activation": {
+          "mode": "while_source_nonzero",
+          "duration_bars": null,
+          "duration_candidates": [],
+          "retrigger": "not_applicable",
+          "cancellation": "source_value_returns_to_zero",
+          "status": "default_not_calibrated"
+        },
+        "note": "Disabled until this rule is calibrated for TorchSharp."
+      },
+      "documentation": {
+        "source": "B2",
+        "source_time": {
+          "start": "00:10:15",
+          "end": "00:11:21"
+        },
+        "meaning": "Разворот возможен после EMA20/50 при удержании EMA100 без нижнего насыщения RSI.",
+        "proposed_definition": "Предшествующие E01(20/50), отсутствие закрытия ниже E100, текущий рост цены/RSI и R>-1+eps; подтверждение широтой отдельным полем.",
+        "lifecycle": "Кандидат при удержании, подтверждение на наблюдаемом возвратном баре.",
+        "unresolved": "Определение близости к E100 и периода коррекции; не требовать обязательного R01."
+      }
+    },
+    {
+      "number": 65,
+      "id": "C05",
+      "names": {
+        "ru": "Неглубокий подхват EMA20/50",
+        "code": "Shallow pickup"
+      },
+      "classification": {
+        "family": "C",
+        "kind": "sequence"
+      },
+      "detector": {
+        "implemented_formula": "Green after 1..3 falling E20 bars and prior close below E20; held E50 throughout episode; bull order before episode; first green only",
+        "output": "existing Breeze feature value",
+        "calculation_status": "implemented"
+      },
+      "breeze": {
+        "enabled": true,
+        "frozen": true,
+        "weight_unit": "score_points",
+        "weights": {
+          "soft": 10.0,
+          "standard": 10.0,
+          "hard": 10.0
+        },
+        "lifecycle": "existing Breeze calculation; unchanged by TorchSharp settings"
+      },
+      "torchsharp": {
+        "enabled": false,
+        "weight_threshold_pp": 0,
+        "weight_status": "not_calibrated",
+        "value_source": "C05",
+        "application": "dynamic_ensemble_threshold",
+        "activation": {
+          "mode": "while_source_nonzero",
+          "duration_bars": null,
+          "duration_candidates": [],
+          "retrigger": "not_applicable",
+          "cancellation": "source_value_returns_to_zero",
+          "status": "default_not_calibrated"
+        },
+        "note": "Disabled until this rule is calibrated for TorchSharp."
+      },
+      "documentation": {
+        "source": "P",
+        "source_time": {
+          "start": "00:05:22",
+          "end": "00:07:18"
+        },
+        "meaning": "После правильной структуры EMA20 падает 1–3 бара, цена ниже неё, но EMA50 удержана; появляется зелёный бар.",
+        "proposed_definition": "Прошлый T01, серия ΔE20<0, закрытие ниже E20, ни одного C<E50 в эпизоде, затем C>O. Отдельно возврат выше E20, не обязательный в исходном базовом описании.",
+        "lifecycle": "Появляется на зелёном баре; текущий пробой E50 отменяет неглубокий вариант.",
+        "unresolved": "Начало эпизода, длительность; существование фактической позиции не является условием."
+      }
+    },
+    {
+      "number": 66,
+      "id": "C06",
+      "names": {
+        "ru": "Глубокий подхват EMA50/100",
+        "code": "Deep pickup"
+      },
+      "classification": {
+        "family": "C",
+        "kind": "sequence"
+      },
+      "detector": {
+        "implemented_formula": "Up cross E20 green, past 10 bars include close below E50, all close>=E100 and low approached E100 within 1%",
+        "output": "existing Breeze feature value",
+        "calculation_status": "implemented"
+      },
+      "breeze": {
+        "enabled": true,
+        "frozen": true,
+        "weight_unit": "score_points",
+        "weights": {
+          "soft": 0,
+          "standard": 0,
+          "hard": 0
+        },
+        "lifecycle": "existing Breeze calculation; unchanged by TorchSharp settings"
+      },
+      "torchsharp": {
+        "enabled": false,
+        "weight_threshold_pp": 0,
+        "weight_status": "not_calibrated",
+        "value_source": "C06",
+        "application": "dynamic_ensemble_threshold",
+        "activation": {
+          "mode": "while_source_nonzero",
+          "duration_bars": null,
+          "duration_candidates": [],
+          "retrigger": "not_applicable",
+          "cancellation": "source_value_returns_to_zero",
+          "status": "default_not_calibrated"
+        },
+        "note": "Disabled until this rule is calibrated for TorchSharp."
+      },
+      "documentation": {
+        "source": "P",
+        "source_time": {
+          "start": "00:07:20",
+          "end": "00:09:24"
+        },
+        "meaning": "Цена проходила EMA50, удержала EMA100, затем вернулась над EMA20; наклоны и широта восстановились.",
+        "proposed_definition": "В прошлом C<E50, опора E100, сегодня C>E20 и C>O; T01/T02, ΔB50>0, ATRP1 около/выше 2% — отдельные усилители.",
+        "lifecycle": "Только после сегодняшнего возврата; для внутридневного прокола E100 хранить отдельный вариант.",
+        "unresolved": "Не путать обязательную структуру с необязательным сильным импульсом; пограничные примеры ниже E100 выделять."
+      }
+    },
+    {
+      "number": 67,
+      "id": "C07",
+      "names": {
+        "ru": "Повторный подхват примерно через 8–10 дней",
+        "code": "Repeated pickup"
+      },
+      "classification": {
+        "family": "C",
+        "kind": "sequence"
+      },
+      "detector": {
+        "implemented_formula": "New C05/C06 and preceding pickup 8..10 bars ago",
+        "output": "existing Breeze feature value",
+        "calculation_status": "implemented"
+      },
+      "breeze": {
+        "enabled": true,
+        "frozen": true,
+        "weight_unit": "score_points",
+        "weights": {
+          "soft": 0,
+          "standard": 0,
+          "hard": 0
+        },
+        "lifecycle": "existing Breeze calculation; unchanged by TorchSharp settings"
+      },
+      "torchsharp": {
+        "enabled": false,
+        "weight_threshold_pp": 0,
+        "weight_status": "not_calibrated",
+        "value_source": "C07",
+        "application": "dynamic_ensemble_threshold",
+        "activation": {
+          "mode": "while_source_nonzero",
+          "duration_bars": null,
+          "duration_candidates": [],
+          "retrigger": "not_applicable",
+          "cancellation": "source_value_returns_to_zero",
+          "status": "default_not_calibrated"
+        },
+        "note": "Disabled until this rule is calibrated for TorchSharp."
+      },
+      "documentation": {
+        "source": "P",
+        "source_time": {
+          "start": "00:10:13",
+          "end": "00:11:54"
+        },
+        "meaning": "Сходная коррекция и возврат над EMA повторяются через небольшой интервал.",
+        "proposed_definition": "Сегодня C05/C06; в прошлом уже завершённый аналогичный эпизод; лаг между триггерами, глубина и восстановление между ними.",
+        "lifecycle": "Только на втором наблюдённом подхвате; длительное одно состояние не считать двумя событиями.",
+        "unresolved": "Интервал 8–10 — пример; диапазон допуска и критерий независимости эпизодов."
+      }
+    },
+    {
+      "number": 68,
+      "id": "C08",
+      "names": {
+        "ru": "Совместный выход RSI из +1, сильный красный бар и EMA20",
+        "code": "Double RSI red break"
+      },
+      "classification": {
+        "family": "C",
+        "kind": "composite"
+      },
+      "detector": {
+        "implemented_formula": "Yesterday bull order and price above E20, both RSI upper; today both release + E20 down cross + red body >2x median prior 20 bodies",
+        "output": "existing Breeze feature value",
+        "calculation_status": "implemented"
+      },
+      "breeze": {
+        "enabled": true,
+        "frozen": true,
+        "weight_unit": "score_points",
+        "weights": {
+          "soft": -10.0,
+          "standard": -10.0,
+          "hard": -10.0
+        },
+        "lifecycle": "existing Breeze calculation; unchanged by TorchSharp settings"
+      },
+      "torchsharp": {
+        "enabled": false,
+        "weight_threshold_pp": 0,
+        "weight_status": "not_calibrated",
+        "value_source": "C08",
+        "application": "dynamic_ensemble_threshold",
+        "activation": {
+          "mode": "while_source_nonzero",
+          "duration_bars": null,
+          "duration_candidates": [],
+          "retrigger": "not_applicable",
+          "cancellation": "source_value_returns_to_zero",
+          "status": "default_not_calibrated"
+        },
+        "note": "Disabled until this rule is calibrated for TorchSharp."
+      },
+      "documentation": {
+        "source": "C",
+        "source_time": {
+          "start": "01:02:32",
+          "end": "01:04:11"
+        },
+        "meaning": "После благополучного дня оба RSI выходят вниз, сильная красная свеча закрывается под EMA20.",
+        "proposed_definition": "Вчера R07 наверху и хорошая структура; сегодня R08, E01(20), C<O, abs(body) более 2× обычного прошлого тела как отдельная версия нормировки.",
+        "lifecycle": "Комплекс сегодня; затем отдельные признаки глубины и возраста повреждения.",
+        "unresolved": "В речи сравнивается тело с прежней волатильностью; окно 20 и замена тела на TR — не авторские факты, а варианты для проверки."
+      }
+    },
+    {
+      "number": 69,
+      "id": "C09",
+      "names": {
+        "ru": "Падение цены при ещё положительном контанго",
+        "code": "Fall despite contango"
+      },
+      "classification": {
+        "family": "C",
+        "kind": "composite"
+      },
+      "detector": {
+        "implemented_formula": "C<E20, positive front spread, VIX rising",
+        "output": "existing Breeze feature value",
+        "calculation_status": "implemented"
+      },
+      "breeze": {
+        "enabled": true,
+        "frozen": true,
+        "weight_unit": "score_points",
+        "weights": {
+          "soft": 0,
+          "standard": 0,
+          "hard": 0
+        },
+        "lifecycle": "existing Breeze calculation; unchanged by TorchSharp settings"
+      },
+      "torchsharp": {
+        "enabled": false,
+        "weight_threshold_pp": 0,
+        "weight_status": "not_calibrated",
+        "value_source": "C09",
+        "application": "dynamic_ensemble_threshold",
+        "activation": {
+          "mode": "while_source_nonzero",
+          "duration_bars": null,
+          "duration_candidates": [],
+          "retrigger": "not_applicable",
+          "cancellation": "source_value_returns_to_zero",
+          "status": "default_not_calibrated"
+        },
+        "note": "Disabled until this rule is calibrated for TorchSharp."
+      },
+      "documentation": {
+        "source": "C",
+        "source_time": {
+          "start": "01:06:27",
+          "end": "01:10:57"
+        },
+        "meaning": "Цена уже пробивает EMA, VIX растёт, но кривая ещё сохраняет контанго.",
+        "proposed_definition": "E01/состояние под EMA вместе с V01>0 и ΔVIX>0; V06 и DTE как контекст.",
+        "lifecycle": "Каждый день конфликта; не ждать обязательной V04 для регистрации ухудшения.",
+        "unresolved": "Приоритеты учатся; положительная кривая не накладывает жёсткий запрет на уменьшение позиции SPY."
+      }
+    },
+    {
+      "number": 70,
+      "id": "C10",
+      "names": {
+        "ru": "Рост цены до восстановления контанго",
+        "code": "Recovery before contango"
+      },
+      "classification": {
+        "family": "C",
+        "kind": "composite"
+      },
+      "detector": {
+        "implemented_formula": "C02/C03 in prior 10 bars, price up, VIX down, front<0 but improving (no roll)",
+        "output": "existing Breeze feature value",
+        "calculation_status": "implemented"
+      },
+      "breeze": {
+        "enabled": true,
+        "frozen": true,
+        "weight_unit": "score_points",
+        "weights": {
+          "soft": 0,
+          "standard": 0,
+          "hard": 0
+        },
+        "lifecycle": "existing Breeze calculation; unchanged by TorchSharp settings"
+      },
+      "torchsharp": {
+        "enabled": false,
+        "weight_threshold_pp": 0,
+        "weight_status": "not_calibrated",
+        "value_source": "C10",
+        "application": "dynamic_ensemble_threshold",
+        "activation": {
+          "mode": "while_source_nonzero",
+          "duration_bars": null,
+          "duration_candidates": [],
+          "retrigger": "not_applicable",
+          "cancellation": "source_value_returns_to_zero",
+          "status": "default_not_calibrated"
+        },
+        "note": "Disabled until this rule is calibrated for TorchSharp."
+      },
+      "documentation": {
+        "source": "C",
+        "source_time": {
+          "start": "00:47:50",
+          "end": "00:50:03"
+        },
+        "meaning": "Цена растёт несколько дней, VIX снижается, но фронтальная кривая остаётся смешанной/инвертированной.",
+        "proposed_definition": "После C02/C03 считать положительные движения C, ΔVIX и улучшение спредов при front_spread<0.",
+        "lifecycle": "Ежедневно до восстановления кривой или отмены ценового движения.",
+        "unresolved": "SPY и SVXY оцениваются отдельно: хороший комплекс для SPY не означает такую же целевую долю SVXY."
+      }
+    },
+    {
+      "number": 71,
+      "id": "C11",
+      "names": {
+        "ru": "Разрыв вверх, возврат над EMA и широкое восстановление",
+        "code": "Gap recovery complex"
+      },
+      "classification": {
+        "family": "C",
+        "kind": "composite"
+      },
+      "detector": {
+        "implemented_formula": "Full gap, at least one EMA reclaim, >=3 breadth rising and contango return",
+        "output": "existing Breeze feature value",
+        "calculation_status": "implemented"
+      },
+      "breeze": {
+        "enabled": true,
+        "frozen": true,
+        "weight_unit": "score_points",
+        "weights": {
+          "soft": 0,
+          "standard": 0,
+          "hard": 0
+        },
+        "lifecycle": "existing Breeze calculation; unchanged by TorchSharp settings"
+      },
+      "torchsharp": {
+        "enabled": false,
+        "weight_threshold_pp": 0,
+        "weight_status": "not_calibrated",
+        "value_source": "C11",
+        "application": "dynamic_ensemble_threshold",
+        "activation": {
+          "mode": "while_source_nonzero",
+          "duration_bars": null,
+          "duration_candidates": [],
+          "retrigger": "not_applicable",
+          "cancellation": "source_value_returns_to_zero",
+          "status": "default_not_calibrated"
+        },
+        "note": "Disabled until this rule is calibrated for TorchSharp."
+      },
+      "documentation": {
+        "source": "C",
+        "source_time": {
+          "start": "00:50:44",
+          "end": "00:55:19"
+        },
+        "meaning": "Гэп и возврат цены над средними совпадают с широким ростом широты и восстановлением кривой; Цвейг может появиться позже.",
+        "proposed_definition": "P04, E05/положение над EMA, B11 и V05; Z01 добавляется только в день его фактического появления.",
+        "lifecycle": "Базовый комплекс сегодня; позднее подтверждение не делает вчерашний сигнал сильнее задним числом.",
+        "unresolved": "Не требовать завтрашнего Цвейга для сегодняшней отметки; различать начало и развитие комплекса."
+      }
+    },
+    {
+      "number": 72,
+      "id": "C12",
+      "names": {
+        "ru": "Двойное дно широты в стрессовом контексте",
+        "code": "Breadth bottom in stress"
+      },
+      "classification": {
+        "family": "C",
+        "kind": "composite"
+      },
+      "detector": {
+        "implemented_formula": "B08>0, drawdown>=5%, both RSI lower and front<0; green trigger kept separately",
+        "output": "existing Breeze feature value",
+        "calculation_status": "implemented"
+      },
+      "breeze": {
+        "enabled": true,
+        "frozen": true,
+        "weight_unit": "score_points",
+        "weights": {
+          "soft": 0,
+          "standard": 0,
+          "hard": 0
+        },
+        "lifecycle": "existing Breeze calculation; unchanged by TorchSharp settings"
+      },
+      "torchsharp": {
+        "enabled": false,
+        "weight_threshold_pp": 0,
+        "weight_status": "not_calibrated",
+        "value_source": "C12",
+        "application": "dynamic_ensemble_threshold",
+        "activation": {
+          "mode": "while_source_nonzero",
+          "duration_bars": null,
+          "duration_candidates": [],
+          "retrigger": "not_applicable",
+          "cancellation": "source_value_returns_to_zero",
+          "status": "default_not_calibrated"
+        },
+        "note": "Disabled until this rule is calibrated for TorchSharp."
+      },
+      "documentation": {
+        "source": "C",
+        "source_time": {
+          "start": "00:29:20",
+          "end": "00:35:18"
+        },
+        "meaning": "Повторный минимум цены, более устойчивая широта, оба RSI внизу и напряжённая кривая рассматриваются совместно.",
+        "proposed_definition": "B08 плюс T08,R07,V02/V03; отдельный текущий триггер роста C/B, а не знание о будущем окончательном дне.",
+        "lifecycle": "Контекст может существовать до триггера; подтверждение появляется только при наблюдаемом развороте.",
+        "unresolved": "Какие компоненты обязательны; нельзя свести комплекс к покупке любой бэквордации."
+      }
+    },
+    {
+      "number": 73,
+      "id": "U01",
+      "names": {
+        "ru": "Повторный отрыв RSI от -1 с изменением медленной широты",
+        "code": "Repeated RSI release"
+      },
+      "classification": {
+        "family": "U",
+        "kind": "sequence"
+      },
+      "detector": {
+        "implemented_formula": "Current slow RSI lower release, previous release 5..15 bars ago with renewed saturation between; green body>=past median; signed B200 difference retained",
+        "output": "existing Breeze feature value",
+        "calculation_status": "implemented"
+      },
+      "breeze": {
+        "enabled": true,
+        "frozen": true,
+        "weight_unit": "score_points",
+        "weights": {
+          "soft": 0,
+          "standard": 0,
+          "hard": 0
+        },
+        "lifecycle": "existing Breeze calculation; unchanged by TorchSharp settings"
+      },
+      "torchsharp": {
+        "enabled": false,
+        "weight_threshold_pp": 0,
+        "weight_status": "not_calibrated",
+        "value_source": "U01",
+        "application": "dynamic_ensemble_threshold",
+        "activation": {
+          "mode": "while_source_nonzero",
+          "duration_bars": null,
+          "duration_candidates": [],
+          "retrigger": "not_applicable",
+          "cancellation": "source_value_returns_to_zero",
+          "status": "default_not_calibrated"
+        },
+        "note": "Disabled until this rule is calibrated for TorchSharp."
+      },
+      "documentation": {
+        "source": "U",
+        "source_time": {
+          "start": "",
+          "end": ""
+        },
+        "meaning": "Пример пользователя: похожий отрыв был около 10 дней назад, сегодня второй, с контекстом B200 и сильной зелёной свечи.",
+        "proposed_definition": "Сегодня R03, ранее отдельный R03; между ними повторный заход в нижнюю зону. Лаг, разность B200 на двух событиях, цена и размер сегодняшнего тела — самостоятельные признаки.",
+        "lifecycle": "Только при втором отрыве, без поиска будущего второго дна; прошлый первый отрыв уже должен быть известен.",
+        "unresolved": "10 дней — пример; направления изменения B200 и цена второго минимума не заданы как обязательные. Это пользовательский пример из чата, не приписанный видео факт."
+      }
+    },
+    {
+      "number": 74,
+      "id": "U02",
+      "names": {
+        "ru": "Вчера благополучие и Цвейг 30, сегодня двойной пробой и бэквордация",
+        "code": "Healthy to double break"
+      },
+      "classification": {
+        "family": "U",
+        "kind": "composite"
+      },
+      "detector": {
+        "implemented_formula": "Yesterday bull order above all EMA, front>0 and Working density=30; today double EMA20/50 break and backwardation start",
+        "output": "existing Breeze feature value",
+        "calculation_status": "implemented"
+      },
+      "breeze": {
+        "enabled": true,
+        "frozen": true,
+        "weight_unit": "score_points",
+        "weights": {
+          "soft": 0,
+          "standard": 0,
+          "hard": 0
+        },
+        "lifecycle": "existing Breeze calculation; unchanged by TorchSharp settings"
+      },
+      "torchsharp": {
+        "enabled": false,
+        "weight_threshold_pp": 0,
+        "weight_status": "not_calibrated",
+        "value_source": "U02",
+        "application": "dynamic_ensemble_threshold",
+        "activation": {
+          "mode": "while_source_nonzero",
+          "duration_bars": null,
+          "duration_candidates": [],
+          "retrigger": "not_applicable",
+          "cancellation": "source_value_returns_to_zero",
+          "status": "default_not_calibrated"
+        },
+        "note": "Disabled until this rule is calibrated for TorchSharp."
+      },
+      "documentation": {
+        "source": "U",
+        "source_time": {
+          "start": "",
+          "end": ""
+        },
+        "meaning": "Пример пользователя: отдельный вес сложного сочетания вчерашнего контекста и сегодняшнего слома.",
+        "proposed_definition": "T01[t-1], цена вчера выше всех EMA, V01[t-1]>0, Z_density[t-1] около 30; сегодня E03 и V04. Значения Цвейга 0/5/15/30 — варианты контекста, не заранее заданные веса.",
+        "lifecycle": "Событие текущего дня; вчерашние показатели не заменяются сегодняшними или завтрашними.",
+        "unresolved": "Допуск к 30, обязательность всех частей, сколько независимых повторений. Отдельный вес взаимодействия не равен сумме весов его частей."
+      }
+    },
+    {
+      "number": 75,
+      "id": "U03",
+      "names": {
+        "ru": "Месячная экспирация SPX",
+        "code": "SPX monthly expiration"
+      },
+      "classification": {
+        "family": "U",
+        "kind": "event"
+      },
+      "detector": {
+        "implemented_formula": "Adjusted standard third-Friday SPX expiration; research-only calendar context with zero score weight",
+        "output": "existing Breeze feature value",
+        "calculation_status": "implemented"
+      },
+      "breeze": {
+        "enabled": true,
+        "frozen": true,
+        "weight_unit": "score_points",
+        "weights": {
+          "soft": 0,
+          "standard": 0,
+          "hard": 0
+        },
+        "lifecycle": "existing Breeze calculation; unchanged by TorchSharp settings"
+      },
+      "torchsharp": {
+        "enabled": false,
+        "weight_threshold_pp": 0,
+        "weight_status": "not_calibrated",
+        "value_source": "U03",
+        "application": "dynamic_ensemble_threshold",
+        "activation": {
+          "mode": "current_bar_only",
+          "duration_bars": 1,
+          "duration_candidates": [],
+          "retrigger": "new_observation",
+          "cancellation": "source_value_returns_to_zero",
+          "status": "default_not_calibrated"
+        },
+        "note": "Disabled until this rule is calibrated for TorchSharp."
+      },
+      "documentation": {
+        "source": "U",
+        "source_time": {
+          "start": "",
+          "end": ""
+        },
+        "meaning": "Стандартная месячная экспирация SPX исторически чаще завершалась снижением, но не показала повышения дневной волатильности или устойчивого эффекта следующего дня.",
+        "proposed_definition": "Скорректированная третья пятница месяца: если она не торговая, используется предыдущий торговый день. Признак равен 1 только в день экспирации.",
+        "lifecycle": "Календарное событие текущего дня; праздничный перенос определяется только по уже известному торговому календарю.",
+        "unresolved": "Исследовательский признак с весом 0 во всех профилях. Ненулевой вес допустим только после независимого walk-forward подтверждения; не смешивать с VIX DTE и календарём расчёта VX."
+      }
+    }
+  ]
+}

@@ -7,6 +7,7 @@
     <DefineConstants>EVENT_MODEL_TEST</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="../Breeze.Strategies/BreezeHoldPositionStrategy_new.cs" Link="BreezeHoldPositionStrategy_new.cs" />
+    <Compile Include="../../Breeze.Strategies/BreezeHoldPositionStrategy_new.cs" Link="BreezeHoldPositionStrategy_new.cs" />
+    <EmbeddedResource Include="../../Breeze/BreezeRules.json" Link="BreezeRules.json" />
   </ItemGroup>
 </Project>

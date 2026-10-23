@@ -7,8 +7,9 @@ map uses a one-quarter left column for a concise market-state explanation at the
 shared cursor date and a three-quarters right column for the chart. The explanation
 combines Phase confidence, MyRSI significance, EMA structure, breadth, candle
 impulse, VIX/SVXY, Titanic, and Zweig from already calculated dated values. It
-also reports precomputed 20-bar SPY outcomes for the current Phase and EMA
-regime: positive-outcome frequency, average return, and sample size.
+also reports precomputed 20-day SPY outcomes from the start of distinct
+episodes of the current Phase and EMA regime: positive-outcome frequency,
+average price change, and the number of episode starts.
 
 In `All breadths`, `Full` remains the default four-panel view. Selecting one or
 more individual breadth series opens a combined synchronized view. Its `ATRP(1)`
@@ -103,6 +104,93 @@ trading day, the strongest support and risk contributions, VIX-curve state, and
 SVXY recommendation. Exact zero maps to no position; positive values add one
 contract per ten Hold points, with 90..100 mapped to all ten contracts. This is
 a transparent display rule, not yet a backtested Wealth-Lab strategy.
+
+Version 0.10.5 rewrites the operational Fuzzy-map panel in ordinary Russian.
+Internal event IDs and English research names remain in CSV/research tables,
+but the live screen explains each contribution, its direction and its size in
+percentage points. The position card states the distance from the fixed 50%
+entry boundary and the exact next-open action. A new dated narrative describes
+the last three trading days, EMA20/EMA50 crossings, breadth direction, changes
+between backwardation and contango, the position of SVXY inside the preceding
+session's range, and the current Titanic run. A red calendar warning appears on
+the third Friday of each month and one or two days beforehand; recent third-
+Friday expiration remains visible in the three-day narrative. The Help explains
+that this is ordinary monthly-option context and that VIX derivatives can use a
+different expiration calendar.
+
+Version 0.10.6 removes qualitative partial-position wording from the binary
+50-point model. The screen now shows a 0–100 score in points and an unambiguous
+decision: below 50 the position is closed, from 50 it is fully open. Factor
+contributions are expressed as added or subtracted model points. Historical
+outcomes are calculated from distinct regime-entry episodes instead of counting
+every bar inside one continuing state. EMA order and EMA direction are reported
+separately, including the current consecutive rise or decline of EMA20, EMA50,
+EMA100, and EMA200.
+
+Version 0.10.7 adds a framed full-calculation block below the market narrative.
+For the selected date and profile it shows the neutral 50-point starting value,
+every non-zero weighted contribution without a top-six cutoff, and the exact
+final score. The historical sentence now presents the 20-day result as a plain
+property of the current Phase or EMA regime and omits the episode count from the
+operational screen.
+
+Version 0.10.8 puts the position card, narrative, and full calculation inside
+one full-height vertical scroller, so the position card can move out of view and
+release space for the remaining text. Every line in the exact calculation has a
+bullet marker. The shorter top-six `Factors` sentence was removed from the
+narrative because it duplicated the complete calculation below.
+
+Version 0.10.9 replaces the lower full-calculation claim with a dated top-ten
+ranking of non-zero indicators ordered by absolute influence. Model profiles are
+shown consistently as Soft, Standard, and Hard. The narrative now compares an
+active Titanic run with prior completed history, identifies a new or repeated
+duration record without treating rarity as trading significance, and reports a
+new SPY high only as a high of the loaded data range.
+
+Version 0.10.10 adds a copy button before the shortened `Состояние рынка`
+heading. One click copies the complete selected-date report: model position,
+calendar warning when present, market narrative, and the top-ten contribution
+ranking. The position heading now reads, for example,
+`ПОЗИЦИЯ ПО МОДЕЛИ «STANDARD» НА 2026-10-19`.
+
+Version 0.10.11 separates SPX and VIX expiration calendars. Adjusted monthly
+SPX expiration is retained as research-only event U03 with zero weight in every
+profile; its red notice reports the observed negative directional bias without
+claiming higher volatility. Standard VX settlement receives a separate neutral
+notice and no calendar weight, while V07 continues to represent actual front
+contract DTE<=3. Holiday shifts use loaded trading dates for history and the
+regular US exchange calendar for the next dates. Help preserves the complete
+32-test expiration/EMA20 table, event-time profiles, split-sample stability and
+the resulting scoring decision.
+
+Version 0.10.12 removes internal V07/DTE terminology from the operational VIX
+calendar notice. The three-day narrative now classifies EMA20/EMA50 geometry on
+every historical date: close position, candle body, full High-Low range,
+confirmed close crossings and intraday probes are reported separately. It also
+counts the complete consecutive run of candle bodies contained between EMA20
+and EMA50, avoiding the false implication that intraday wicks stayed inside.
+
+Version 0.10.13 divides the Titanic chart into the same 68/32 vertical layout
+used by Zweig. QQQ remains in the upper pane; the new lower Nasdaq pane plots
+daily 52-week New Highs in green and New Lows in red on one dynamically scaled
+axis. The model-score ribbon stays between the panes, and the shared viewport
+and synchronized cursor span the complete two-pane chart.
+
+Version 0.10.14 adds the calculated Titanic signal itself to the lower pane as
+a blue binary 0/1 step series. Its own 0.0/0.5/1.0 Y scale is printed on both
+sides, independently of the New High/New Low count scale. Checked-by-default
+switches independently control Titanic Active, Persistent, model score, New
+High, New Low, and the Titanic value.
+
+Version 0.10.15 replaces that binary display with the continuous Nasdaq
+High/Low Ratio `New High / (New High + New Low)`. The blue line uses its own
+0..1 scale on both sides, while a thin red dashed line marks the meaningful 0.5
+boundary. The exact ratio is now stored in each Titanic point, shown at the
+cursor, and exported to both Titanic CSV files.
+
+Version 0.10.16 renders the continuous blue Titanic ratio with a long-dash
+pattern. The 0.5 threshold remains a thinner red short-dash line, so the
+calculated series and its decision boundary remain visually distinct.
 
 Version 0.9.18 adds a separate compiled Wealth-Lab strategy in
 `Breeze.Strategies.dll`. `Breeze Hold Position Strategy` reads the dated values
@@ -217,6 +305,15 @@ from the user's updated `TitanicSyndromeResearch.cs`:
 - the optional Nasdaq-100 SMA(50) breadth filter is calculated from the selected
   Nasdaq DataSet but remains disabled by default, matching the source settings.
 
+Version 0.10.26 publishes the reviewed Forecast and chart-navigation snapshot.
+The Trading Ensemble page calculates ZZ1, ZZ2 and ZZ3 forecasts, shows the
+central scenario together with the ±1% and ±2% paths, and persists all seven
+movable chart-pane boundaries in `%APPDATA%\WealthLab8\BreezeLayout.json`.
+Layout persistence keeps an in-memory authoritative state, so closing Breeze
+from a hidden tab cannot replace saved positions with defaults. The release
+also uses 20-bar navigation steps, portable deployment scripts, synchronized
+release binaries and explicit model-calculation error reporting.
+
 The early Titanic phase is blue and a persistent run is green. Breeze exports
 all evaluated dates to `titanic_sentiment.csv` and active dates to
 `titanic_sentiment_events.csv` in `D:\fear_greed_close\Breeze`. Both files include
@@ -226,9 +323,35 @@ DataSet-based SMA(50) breadth and all active defaults.
 The Titanic header includes `- 7 days +` immediately before the latest-state
 readout. It changes the persistence threshold from 1 to 30 days, recolors the
 history immediately, and rewrites both Titanic CSV files. The shared `Candles`
-toggle switches the Titanic QQQ plot between a line and OHLC candles. The lower
-cursor row deliberately shows only `MyRSI: value`; implementation parameters
-remain in the technical CSV metadata.
+toggle switches the Titanic QQQ plot between a line and OHLC candles. As on the
+Zweig tab, the lower pane occupies 32% of the available plot height. It shows
+Nasdaq 52-week New Highs and New Lows for the same dates and viewport; both use
+one zero-based scale so their crossings and relative magnitude remain directly
+comparable. The blue `Titanic value` series is the continuous normalized value
+`New High / (New High + New Low)`. Its separate 0..1 Y scale is repeated on the
+left and right, and a thin red dashed line marks 0.5: readings below it mean New
+Lows exceed New Highs. The final Active condition also requires QQQ to be near
+its annual high. The synchronized cursor crosses both panes. Every visual layer
+can be hidden without recalculation by its checked-by-default switch above the
+chart.
+
+## Repository layout
+
+- `Breeze/` — the Wealth-Lab client extension and the source Help.
+- `Breeze.Strategies/` — the production compiled strategy and the shared source
+  of the research event model.
+- `tests/` — Contango, event-model and fuzzy/Help integration smoke tests.
+- `docs/` — maintained documentation, the event catalog and review reports.
+- `research/` — Wealth-Lab research strategies, generated artifacts, raw inputs
+  and upstream reference sources.
+- `tools/` — scripts that reproduce and validate research artifacts.
+- `release/` — only the current ready-to-install handoff files.
+- `versions/` — immutable, versioned release snapshots.
+
+The old root-level smoke-test projects and the duplicate
+`Breeze.Strategies.New` project wrapper were removed. The event-model source is
+compiled directly by `Breeze` and validated from `tests/EventModel`, so there is
+one maintained implementation.
 
 ## Build
 
@@ -271,6 +394,18 @@ Its assembly is:
 
 `Breeze.Strategies\\bin\\Release\\net8.0-windows\\Breeze.Strategies.dll`
 
+Run the integration checks from the repository root:
+
+```powershell
+dotnet run --project .\tests\Contango\Breeze.ContangoSmokeTest.csproj -c Release
+dotnet run --project .\tests\EventModel\Breeze.EventModel.SmokeTest.csproj -c Release
+dotnet run --project .\tests\Fuzzy\Breeze.FuzzySmokeTest.csproj -c Release
+```
+
+The checks use the local research data under `D:\fear_greed_close`. Generated
+event-model validation files are written to
+`research/artifacts/event-model-new-validation`.
+
 Copy `Breeze.dll`, `BreezeHelp.html` and, when the separate compiled strategies
 are required, `Breeze.Strategies.dll` into
 `C:\Program Files\Quantacula, LLC\WealthLab 8` while Wealth-Lab is closed.
@@ -290,4 +425,4 @@ fallback at the top of the page.
 The GitHub source repository contains both ready-to-install release files, so
 users do not need to install the .NET SDK or compile the project themselves.
 
-The upstream reference project is in `reference/WL8ExtensionDemos`.
+The upstream reference project is in `research/reference/WL8ExtensionDemos`.

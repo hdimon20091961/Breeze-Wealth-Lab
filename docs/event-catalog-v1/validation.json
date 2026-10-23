@@ -1,12 +1,12 @@
 {
   "date": "2026-10-13",
   "structural_checks_passed": true,
-  "event_count": 77,
+  "event_count": 78,
   "by_kind": {
     "state": 27,
     "composite": 15,
     "sequence": 16,
-    "event": 16,
+    "event": 17,
     "execution": 3
   },
   "by_source": {
@@ -14,7 +14,7 @@
     "B2": 13,
     "C": 31,
     "B1": 12,
-    "U": 2
+    "U": 3
   },
   "frame_candidates": 567,
   "unique_frame_hashes": 564,
@@ -47,5 +47,5 @@
     "backtest",
     "production DLL changes"
   ],
-  "source_spec_sha256": "53a8a02661d56725c73e12e4ee63bb6cfd6ebb873ca6b77263a64298aa63ae0d"
+  "source_spec_sha256": "68c754dd9a232654f56c2563b5c8f5a5959b1fcaca077b4fc3e49e54dd78361e"
 }
