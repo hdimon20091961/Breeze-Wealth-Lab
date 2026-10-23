@@ -1,7 +1,12 @@
+// Integration smoke test for fuzzy state, event score and Help generation.
 using System.Globalization;
 using BreezeVL;
 
-string source = args.ElementAtOrDefault(0) ?? @"D:\fear_greed_close\Breeze";
+bool writeStandaloneHelp = args.Length == 2 &&
+    string.Equals(args[0], "--write-help", StringComparison.OrdinalIgnoreCase);
+string source = writeStandaloneHelp
+    ? @"D:\fear_greed_close\Breeze"
+    : args.ElementAtOrDefault(0) ?? @"D:\fear_greed_close\Breeze";
 
 PriceSeries spy = new("SPY", ReadPrice(Path.Combine(source, "SPY.csv")));
 BreadthSeries sp50 = new("sp500_sma50", 50, ReadBreadth(Path.Combine(source, "sp500_sma50.csv")), true);
@@ -48,8 +53,11 @@ Console.WriteLine("Model position sizing: fixed 50% level, 0/10 contracts verifi
 var researchProfiles = new List<HoldConfidenceSeries>();
 for (int profile = 0; profile < 3; profile++)
 {
-    if (!ResearchHoldConfidenceCalculator.TryCalculate(profile, out HoldConfidenceSeries researchSeries, out string researchError))
+    if (!ResearchHoldConfidenceCalculator.TryCalculate(profile, out HoldConfidenceSeries researchSeries,
+            out string researchError, out ResearchCalculationFailure failure))
         throw new InvalidOperationException($"Research profile {profile} failed: {researchError}");
+    if (failure != ResearchCalculationFailure.None)
+        throw new InvalidOperationException($"Research profile {profile} returned failure state {failure}.");
     if (researchSeries.Points.Count == 0 || researchSeries.Points.Any(point => point.Profile == "Legacy" || point.Value is < 0 or > 100))
         throw new InvalidOperationException($"Research profile {profile} is invalid.");
     researchProfiles.Add(researchSeries);
@@ -59,16 +67,65 @@ if (!researchProfiles[0].Points.Zip(researchProfiles[1].Points)
         .Any(pair => Math.Abs(pair.First.Value - pair.Second.Value) > 0.000001) ||
     !researchProfiles[1].Points.Zip(researchProfiles[2].Points)
         .Any(pair => Math.Abs(pair.First.Value - pair.Second.Value) > 0.000001))
-    throw new InvalidOperationException("Soft, Standard and Strong profiles do not produce distinct histories.");
+    throw new InvalidOperationException("Soft, Standard and Hard profiles do not produce distinct histories.");
+HoldConfidencePoint humanLanguageSample = researchProfiles[1].Points
+    .Last(point => !string.IsNullOrWhiteSpace(point.ActiveEvents));
+string operationalText = $"{humanLanguageSample.MainSupport} {humanLanguageSample.MainRisk} {humanLanguageSample.ActiveEvents}";
+if (System.Text.RegularExpressions.Regex.IsMatch(operationalText, @"\b[A-Z]\d{2}\b") ||
+    operationalText.Contains(" pp", StringComparison.OrdinalIgnoreCase) ||
+    operationalText.Contains("п.п.", StringComparison.Ordinal) ||
+    !operationalText.Contains("балла к оценке модели", StringComparison.Ordinal) ||
+    HumanLanguage.Event("T09") != "несколько снижений цены после промежуточных отскоков")
+    throw new InvalidOperationException("Operational contributions are not written in human Russian wording.");
+if (HumanLanguage.Profile("Standard") != "Standard" ||
+    HumanLanguage.Profile("Hard") != "Hard" ||
+    HumanLanguage.CurveState(VixCurveState.Backwardation) != "бэквордация")
+    throw new InvalidOperationException("Human-language profile or VIX-curve labels changed unexpectedly.");
+Console.WriteLine("Human-language operational wording: event codes and percentage-point abbreviations are absent.");
+HoldConfidencePoint exactCalculationSample = researchProfiles[1].Points
+    .Single(point => point.Date == new DateTime(2026, 10, 19));
+string[] calculationLines = exactCalculationSample.TopContributions
+    .Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries);
+if (exactCalculationSample.Date != new DateTime(2026, 10, 19) ||
+    calculationLines.Length != 9 ||
+    !exactCalculationSample.TopContributions.Contains("текущий уровень широты рынка: +7.1", StringComparison.Ordinal) ||
+    !exactCalculationSample.TopContributions.Contains("несколько снижений цены после промежуточных отскоков: -6.7", StringComparison.Ordinal) ||
+    !calculationLines.All(line => line.StartsWith("• ", StringComparison.Ordinal)) ||
+    calculationLines.Any(line => line.Contains("Стартовая", StringComparison.Ordinal) ||
+                                 line.Contains("Итоговая", StringComparison.Ordinal)))
+    throw new InvalidOperationException("The top-ten contribution ranking is incomplete or inconsistent.");
+Console.WriteLine("Top-ten contribution ranking: 9 non-zero contributions, ordered by absolute influence, verified.");
 string researchHelp = BreezeResearchHelp.BuildHtml();
-if (!researchHelp.Contains("Полный каталог 74 состояний", StringComparison.Ordinal) ||
+if (BreezeRuleCatalog.Current.Rules.Count != 75 ||
+    BreezeRuleCatalog.Current.Rules.Select(rule => rule.Number).Distinct().Count() != 75 ||
+    BreezeRuleCatalog.Current.ById("R03").SoftWeight != 15 ||
+    BreezeRuleCatalog.Current.ById("Z02").HardWeight != 5)
+    throw new InvalidOperationException("BreezeRules.json was not loaded or validated correctly.");
+if (!researchHelp.Contains("Полный каталог 75 состояний", StringComparison.Ordinal) ||
+    !researchHelp.Contains("Единый каталог правил", StringComparison.Ordinal) ||
+    !researchHelp.Contains("TorchSharp, п.п.", StringComparison.Ordinal) ||
     !researchHelp.Contains("T09", StringComparison.Ordinal) ||
     !researchHelp.Contains("0 — сохранён", StringComparison.Ordinal) ||
     !researchHelp.Contains("Бычий порядок EMA", StringComparison.Ordinal) ||
     !researchHelp.Contains("Предварительное определение", StringComparison.Ordinal))
     throw new InvalidOperationException("Embedded research Help is incomplete.");
 Console.WriteLine($"Research Help generated: {researchHelp.Length:N0} characters.");
-string? generatedHelpPath = args.ElementAtOrDefault(1);
+
+if (writeStandaloneHelp)
+{
+    string root = Path.GetFullPath(args[1]);
+    string sourcePath = Path.Combine(root, "Breeze", "BreezeHelp.html");
+    string standalonePath = Path.Combine(root, "Breeze", "BreezeHelp.standalone.html");
+    string sourceHtml = File.ReadAllText(sourcePath);
+    const string marker = "<!-- RESEARCH-MODEL-HELP -->";
+    if (!sourceHtml.Contains(marker, StringComparison.Ordinal))
+        throw new InvalidOperationException($"Help marker was not found in {sourcePath}.");
+    File.WriteAllText(
+        standalonePath,
+        sourceHtml.Replace(marker, researchHelp, StringComparison.Ordinal));
+    Console.WriteLine($"Standalone Help written: {standalonePath}");
+}
+string? generatedHelpPath = writeStandaloneHelp ? null : args.ElementAtOrDefault(1);
 if (!string.IsNullOrWhiteSpace(generatedHelpPath))
 {
     string templatePath = Path.Combine(Directory.GetCurrentDirectory(), "Breeze", "BreezeHelp.html");
@@ -144,7 +201,9 @@ TitanicSeries titanic = TitanicSyndromeCalculator.Calculate(
 IReadOnlyList<TitanicPoint> activeTitanic = titanic.Points.Where(point => point.Signal).ToList();
 if (activeTitanic.Count != 8 || activeTitanic[0].RunLength != 1 || activeTitanic[0].Persistent ||
     activeTitanic[6].RunLength != 7 || !activeTitanic[6].Persistent || titanic.UseBreadthFilter ||
-    Math.Abs(titanic.HighTolerancePercent - 3.0) > 0.000001)
+    Math.Abs(titanic.HighTolerancePercent - 3.0) > 0.000001 ||
+    Math.Abs(activeTitanic[0].NasdaqHighLowRatio - 0.4) > 0.000001 ||
+    Math.Abs(titanic.Points[0].NasdaqHighLowRatio - (2.0 / 3.0)) > 0.000001)
     throw new InvalidOperationException("SentimenTrader Titanic defaults or persistence logic are incorrect.");
 Console.WriteLine($"Titanic synthetic check: {activeTitanic.Count} active days; persistent from day {activeTitanic[6].RunLength}; MA filter={titanic.UseBreadthFilter}.");
 TitanicSeries adjustedTitanic = TitanicSyndromeCalculator.WithPersistentDays(titanic, 5);

@@ -1,5 +1,6 @@
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
@@ -44,8 +45,8 @@ public partial class BreezeWindow : ChildWindow
 
     public const string WindowToken = "BreezeVL.MarketBreadth";
     private const int DefaultVisibleBarCount = 200;
-    private const int MinimumVisibleBarCount = 50;
-    private const int VisibleBarStep = 25;
+    private const int MinimumVisibleBarCount = 20;
+    private const int VisibleBarStep = 20;
     private const string VixTermDataDirectory = @"D:\fear_greed_close\VIX";
     private const string VixTermExportPath = @"D:\fear_greed_close\vix_term_structure.csv";
     private const string VixCurveStateExportPath = @"D:\fear_greed_close\Breeze\contango_market_state.csv";
@@ -59,6 +60,7 @@ public partial class BreezeWindow : ChildWindow
     public BreezeWindow()
     {
         InitializeComponent();
+        LoadPersistentLayout();
         OrderTabsByAnalysisPriority();
         Loaded += OnLoaded;
         OverviewCombinedChart.SetAutoScaleBreadth(true);
@@ -76,18 +78,29 @@ public partial class BreezeWindow : ChildWindow
         FuzzyChart.CursorDateChanged += UpdateCursorValues;
         TitanicChart.CursorDateChanged += UpdateCursorValues;
         ZweigChart.CursorDateChanged += UpdateCursorValues;
+        TradingEnsembleChart.CursorDateChanged += UpdateCursorValues;
         TitanicChart.PersistentDaysChanged += TitanicPersistentDaysChanged;
         BreadthTabs.SelectionChanged += BreadthTabsSelectionChanged;
         BreadthTabs.LostMouseCapture += (_, _) =>
         {
             _isPanning = false;
+            bool saveLayout = _isTradingPaneResizing;
+            _isTradingPaneResizing = false;
+            TradingEnsembleChart.EndPaneResize();
+            if (saveLayout)
+            {
+                CaptureTradingLayout();
+                SavePersistentLayout();
+            }
             SetHorizontalDragCursor(false);
         };
         Unloaded += (_, _) =>
         {
+            SavePersistentLayout();
             SetHorizontalDragCursor(false);
             _calculationCts?.Cancel();
             _contangoLoadCts?.Cancel();
+            _tradingEnsembleCts?.Cancel();
         };
         SetPlaceholders();
         UpdateOverviewBreadthMode();
@@ -95,7 +108,7 @@ public partial class BreezeWindow : ChildWindow
 
     private void OrderTabsByAnalysisPriority()
     {
-        TabItem[] orderedTabs = [FuzzyTab, OverviewTab, ContangoTab, TitanicTab, ZweigTab];
+        TabItem[] orderedTabs = [FuzzyTab, TradingEnsemblesTab, OverviewTab, ContangoTab, TitanicTab, ZweigTab];
         foreach (TabItem tab in orderedTabs)
             BreadthTabs.Items.Remove(tab);
         foreach (TabItem tab in orderedTabs)
@@ -109,15 +122,17 @@ public partial class BreezeWindow : ChildWindow
     {
         get
         {
-            double totalWidth = FuzzyAnalysisColumn.ActualWidth + FuzzyChartColumn.ActualWidth;
-            double splitRatio = totalWidth > 1.0
-                ? FuzzyAnalysisColumn.ActualWidth / totalWidth
-                : 0.25;
             return $"{(SpDataSet.SelectedItem as DataSet)?.QualifiedName}|" +
                    $"{(NasdaqDataSet.SelectedItem as DataSet)?.QualifiedName}|" +
                    $"{(UseWorkingZweig.IsChecked == true ? "Working" : "Strong")}|" +
                    $"{PositionProfile?.SelectedIndex ?? 1}|" +
-                   splitRatio.ToString("0.####", CultureInfo.InvariantCulture);
+                   $"{_layoutState.FuzzyAnalysisRatio.ToString("0.####", CultureInfo.InvariantCulture)}|" +
+                   $"{_layoutState.TradingPriceBoundary.ToString("0.####", CultureInfo.InvariantCulture)}|" +
+                   $"{_layoutState.TradingEnsembleBoundary.ToString("0.####", CultureInfo.InvariantCulture)}|" +
+                   $"{_layoutState.TradingDecileBoundary.ToString("0.####", CultureInfo.InvariantCulture)}|" +
+                   $"{_layoutState.OverviewCombinedRatio.ToString("0.####", CultureInfo.InvariantCulture)}|" +
+                   $"{_layoutState.ContangoLeftRatio.ToString("0.####", CultureInfo.InvariantCulture)}|" +
+                   _layoutState.ContangoTopRatio.ToString("0.####", CultureInfo.InvariantCulture);
         }
         set => _workspaceSelection = value ?? string.Empty;
     }
@@ -130,6 +145,7 @@ public partial class BreezeWindow : ChildWindow
     private BreadthSeries? _nasdaq100Series;
     private BreadthSeries? _nasdaq50Series;
     private PriceSeries? _sp500PriceSeries;
+    private BarHistory? _sp500Bars;
     private PriceSeries? _svxyPriceSeries;
     private PriceSeries? _vixPriceSeries;
     private FuzzyMarketStateSeries? _fuzzyStates;
@@ -139,12 +155,24 @@ public partial class BreezeWindow : ChildWindow
     private ZweigSeries? _zweigSeries;
     private ZweigSeries? _zweigStrongSeries;
     private ZweigSeries? _zweigWorkingSeries;
+    private IReadOnlyDictionary<string, TradingEnsembleSeries> _tradingEnsembles =
+        new Dictionary<string, TradingEnsembleSeries>(StringComparer.OrdinalIgnoreCase);
+    private CancellationTokenSource? _tradingEnsembleCts;
+    private bool _tradingEnsembleCalculationStarted;
+    private int _tradingEnsembleCalculationGeneration;
+    private bool _initialCalculationStarted;
+    private int _tradingForecastDays = 10;
+    private bool _tradingDirectoryTreeInitialized;
+    private static readonly object DirectoryTreePlaceholder = new();
     private int _visibleBarCount = DefaultVisibleBarCount;
     private DateTime? _cursorDate;
     private bool _cursorPinned;
     private bool _horizontalDragCursorActive;
     private Cursor? _previousOverrideCursor;
     private bool _isPanning;
+    private bool _isTradingPaneResizing;
+    private bool _persistentLayoutLoaded;
+    private BreezeLayoutState _layoutState = new();
     private Point _panStartPoint;
     private double _panStartSlider;
     private double _panChartWidth;
@@ -173,6 +201,111 @@ public partial class BreezeWindow : ChildWindow
         OverviewCombinedChart, ContangoSpChart, ContangoSvxyChart
     ];
 
+    private void LoadPersistentLayout()
+    {
+        if (!BreezeLayoutStore.TryLoad(out BreezeLayoutState state))
+            return;
+
+        _layoutState = state;
+        _persistentLayoutLoaded = true;
+        double fuzzyRatio = Math.Clamp(state.FuzzyAnalysisRatio, 0.20, 0.65);
+        FuzzyAnalysisColumn.Width = new GridLength(fuzzyRatio, GridUnitType.Star);
+        FuzzyChartColumn.Width = new GridLength(1.0 - fuzzyRatio, GridUnitType.Star);
+        TradingEnsembleChart.SetPaneBoundaries(
+            state.TradingPriceBoundary,
+            state.TradingEnsembleBoundary,
+            state.TradingDecileBoundary);
+        ApplyOverviewRatio(state.OverviewCombinedRatio);
+        ApplyStarRatio(ContangoLeftColumn, ContangoRightColumn,
+            state.ContangoLeftRatio, 0.20, 0.80);
+        ApplyStarRatio(ContangoTopRow, ContangoBottomRow,
+            state.ContangoTopRatio, 0.20, 0.85);
+    }
+
+    private void SavePersistentLayout()
+    {
+        if (BreezeLayoutStore.TrySave(_layoutState))
+            _persistentLayoutLoaded = true;
+    }
+
+    private void CaptureTradingLayout()
+    {
+        (double price, double ensemble, double decile) = TradingEnsembleChart.GetPaneBoundaries();
+        _layoutState.TradingPriceBoundary = price;
+        _layoutState.TradingEnsembleBoundary = ensemble;
+        _layoutState.TradingDecileBoundary = decile;
+    }
+
+    private void LayoutSplitterDragCompleted(object sender, DragCompletedEventArgs e)
+    {
+        if (ReferenceEquals(sender, OverviewAtrpSplitter))
+        {
+            double ratio = Ratio(
+                OverviewCombinedRow.ActualHeight, OverviewAtrpRow.ActualHeight, 2.0 / 3.0);
+            ApplyOverviewRatio(ratio);
+            _layoutState.OverviewCombinedRatio = ratio;
+        }
+        else if (ReferenceEquals(sender, FuzzyHorizontalSplitter))
+            _layoutState.FuzzyAnalysisRatio = Ratio(
+                FuzzyAnalysisColumn.ActualWidth, FuzzyChartColumn.ActualWidth,
+                _layoutState.FuzzyAnalysisRatio);
+        else if (ReferenceEquals(sender, ContangoVerticalSplitter))
+            _layoutState.ContangoLeftRatio = Ratio(
+                ContangoLeftColumn.ActualWidth, ContangoRightColumn.ActualWidth,
+                _layoutState.ContangoLeftRatio);
+        else if (ReferenceEquals(sender, ContangoLeftHorizontalSplitter) ||
+                 ReferenceEquals(sender, ContangoRightHorizontalSplitter))
+            _layoutState.ContangoTopRatio = Ratio(
+                ContangoTopRow.ActualHeight, ContangoBottomRow.ActualHeight,
+                _layoutState.ContangoTopRatio);
+        SavePersistentLayout();
+    }
+
+    private double CurrentOverviewRatio()
+    {
+        if (_overviewAtrpLayoutVisible && OverviewCombinedRow.ActualHeight + OverviewAtrpRow.ActualHeight > 1.0)
+            return Ratio(OverviewCombinedRow.ActualHeight, OverviewAtrpRow.ActualHeight, 2.0 / 3.0);
+        double first = _overviewCombinedHeight.Value;
+        double second = _overviewAtrpHeight.Value;
+        return first + second > 0.0 ? Math.Clamp(first / (first + second), 0.20, 0.85) : 2.0 / 3.0;
+    }
+
+    private void ApplyOverviewRatio(double ratio)
+    {
+        ratio = Math.Clamp(ratio, 0.20, 0.85);
+        _overviewCombinedHeight = new GridLength(ratio, GridUnitType.Star);
+        _overviewAtrpHeight = new GridLength(1.0 - ratio, GridUnitType.Star);
+        if (_overviewAtrpLayoutVisible)
+        {
+            OverviewCombinedRow.Height = _overviewCombinedHeight;
+            OverviewAtrpRow.Height = _overviewAtrpHeight;
+        }
+    }
+
+    private static void ApplyStarRatio(ColumnDefinition first, ColumnDefinition second,
+        double ratio, double minimum, double maximum)
+    {
+        ratio = Math.Clamp(ratio, minimum, maximum);
+        first.Width = new GridLength(ratio, GridUnitType.Star);
+        second.Width = new GridLength(1.0 - ratio, GridUnitType.Star);
+    }
+
+    private static void ApplyStarRatio(RowDefinition first, RowDefinition second,
+        double ratio, double minimum, double maximum)
+    {
+        ratio = Math.Clamp(ratio, minimum, maximum);
+        first.Height = new GridLength(ratio, GridUnitType.Star);
+        second.Height = new GridLength(1.0 - ratio, GridUnitType.Star);
+    }
+
+    private static double Ratio(double first, double second, double fallback)
+    {
+        double total = first + second;
+        return double.IsFinite(total) && total > 1.0
+            ? Math.Clamp(first / total, 0.0, 1.0)
+            : fallback;
+    }
+
     private void OnLoaded(object sender, RoutedEventArgs e)
     {
         List<DataSet> dataSets = WLHost.Instance.DataSets
@@ -189,15 +322,58 @@ public partial class BreezeWindow : ChildWindow
         PositionProfile.SelectedIndex = int.TryParse(saved.ElementAtOrDefault(3), out int savedProfile)
             ? Math.Clamp(savedProfile, 0, 2)
             : 1;
-        if (double.TryParse(saved.ElementAtOrDefault(4), NumberStyles.Float,
+        if (!_persistentLayoutLoaded && double.TryParse(saved.ElementAtOrDefault(4), NumberStyles.Float,
                 CultureInfo.InvariantCulture, out double savedSplitRatio))
         {
             savedSplitRatio = Math.Clamp(savedSplitRatio, 0.20, 0.65);
+            _layoutState.FuzzyAnalysisRatio = savedSplitRatio;
             FuzzyAnalysisColumn.Width = new GridLength(savedSplitRatio, GridUnitType.Star);
             FuzzyChartColumn.Width = new GridLength(1.0 - savedSplitRatio, GridUnitType.Star);
         }
+        if (!_persistentLayoutLoaded &&
+            double.TryParse(saved.ElementAtOrDefault(5), NumberStyles.Float, CultureInfo.InvariantCulture, out double savedPriceBoundary) &&
+            double.TryParse(saved.ElementAtOrDefault(6), NumberStyles.Float, CultureInfo.InvariantCulture, out double savedEnsembleBoundary) &&
+            double.TryParse(saved.ElementAtOrDefault(7), NumberStyles.Float, CultureInfo.InvariantCulture, out double savedDecileBoundary))
+        {
+            _layoutState.TradingPriceBoundary = savedPriceBoundary;
+            _layoutState.TradingEnsembleBoundary = savedEnsembleBoundary;
+            _layoutState.TradingDecileBoundary = savedDecileBoundary;
+            TradingEnsembleChart.SetPaneBoundaries(
+                savedPriceBoundary, savedEnsembleBoundary, savedDecileBoundary);
+        }
+        if (!_persistentLayoutLoaded &&
+            double.TryParse(saved.ElementAtOrDefault(8), NumberStyles.Float, CultureInfo.InvariantCulture, out double savedOverviewRatio))
+        {
+            _layoutState.OverviewCombinedRatio = savedOverviewRatio;
+            ApplyOverviewRatio(savedOverviewRatio);
+        }
+        if (!_persistentLayoutLoaded &&
+            double.TryParse(saved.ElementAtOrDefault(9), NumberStyles.Float, CultureInfo.InvariantCulture, out double savedContangoLeftRatio))
+        {
+            _layoutState.ContangoLeftRatio = savedContangoLeftRatio;
+            ApplyStarRatio(ContangoLeftColumn, ContangoRightColumn, savedContangoLeftRatio, 0.20, 0.80);
+        }
+        if (!_persistentLayoutLoaded &&
+            double.TryParse(saved.ElementAtOrDefault(10), NumberStyles.Float, CultureInfo.InvariantCulture, out double savedContangoTopRatio))
+        {
+            _layoutState.ContangoTopRatio = savedContangoTopRatio;
+            ApplyStarRatio(ContangoTopRow, ContangoBottomRow, savedContangoTopRatio, 0.20, 0.85);
+        }
         UpdateZweigModeText();
-        SetStatus("Select Wealth-Lab dynamic DataSets, then calculate.");
+        TradingEnsembleDirectory.Text = @"D:\TorchSharp4GPU";
+        SetStatus("Ожидайте — запускается первоначальный расчёт данных …", BreadthProgressLevel.Waiting);
+        if (!_initialCalculationStarted)
+        {
+            _initialCalculationStarted = true;
+            Dispatcher.BeginInvoke(DispatcherPriority.Background,
+                new Action(() => RefreshClick(RefreshButton, new RoutedEventArgs())));
+        }
+        Dispatcher.BeginInvoke(DispatcherPriority.Background,
+            new Action(() =>
+            {
+                if (!_persistentLayoutLoaded)
+                    SavePersistentLayout();
+            }));
     }
 
     private async void RefreshClick(object sender, RoutedEventArgs e)
@@ -213,6 +389,7 @@ public partial class BreezeWindow : ChildWindow
         _calculationCts = new CancellationTokenSource();
         CancellationToken cancellationToken = _calculationCts.Token;
         RefreshButton.IsEnabled = false;
+        RefreshButton.Content = "Calculating…";
         SpDataSet.IsEnabled = false;
         NasdaqDataSet.IsEnabled = false;
         _isCalculationInProgress = true;
@@ -232,8 +409,8 @@ public partial class BreezeWindow : ChildWindow
             BreadthSeries sp50Series = spSeries.Single(series => series.Period == 50);
             SetStatus("S&P 500 breadth ready. Loading SPY and NYSE Zweig histories …");
 
-            Task<PriceSeries> spyTask = Task.Run(() =>
-                BreadthCalculator.LoadSp500Price(sp, technicalWarmupStart, end), cancellationToken);
+            Task<BarHistory> spyTask = Task.Run(() =>
+                BreadthCalculator.LoadRawHistory(sp, "SPY", technicalWarmupStart, end), cancellationToken);
             Task<PriceSeries> advancingTask = Task.Run(() =>
                 BreadthCalculator.LoadPriceSeries(sp, "$NYSE_ADVN", technicalWarmupStart, end, "NYSE Advancing"),
                 cancellationToken);
@@ -253,7 +430,8 @@ public partial class BreezeWindow : ChildWindow
                 }
             }, cancellationToken);
             await Task.WhenAll(spyTask, advancingTask, decliningTask);
-            PriceSeries sp500Price = await spyTask;
+            BarHistory sp500Bars = await spyTask;
+            PriceSeries sp500Price = BreadthCalculator.ToPriceSeries(sp500Bars, "S&P 500 (SPY)");
             PriceSeries? svxyPrice = await svxyTask;
             PriceSeries advancingSeries = await advancingTask;
             PriceSeries decliningSeries = await decliningTask;
@@ -296,6 +474,7 @@ public partial class BreezeWindow : ChildWindow
             _nasdaq100Series = nasdaq100Series;
             _nasdaq50Series = nasdaq50Series;
             _sp500PriceSeries = sp500Price;
+            _sp500Bars = sp500Bars;
             _svxyPriceSeries = svxyPrice;
             _technicalIndicators = technicalIndicators;
             _marketResearch = marketResearch;
@@ -318,6 +497,8 @@ public partial class BreezeWindow : ChildWindow
             UpdateContangoBreadthOverlays();
             SetFuzzyStateData(fuzzyStates);
             TitanicChart.SetData(titanicSeries);
+            TradingEnsembleChart.SetData(_tradingEnsembles, sp500Price, technicalIndicators);
+            ApplyTradingEnsembleOptions();
             SetActiveZweigMode(exportConfidence: false);
             SetBreadthCandleMode(FullOhlc.IsChecked == true);
             SetPriceSeries(sp500Price);
@@ -359,11 +540,14 @@ public partial class BreezeWindow : ChildWindow
         finally
         {
             RefreshButton.IsEnabled = true;
+            RefreshButton.Content = "Recalculate";
             SpDataSet.IsEnabled = true;
             NasdaqDataSet.IsEnabled = true;
             _isCalculationInProgress = false;
             if (IsLoaded && _sp500PriceSeries is not null && !_contangoInitializationStarted)
                 StartContangoInitialization();
+            if (ReferenceEquals(BreadthTabs.SelectedItem, TradingEnsemblesTab))
+                StartTradingEnsembleCalculationIfNeeded();
         }
     }
 
@@ -402,6 +586,21 @@ public partial class BreezeWindow : ChildWindow
                 FillBehavior = FillBehavior.Stop
             });
         }
+    }
+
+    private void SetTradingCalculationStatus(string message,
+        BreadthProgressLevel level = BreadthProgressLevel.Normal)
+    {
+        if (TradingCalculationStatus is null)
+            return;
+        TradingCalculationStatus.Text = message;
+        TradingCalculationStatus.ToolTip = message;
+        TradingCalculationStatus.Foreground = level switch
+        {
+            BreadthProgressLevel.Waiting => new SolidColorBrush(Color.FromRgb(181, 103, 0)),
+            BreadthProgressLevel.Error => Brushes.Red,
+            _ => new SolidColorBrush(Color.FromRgb(20, 112, 68))
+        };
     }
 
     private void ConfigureHistorySlider(BreadthSeries master)
@@ -447,16 +646,27 @@ public partial class BreezeWindow : ChildWindow
 
     private void ChartsMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
-        SetHorizontalDragCursor(true);
         DependencyObject? source = e.OriginalSource as DependencyObject;
         if (FindAncestor<System.Windows.Controls.Primitives.ButtonBase>(source) is not null ||
             FindAncestor<System.Windows.Controls.Primitives.RangeBase>(source) is not null ||
-            FindAncestor<ComboBox>(source) is not null || FindAncestor<CheckBox>(source) is not null)
+            FindAncestor<ComboBox>(source) is not null || FindAncestor<CheckBox>(source) is not null ||
+            FindAncestor<TextBox>(source) is not null || FindAncestor<TreeView>(source) is not null)
             return;
+
+        if (IsDescendantOf(source, TradingEnsembleChart) &&
+            TradingEnsembleChart.TryBeginPaneResize(e.GetPosition(TradingEnsembleChart)))
+        {
+            _isTradingPaneResizing = true;
+            BreadthTabs.CaptureMouse();
+            e.Handled = true;
+            return;
+        }
 
         FrameworkElement? chart = FindChartElement(source);
         if (chart is null || _viewportMaster is null || _viewportMaster.Points.Count == 0)
             return;
+
+        SetHorizontalDragCursor(true);
 
         if (e.ClickCount >= 2)
         {
@@ -481,6 +691,21 @@ public partial class BreezeWindow : ChildWindow
 
     private void ChartsMouseMove(object sender, MouseEventArgs e)
     {
+        if (_isTradingPaneResizing)
+        {
+            if (e.LeftButton == MouseButtonState.Pressed && BreadthTabs.IsMouseCaptured)
+            {
+                TradingEnsembleChart.ResizePane(e.GetPosition(TradingEnsembleChart));
+                e.Handled = true;
+                return;
+            }
+            _isTradingPaneResizing = false;
+            TradingEnsembleChart.EndPaneResize();
+            CaptureTradingLayout();
+            SavePersistentLayout();
+            if (BreadthTabs.IsMouseCaptured)
+                BreadthTabs.ReleaseMouseCapture();
+        }
         if (e.LeftButton != MouseButtonState.Pressed)
             SetHorizontalDragCursor(false);
         if (!_isPanning || _viewportMaster is null || !BreadthTabs.IsMouseCaptured)
@@ -507,6 +732,17 @@ public partial class BreezeWindow : ChildWindow
 
     private void ChartsMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
     {
+        if (_isTradingPaneResizing)
+        {
+            _isTradingPaneResizing = false;
+            TradingEnsembleChart.EndPaneResize();
+            CaptureTradingLayout();
+            SavePersistentLayout();
+            if (BreadthTabs.IsMouseCaptured)
+                BreadthTabs.ReleaseMouseCapture();
+            e.Handled = true;
+            return;
+        }
         bool wasPanning = _isPanning;
         _isPanning = false;
         if (BreadthTabs.IsMouseCaptured)
@@ -522,8 +758,11 @@ public partial class BreezeWindow : ChildWindow
             return;
 
         object? selectedTab = BreadthTabs.SelectedItem;
+        UpdateBottomNavigationForSelectedTab();
         if (ReferenceEquals(selectedTab, ContangoTab) && !_contangoInitializationStarted)
             RequestContangoInitialization();
+        if (ReferenceEquals(selectedTab, TradingEnsemblesTab))
+            StartTradingEnsembleCalculationIfNeeded();
 
         Dispatcher.BeginInvoke(new Action(() =>
         {
@@ -551,6 +790,10 @@ public partial class BreezeWindow : ChildWindow
             {
                 TitanicChart.Refresh();
             }
+            else if (ReferenceEquals(selectedTab, TradingEnsemblesTab))
+            {
+                TradingEnsembleChart.Refresh();
+            }
             else if (ReferenceEquals(selectedTab, ZweigTab))
             {
                 ZweigChart.Refresh();
@@ -558,6 +801,15 @@ public partial class BreezeWindow : ChildWindow
             // Contango controls redraw once from IsVisibleChanged. Avoid a second
             // full render every time the user returns to that tab.
         }));
+    }
+
+    private void UpdateBottomNavigationForSelectedTab()
+    {
+        bool tradingEnsemble = ReferenceEquals(BreadthTabs.SelectedItem, TradingEnsemblesTab);
+        Visibility detailVisibility = tradingEnsemble ? Visibility.Collapsed : Visibility.Visible;
+        CursorValuesText.Visibility = detailVisibility;
+        CursorIndicatorsText.Visibility = detailVisibility;
+        VisibleBarsText.Visibility = Visibility.Visible;
     }
 
     private void RequestContangoInitialization()
@@ -568,7 +820,7 @@ public partial class BreezeWindow : ChildWindow
         ContangoWaitBanner.Visibility = Visibility.Visible;
         if (_isCalculationInProgress)
         {
-            ContangoWaitText.Text = "Wait…  Calculate 12 years is still running";
+            ContangoWaitText.Text = "Wait…  Recalculation is still running";
             return;
         }
 
@@ -899,6 +1151,221 @@ public partial class BreezeWindow : ChildWindow
         help.Show();
     }
 
+    private async void StartTradingEnsembleCalculationIfNeeded()
+    {
+        if (_tradingEnsembleCalculationStarted)
+            return;
+        if (_sp500Bars is null)
+        {
+            TradingEnsembleChart.SetMessage("Дождитесь завершения общего расчёта. Расчёт ZZ1, ZZ2 и ZZ3 начнётся при открытой вкладке.");
+            SetTradingCalculationStatus("Ожидайте — подготовка данных…", BreadthProgressLevel.Waiting);
+            return;
+        }
+
+        _tradingEnsembleCalculationStarted = true;
+        int generation = ++_tradingEnsembleCalculationGeneration;
+        _tradingEnsembleCts?.Cancel();
+        _tradingEnsembleCts?.Dispose();
+        _tradingEnsembleCts = new CancellationTokenSource();
+        CancellationToken cancellationToken = _tradingEnsembleCts.Token;
+        string directory = TradingEnsembleDirectory.Text?.Trim() ?? @"D:\TorchSharp4GPU";
+        var progress = new Progress<BreadthProgress>(update =>
+        {
+            if (generation != _tradingEnsembleCalculationGeneration)
+                return;
+            SetStatus(update.Message, update.Level);
+            SetTradingCalculationStatus(update.Message, update.Level);
+        });
+        TradingEnsembleChart.SetMessage("Расчёт ZZ1, ZZ2 и ZZ3 из готовых JBIN/INI-пакетов …");
+        SetTradingCalculationStatus(
+            _tradingForecastDays == 0
+                ? "Ожидайте — расчёт ансамблей…"
+                : $"Ожидайте — Forecast {_tradingForecastDays}…",
+            BreadthProgressLevel.Waiting);
+        try
+        {
+            IReadOnlyDictionary<string, TradingEnsembleSeries> result = await Task.Run(() =>
+                TradingEnsembleInference.Calculate(
+                    _sp500Bars, directory, _tradingForecastDays, progress, cancellationToken),
+                cancellationToken);
+            if (generation != _tradingEnsembleCalculationGeneration || cancellationToken.IsCancellationRequested)
+                return;
+            _tradingEnsembles = result;
+            TradingEnsembleChart.SetData(_tradingEnsembles, _sp500PriceSeries, _technicalIndicators);
+            ApplyTradingEnsembleOptions();
+            SetStatus("Торговые ансамбли ZZ1, ZZ2 и ZZ3 рассчитаны напрямую из JBIN/​INI-пакетов.");
+            SetTradingCalculationStatus(
+                _tradingForecastDays == 0
+                    ? "Ансамбли рассчитаны"
+                    : $"Forecast {_tradingForecastDays}: готово");
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            if (generation == _tradingEnsembleCalculationGeneration)
+                SetTradingCalculationStatus("Расчёт отменён", BreadthProgressLevel.Waiting);
+        }
+        catch (Exception ex)
+        {
+            if (generation != _tradingEnsembleCalculationGeneration)
+                return;
+            TradingEnsembleChart.SetMessage(ex.Message);
+            SetStatus($"Расчёт торговых ансамблей не выполнен: {ex.Message}", BreadthProgressLevel.Error);
+            SetTradingCalculationStatus("Ошибка Forecast — см. сообщение", BreadthProgressLevel.Error);
+        }
+    }
+
+    private void OpenTradingDirectoryTreeClick(object sender, RoutedEventArgs e)
+    {
+        EnsureTradingDirectoryTree();
+        TradingDirectoryPopup.IsOpen = true;
+        Dispatcher.BeginInvoke(new Action(() => SelectDirectoryTreePath(TradingEnsembleDirectory.Text)));
+    }
+
+    private void EnsureTradingDirectoryTree()
+    {
+        if (_tradingDirectoryTreeInitialized)
+            return;
+        _tradingDirectoryTreeInitialized = true;
+        foreach (DriveInfo drive in DriveInfo.GetDrives().Where(drive => drive.IsReady))
+        {
+            TreeViewItem item = CreateDirectoryTreeItem(drive.RootDirectory.FullName, drive.Name);
+            TradingDirectoryTree.Items.Add(item);
+        }
+    }
+
+    private TreeViewItem CreateDirectoryTreeItem(string path, string? header = null)
+    {
+        var item = new TreeViewItem
+        {
+            Header = header ?? new DirectoryInfo(path).Name,
+            Tag = path
+        };
+        item.Items.Add(DirectoryTreePlaceholder);
+        item.Expanded += DirectoryTreeItemExpanded;
+        return item;
+    }
+
+    private void DirectoryTreeItemExpanded(object sender, RoutedEventArgs e)
+    {
+        if (sender is not TreeViewItem item || item.Tag is not string path ||
+            item.Items.Count != 1 || !ReferenceEquals(item.Items[0], DirectoryTreePlaceholder))
+            return;
+        item.Items.Clear();
+        try
+        {
+            foreach (string directory in Directory.GetDirectories(path).OrderBy(value => value, StringComparer.OrdinalIgnoreCase))
+            {
+                try
+                {
+                    if ((File.GetAttributes(directory) & FileAttributes.ReparsePoint) == 0)
+                        item.Items.Add(CreateDirectoryTreeItem(directory));
+                }
+                catch { }
+            }
+        }
+        catch { }
+        e.Handled = true;
+    }
+
+    private void SelectDirectoryTreePath(string? path)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+            return;
+        string fullPath;
+        try { fullPath = Path.GetFullPath(path); }
+        catch { return; }
+        string rootPath = Path.GetPathRoot(fullPath) ?? string.Empty;
+        TreeViewItem? current = TradingDirectoryTree.Items.OfType<TreeViewItem>()
+            .FirstOrDefault(item => string.Equals(item.Tag as string, rootPath, StringComparison.OrdinalIgnoreCase));
+        if (current is null)
+            return;
+        current.IsExpanded = true;
+        string remainder = fullPath[rootPath.Length..].Trim(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+        string partial = rootPath;
+        foreach (string segment in remainder.Split(Path.DirectorySeparatorChar, StringSplitOptions.RemoveEmptyEntries))
+        {
+            partial = Path.Combine(partial, segment);
+            TreeViewItem? next = current.Items.OfType<TreeViewItem>()
+                .FirstOrDefault(item => string.Equals(item.Tag as string, partial, StringComparison.OrdinalIgnoreCase));
+            if (next is null)
+                break;
+            current = next;
+            current.IsExpanded = true;
+        }
+        current.IsSelected = true;
+        current.BringIntoView();
+    }
+
+    private void SelectTradingDirectoryClick(object sender, RoutedEventArgs e) =>
+        ApplySelectedTradingDirectory();
+
+    private void TradingDirectoryTreeMouseDoubleClick(object sender, MouseButtonEventArgs e)
+    {
+        ApplySelectedTradingDirectory();
+        e.Handled = true;
+    }
+
+    private void CloseTradingDirectoryTreeClick(object sender, RoutedEventArgs e) =>
+        TradingDirectoryPopup.IsOpen = false;
+
+    private void ApplySelectedTradingDirectory()
+    {
+        if (TradingDirectoryTree.SelectedItem is not TreeViewItem item || item.Tag is not string path)
+            return;
+        TradingEnsembleDirectory.Text = path;
+        TradingDirectoryPopup.IsOpen = false;
+        _tradingEnsembleCalculationGeneration++;
+        _tradingEnsembleCts?.Cancel();
+        _tradingEnsembleCalculationStarted = false;
+        _tradingEnsembles = new Dictionary<string, TradingEnsembleSeries>(StringComparer.OrdinalIgnoreCase);
+        if (ReferenceEquals(BreadthTabs.SelectedItem, TradingEnsemblesTab))
+            StartTradingEnsembleCalculationIfNeeded();
+    }
+
+    private void TradingEnsembleOptionsChanged(object sender, RoutedEventArgs e) =>
+        ApplyTradingEnsembleOptions();
+
+    private void DecreaseTradingForecastClick(object sender, RoutedEventArgs e) =>
+        SetTradingForecastDays(_tradingForecastDays - 5);
+
+    private void IncreaseTradingForecastClick(object sender, RoutedEventArgs e) =>
+        SetTradingForecastDays(_tradingForecastDays + 5);
+
+    private void SetTradingForecastDays(int value)
+    {
+        int normalized = Math.Clamp(value, 0, 100);
+        if (normalized == _tradingForecastDays)
+            return;
+
+        _tradingForecastDays = normalized;
+        TradingForecastValue.Text = normalized.ToString(CultureInfo.InvariantCulture);
+        _tradingEnsembleCalculationGeneration++;
+        _tradingEnsembleCts?.Cancel();
+        _tradingEnsembleCalculationStarted = false;
+        _tradingEnsembles = new Dictionary<string, TradingEnsembleSeries>(StringComparer.OrdinalIgnoreCase);
+        TradingEnsembleChart.SetMessage(normalized == 0
+            ? "Forecast отключён. Пересчёт основных ансамблей …"
+            : $"Forecast: {normalized} дней. Пересчёт ансамблей …");
+        SetTradingCalculationStatus(
+            normalized == 0 ? "Ожидайте — расчёт ансамблей…" : $"Ожидайте — Forecast {normalized}…",
+            BreadthProgressLevel.Waiting);
+        if (ReferenceEquals(BreadthTabs.SelectedItem, TradingEnsemblesTab))
+            StartTradingEnsembleCalculationIfNeeded();
+    }
+
+    private void ApplyTradingEnsembleOptions()
+    {
+        if (TradingEnsembleChart is null || TradingShowZz1 is null) return;
+        TradingEnsembleChart.SetPackages(
+            TradingShowZz1.IsChecked == true,
+            TradingShowZz2.IsChecked == true,
+            TradingShowZz3.IsChecked == true);
+        TradingEnsembleChart.SetShowEma(TradingShowEma.IsChecked == true);
+        TradingEnsembleChart.SetShowScoringClassification(TradingShowScoring.IsChecked == true);
+        TradingEnsembleChart.SetShowPrice(
+            TradingShowSp500.IsChecked == true && ShowSp500Price.IsChecked == true);
+    }
+
     private void SetPriceSeries(PriceSeries? series)
     {
         foreach (BreadthChart chart in AllCharts)
@@ -907,6 +1374,7 @@ public partial class BreezeWindow : ChildWindow
                 chart.SetPriceSeries(series);
         }
         FuzzyChart?.SetData(series, _fuzzyStates, _technicalIndicators);
+        TradingEnsembleChart?.SetData(_tradingEnsembles, series, _technicalIndicators);
         SetPriceVisibility(ShowSp500Price.IsChecked == true);
         SetPriceCandleMode(ShowSp500Candles.IsChecked == true);
     }
@@ -918,6 +1386,7 @@ public partial class BreezeWindow : ChildWindow
 
         foreach (BreadthChart chart in AllCharts)
             chart.SetShowPriceSeries(show);
+        TradingEnsembleChart?.SetShowPrice(show && TradingShowSp500.IsChecked == true);
     }
 
     private void SetPriceCandleMode(bool showCandles)
@@ -930,6 +1399,7 @@ public partial class BreezeWindow : ChildWindow
         FuzzyChart?.SetShowCandles(showCandles);
         TitanicChart?.SetShowCandles(showCandles);
         ZweigChart?.SetShowCandles(showCandles);
+        TradingEnsembleChart?.SetShowCandles(showCandles);
     }
 
     private void SetLogBreadthMode(bool useLogarithmicScale)
@@ -1005,23 +1475,52 @@ public partial class BreezeWindow : ChildWindow
             ZweigChart.SetShowHoldConfidence(ZweigShowHold.IsChecked == true);
     }
 
+    private void TitanicLayerVisibilityChanged(object sender, RoutedEventArgs e)
+    {
+        if (TitanicChart is null)
+            return;
+
+        TitanicChart.SetLayerVisibility(
+            TitanicShowActive?.IsChecked == true,
+            TitanicShowPersistent?.IsChecked == true,
+            TitanicShowNewHigh?.IsChecked == true,
+            TitanicShowNewLow?.IsChecked == true,
+            TitanicShowValue?.IsChecked == true);
+    }
+
     private void RefreshHoldConfidence(bool export = true)
     {
         if (_fuzzyStates is null || _technicalIndicators is null || _zweigSeries is null)
             return;
 
         int profile = Math.Clamp(PositionProfile?.SelectedIndex ?? 1, 0, 2);
-        if (!ResearchHoldConfidenceCalculator.TryCalculate(profile, out HoldConfidenceSeries research, out _))
+        if (!ResearchHoldConfidenceCalculator.TryCalculate(
+                profile, out HoldConfidenceSeries research, out string researchError,
+                out ResearchCalculationFailure failure))
         {
-            // During the first calculation the CSV snapshot may not have been
-            // promoted yet. Keep the UI usable; the research model is retried
-            // immediately after the current VIX/breadth exports complete.
-            _holdConfidence = HoldConfidenceCalculator.Calculate(
-                _fuzzyStates,
-                _technicalIndicators,
-                _contangoStates,
-                _titanicSeries,
-                _zweigSeries);
+            if (failure == ResearchCalculationFailure.SnapshotNotReady)
+            {
+                // The first calculation has not promoted its CSV snapshot yet.
+                // The research model is retried after the current export.
+                _holdConfidence ??= HoldConfidenceCalculator.Calculate(
+                    _fuzzyStates,
+                    _technicalIndicators,
+                    _contangoStates,
+                    _titanicSeries,
+                    _zweigSeries);
+            }
+            else
+            {
+                // Retain the last valid result instead of silently replacing it
+                // with a different model when a real calculation error occurs.
+                _holdConfidence ??= HoldConfidenceCalculator.Calculate(
+                    _fuzzyStates,
+                    _technicalIndicators,
+                    _contangoStates,
+                    _titanicSeries,
+                    _zweigSeries);
+                SetStatus($"Ошибка исследовательской модели: {researchError}", BreadthProgressLevel.Error);
+            }
         }
         else _holdConfidence = research;
         FuzzyChart.SetHoldConfidence(_holdConfidence);
@@ -1084,6 +1583,7 @@ public partial class BreezeWindow : ChildWindow
         FuzzyChart.SetCursorDate(date);
         TitanicChart.SetCursorDate(date);
         ZweigChart.SetCursorDate(date);
+        TradingEnsembleChart.SetCursorDate(date);
         UpdateContangoSnapshot();
 
         BreadthPoint? sp50 = FindPoint(_sp50Series, date);
@@ -1098,34 +1598,38 @@ public partial class BreezeWindow : ChildWindow
         VixCurveStatePoint? curve = FindPoint(_contangoStates, date);
         string fuzzyText = fuzzy is null
             ? string.Empty
-            : $"   Phase: {FuzzyStatePalette.Label(fuzzy.DominantZone)} {fuzzy.Confidence:P0} " +
+            : $"   Фаза: {HumanLanguage.MarketZone(fuzzy.DominantZone)} {fuzzy.Confidence:P0} " +
               $"(SB {fuzzy.Buy:P0}, B {fuzzy.PrepareBuy:P0}, Warn {fuzzy.Caution:P0}, " +
               $"S {fuzzy.PrepareSell:P0}, SS {fuzzy.ReduceRisk:P0})" +
               (hold is null
                   ? string.Empty
-                  : $"   Hold: {hold.Value:F0}% ({HoldConfidenceCalculator.Band(hold.Value)})");
+                  : $"   Оценка модели: {hold.Value:F0} ({HumanLanguage.PositionDecision(hold.Value)})");
         TechnicalIndicatorPoint? technical = FindPoint(_technicalIndicators, date);
         TitanicPoint? titanic = FindPoint(_titanicSeries, date);
         ZweigPoint? zweig = FindPoint(_zweigSeries, date);
+        string titanicRatioText = titanic is not null && double.IsFinite(titanic.NasdaqHighLowRatio)
+            ? titanic.NasdaqHighLowRatio.ToString("F3")
+            : "нет данных";
         string titanicText = titanic is null
             ? string.Empty
-            : $"   Titanic: {(titanic.Signal ? $"ACTIVE d{titanic.RunLength}" : "off")} " +
-              $"NH {titanic.NasdaqNewHighs:F0}/NL {titanic.NasdaqNewLows:F0}";
+            : $"   Титаник: {(titanic.Signal ? $"действует {titanic.RunLength} дн." : "выключен")} " +
+              $"NH/(NH+NL) {titanicRatioText}; " +
+              $"новые максимумы {titanic.NasdaqNewHighs:F0}/минимумы {titanic.NasdaqNewLows:F0}";
         string zweigText = zweig is null
             ? string.Empty
-            : $"   ZW Density: {zweig.Density}";
+            : $"   Плотность Цвейга: {zweig.Density}";
         string curveText = curve is null
-            ? "   VIX curve: no data"
-            : $"   VIX curve: {VixCurveStateClassifier.Label(curve.State)} " +
-              $"30–60 {curve.Contango30To60Pct:+0.00;-0.00;0.00}% " +
-              $"score {curve.CurveRegimeScore:+0.00;-0.00;0.00}";
+            ? "   Кривая VIX: данных нет"
+            : $"   Кривая VIX: {HumanLanguage.CurveState(curve.State)}; " +
+              $"участок 30–60 дней {curve.Contango30To60Pct:+0.00;-0.00;0.00}%; " +
+              $"оценка формы {curve.CurveRegimeScore:+0.00;-0.00;0.00}";
         string svxyRecommendationText = curve?.SvxyRecommendation switch
         {
-            SvxyRecommendation.StrongBuy => "   SVXY: Strong buy candidate d0",
-            SvxyRecommendation.Buy => $"   SVXY: Buy / hold d{curve.SvxyBarsSinceCandidate}",
+            SvxyRecommendation.StrongBuy => "   SVXY: первый день после выхода из красной зоны",
+            SvxyRecommendation.Buy => $"   SVXY: покупка или удержание, день {curve.SvxyBarsSinceCandidate}",
             SvxyRecommendation.ExtendedHold =>
-                $"   SVXY: Extended hold d{curve.SvxyBarsSinceCandidate}",
-            _ => "   SVXY: Neutral"
+                $"   SVXY: продлённое удержание, день {curve.SvxyBarsSinceCandidate}",
+            _ => "   SVXY: активного сигнала нет"
         };
         if (FuzzyAnalysisText is not null)
             FuzzyAnalysisText.Text = BuildMarketStateExplanation(
@@ -1153,12 +1657,15 @@ public partial class BreezeWindow : ChildWindow
             OperationalPositionBorder is null)
             return;
 
-        OperationalPositionTitle.Text = $"MODEL POSITION · {date:yyyy-MM-dd}";
+        OperationalPositionTitle.Text = $"ПОЗИЦИЯ ПО МОДЕЛИ НА {date:yyyy-MM-dd}";
+        UpdateExpirationWarning(date);
         if (hold is null)
         {
-            OperationalPositionText.Text = "Hold: no data\nTarget: no data\nAction: WAIT";
+            OperationalPositionText.Text = "Расчёт модели: данных нет\nЦелевая позиция: данных нет\nДействие: ждать";
             OperationalPositionBorder.Background = new SolidColorBrush(Color.FromRgb(245, 247, 249));
             OperationalPositionBorder.BorderBrush = new SolidColorBrush(Color.FromRgb(185, 200, 213));
+            if (TopContributionsBorder is not null)
+                TopContributionsBorder.Visibility = Visibility.Collapsed;
             return;
         }
 
@@ -1167,44 +1674,242 @@ public partial class BreezeWindow : ChildWindow
         int previousTarget = previous is null ? 0 : ModelPositionSizing.TargetContracts(previous.Value);
         int delta = target - previousTarget;
         string action = previous is null
-            ? target == 0 ? "FLAT" : $"INITIAL {target}"
+            ? target == 0 ? "оставаться вне рынка" : $"открыть {target} контрактов"
             : delta > 0
-                ? $"ADD +{delta} → {target}"
+                ? $"увеличить позицию на {delta}, до {target} контрактов"
                 : delta < 0
-                    ? target == 0 ? $"EXIT −{previousTarget}" : $"REDUCE {delta} → {target}"
-                    : target == 0 ? "FLAT" : $"HOLD {target}";
+                    ? target == 0 ? $"закрыть все {previousTarget} контрактов" : $"сократить позицию до {target} контрактов"
+                    : target == 0 ? "оставаться вне рынка" : $"удерживать {target} контрактов";
         string yesterday = previous is null
-            ? "no previous value"
-            : $"{previous.Value:F1}% · {previousTarget}/10 ({previous.Date:yyyy-MM-dd})";
+            ? "предыдущего значения нет"
+            : $"{previous.Date:yyyy-MM-dd}: уровень {previous.Value:F1}%, позиция {previousTarget} из 10";
         string curveState = curve is null
-            ? "no data"
-            : VixCurveStateClassifier.Label(curve.State);
+            ? "данных нет"
+            : HumanLanguage.CurveState(curve.State);
         string svxy = curve is null
-            ? "no data"
+            ? "данных нет"
             : curve.SvxyRecommendation switch
             {
-                SvxyRecommendation.StrongBuy => "Strong buy candidate d0",
-                SvxyRecommendation.Buy => $"Buy / hold d{curve.SvxyBarsSinceCandidate}",
-                SvxyRecommendation.ExtendedHold => $"Extended hold d{curve.SvxyBarsSinceCandidate}",
-                _ => "Neutral"
+                SvxyRecommendation.StrongBuy => "первый день после выхода кривой из красной зоны",
+                SvxyRecommendation.Buy => $"окно покупки или удержания, день {curve.SvxyBarsSinceCandidate}",
+                SvxyRecommendation.ExtendedHold => $"продлённое удержание, день {curve.SvxyBarsSinceCandidate}",
+                _ => "активного сигнала нет"
             };
 
-        string model = hold.Profile == "Legacy" ? "Legacy fallback" : hold.Profile;
-        OperationalPositionTitle.Text = $"MODEL POSITION · {model} · {date:yyyy-MM-dd}";
+        string model = HumanLanguage.Profile(hold.Profile);
+        double distance = hold.Value - ModelPositionSizing.FixedLevel;
+        string thresholdExplanation = distance >= 0
+            ? $"на {distance:F1} балла выше порога {ModelPositionSizing.FixedLevel:F0}"
+            : $"на {Math.Abs(distance):F1} балла ниже порога {ModelPositionSizing.FixedLevel:F0}";
+        OperationalPositionTitle.Text =
+            $"ПОЗИЦИЯ ПО МОДЕЛИ «{model.ToUpperInvariant()}» НА {date:yyyy-MM-dd}";
         OperationalPositionText.Text =
-            $"Score: {hold.Value:F1}% · {HoldConfidenceCalculator.Band(hold.Value)}\n" +
-            $"Target: {target}/10 contracts · fixed level {ModelPositionSizing.FixedLevel:F0}%\n" +
-            $"Action: {action}\n" +
-            $"Yesterday: {yesterday}\n" +
-            $"Main support: {MainHoldSupport(hold)}\n" +
-            $"Main risk: {MainHoldRisk(hold)}\n" +
-            $"VIX curve: {curveState}\n" +
-            $"SVXY: {svxy}";
+            $"Оценка модели: {hold.Value:F1} балла из 100; {thresholdExplanation}.\n" +
+            $"Позиция на следующем открытии: {target} из 10 контрактов.\n" +
+            $"Действие: {action}.\n" +
+            $"Предыдущий торговый день: {yesterday}.\n" +
+            $"Наиболее сильный положительный фактор: {MainHoldSupport(hold)}.\n" +
+            $"Наиболее сильный отрицательный фактор: {MainHoldRisk(hold)}.\n" +
+            $"Кривая фьючерсов VIX: {curveState}.\n" +
+            $"SVXY: {svxy}.";
+
+        if (TopContributionsBorder is not null && TopContributionsTitle is not null && TopContributionsText is not null)
+        {
+            bool hasContributions = !string.IsNullOrWhiteSpace(hold.TopContributions);
+            TopContributionsBorder.Visibility = hasContributions ? Visibility.Visible : Visibility.Collapsed;
+            if (hasContributions)
+            {
+                TopContributionsTitle.Text =
+                    $"ТОП-10 ПОКАЗАТЕЛЕЙ РЕЖИМА {HumanLanguage.Profile(hold.Profile)} " +
+                    $"НА {date:yyyy-MM-dd} И ИХ ВЛИЯНИЕ НА ОЦЕНКУ";
+                TopContributionsText.Text = hold.TopContributions;
+            }
+        }
 
         Color confidenceColor = FuzzyStateChart.ColorForHoldConfidence(hold.Value);
         OperationalPositionBorder.BorderBrush = new SolidColorBrush(confidenceColor);
         OperationalPositionBorder.Background = new SolidColorBrush(Color.FromArgb(
             24, confidenceColor.R, confidenceColor.G, confidenceColor.B));
+    }
+
+    private void CopyMarketStateClick(object sender, RoutedEventArgs e)
+    {
+        var sections = new List<string>();
+
+        var position = new StringBuilder();
+        if (!string.IsNullOrWhiteSpace(OperationalPositionTitle?.Text))
+            position.AppendLine(OperationalPositionTitle.Text.Trim());
+        if (OperationalEventWarning?.Visibility == Visibility.Visible &&
+            !string.IsNullOrWhiteSpace(OperationalEventWarning.Text))
+            position.AppendLine(OperationalEventWarning.Text.Trim());
+        if (OperationalVixExpirationNotice?.Visibility == Visibility.Visible &&
+            !string.IsNullOrWhiteSpace(OperationalVixExpirationNotice.Text))
+            position.AppendLine(OperationalVixExpirationNotice.Text.Trim());
+        if (!string.IsNullOrWhiteSpace(OperationalPositionText?.Text))
+            position.Append(OperationalPositionText.Text.Trim());
+        if (position.Length > 0)
+            sections.Add(position.ToString());
+
+        if (!string.IsNullOrWhiteSpace(FuzzyAnalysisText?.Text))
+            sections.Add("СОСТОЯНИЕ РЫНКА" + Environment.NewLine + FuzzyAnalysisText.Text.Trim());
+
+        if (TopContributionsBorder?.Visibility == Visibility.Visible &&
+            !string.IsNullOrWhiteSpace(TopContributionsText?.Text))
+        {
+            string title = string.IsNullOrWhiteSpace(TopContributionsTitle?.Text)
+                ? "ТОП-10 ПОКАЗАТЕЛЕЙ"
+                : TopContributionsTitle.Text.Trim();
+            sections.Add(title + Environment.NewLine + TopContributionsText.Text.Trim());
+        }
+
+        if (sections.Count == 0)
+        {
+            SetStatus("Нет текста для копирования.", BreadthProgressLevel.Error);
+            return;
+        }
+
+        try
+        {
+            Clipboard.SetText(string.Join(Environment.NewLine + Environment.NewLine, sections));
+            SetStatus("Отчёт о состоянии рынка скопирован в буфер обмена.");
+        }
+        catch (Exception ex)
+        {
+            SetStatus($"Не удалось скопировать отчёт: {ex.Message}", BreadthProgressLevel.Error);
+        }
+    }
+
+    private void UpdateExpirationWarning(DateTime date)
+    {
+        if (OperationalEventWarning is null || OperationalVixExpirationNotice is null)
+            return;
+
+        DateTime? spxExpiration = AdjustedSpxExpiration(date.Year, date.Month);
+        int? daysBeforeSpx = spxExpiration.HasValue
+            ? (spxExpiration.Value - date.Date).Days
+            : null;
+        string? warning = daysBeforeSpx switch
+        {
+            0 => "КАЛЕНДАРНОЕ СОБЫТИЕ: сегодня месячная экспирация SPX. Исторически такие сессии чаще завершались снижением; повышения дневной волатильности и устойчивого эффекта следующего дня не обнаружено. Исследовательский вес: 0.",
+            1 => "КАЛЕНДАРНОЕ СОБЫТИЕ: завтра месячная экспирация SPX. Исторически такие сессии чаще завершались снижением; повышения дневной волатильности и устойчивого эффекта следующего дня не обнаружено. Исследовательский вес: 0.",
+            2 => "КАЛЕНДАРНОЕ СОБЫТИЕ: через два дня месячная экспирация SPX. Исторически такие сессии чаще завершались снижением; повышения дневной волатильности и устойчивого эффекта следующего дня не обнаружено. Исследовательский вес: 0.",
+            _ => null
+        };
+        OperationalEventWarning.Text = warning ?? string.Empty;
+        OperationalEventWarning.Visibility = warning is null ? Visibility.Collapsed : Visibility.Visible;
+
+        DateTime? vixSettlement = StandardVixSettlement(date.Year, date.Month);
+        int? daysBeforeVix = vixSettlement.HasValue
+            ? (vixSettlement.Value - date.Date).Days
+            : null;
+        string? vixNotice = daysBeforeVix switch
+        {
+            0 => "Календарь VIX: сегодня расчётная дата стандартного фьючерса VIX. Самостоятельный статистически значимый эффект не подтверждён; на оценку модели эта календарная дата не влияет.",
+            1 => "Календарь VIX: завтра расчётная дата стандартного фьючерса VIX. Самостоятельный статистически значимый эффект не подтверждён; на оценку модели эта календарная дата не влияет.",
+            2 => "Календарь VIX: через два дня расчётная дата стандартного фьючерса VIX. Самостоятельный статистически значимый эффект не подтверждён; на оценку модели эта календарная дата не влияет.",
+            _ => null
+        };
+        OperationalVixExpirationNotice.Text = vixNotice ?? string.Empty;
+        OperationalVixExpirationNotice.Visibility = vixNotice is null ? Visibility.Collapsed : Visibility.Visible;
+    }
+
+    private static DateTime ThirdFriday(int year, int month)
+    {
+        DateTime first = new(year, month, 1);
+        int offset = ((int)DayOfWeek.Friday - (int)first.DayOfWeek + 7) % 7;
+        return first.AddDays(offset + 14);
+    }
+
+    private DateTime? AdjustedSpxExpiration(int year, int month)
+    {
+        return PreviousLoadedTradingDay(ThirdFriday(year, month));
+    }
+
+    private DateTime? StandardVixSettlement(int year, int month)
+    {
+        DateTime followingMonth = new DateTime(year, month, 1).AddMonths(1);
+        DateTime? adjustedFollowingFriday = AdjustedSpxExpiration(followingMonth.Year, followingMonth.Month);
+        return adjustedFollowingFriday.HasValue
+            ? PreviousLoadedTradingDay(adjustedFollowingFriday.Value.AddDays(-30))
+            : null;
+    }
+
+    private DateTime? PreviousLoadedTradingDay(DateTime candidate)
+    {
+        HashSet<DateTime> tradingDays = _sp500PriceSeries?.Points
+            .Select(point => point.Date.Date)
+            .ToHashSet() ?? [];
+        DateTime? lastLoadedDate = tradingDays.Count == 0 ? null : tradingDays.Max();
+        for (int attempts = 0; attempts < 10; attempts++, candidate = candidate.AddDays(-1))
+        {
+            bool knownLoadedDay = tradingDays.Contains(candidate.Date);
+            bool futureRegularDay = lastLoadedDate.HasValue && candidate.Date > lastLoadedDate.Value &&
+                                    IsRegularUsTradingDay(candidate.Date);
+            if (knownLoadedDay || futureRegularDay)
+                return candidate.Date;
+        }
+        return null;
+    }
+
+    private static bool IsRegularUsTradingDay(DateTime date)
+    {
+        date = date.Date;
+        if (date.DayOfWeek is DayOfWeek.Saturday or DayOfWeek.Sunday)
+            return false;
+
+        DateTime Observed(DateTime holiday) => holiday.DayOfWeek switch
+        {
+            DayOfWeek.Saturday => holiday.AddDays(-1),
+            DayOfWeek.Sunday => holiday.AddDays(1),
+            _ => holiday
+        };
+        DateTime NthWeekday(int month, DayOfWeek weekday, int occurrence)
+        {
+            DateTime first = new(date.Year, month, 1);
+            int offset = ((int)weekday - (int)first.DayOfWeek + 7) % 7;
+            return first.AddDays(offset + 7 * (occurrence - 1));
+        }
+        DateTime LastWeekday(int month, DayOfWeek weekday)
+        {
+            DateTime last = new DateTime(date.Year, month, DateTime.DaysInMonth(date.Year, month));
+            int offset = ((int)last.DayOfWeek - (int)weekday + 7) % 7;
+            return last.AddDays(-offset);
+        }
+
+        var holidays = new HashSet<DateTime>
+        {
+            Observed(new DateTime(date.Year, 1, 1)),
+            NthWeekday(1, DayOfWeek.Monday, 3),
+            NthWeekday(2, DayOfWeek.Monday, 3),
+            EasterSunday(date.Year).AddDays(-2),
+            LastWeekday(5, DayOfWeek.Monday),
+            Observed(new DateTime(date.Year, 7, 4)),
+            NthWeekday(9, DayOfWeek.Monday, 1),
+            NthWeekday(11, DayOfWeek.Thursday, 4),
+            Observed(new DateTime(date.Year, 12, 25))
+        };
+        if (date.Year >= 2022)
+            holidays.Add(Observed(new DateTime(date.Year, 6, 19)));
+        return !holidays.Contains(date);
+    }
+
+    private static DateTime EasterSunday(int year)
+    {
+        int a = year % 19;
+        int b = year / 100;
+        int c = year % 100;
+        int d = b / 4;
+        int e = b % 4;
+        int f = (b + 8) / 25;
+        int g = (b - f + 1) / 3;
+        int h = (19 * a + b - d - g + 15) % 30;
+        int i = c / 4;
+        int k = c % 4;
+        int l = (32 + 2 * e + 2 * i - h - k) % 7;
+        int m = (a + 11 * h + 22 * l) / 451;
+        int month = (h + l - 7 * m + 114) / 31;
+        int day = (h + l - 7 * m + 114) % 31 + 1;
+        return new DateTime(year, month, day);
     }
 
     private static string MainHoldSupport(HoldConfidencePoint hold)
@@ -1213,15 +1918,15 @@ public partial class BreezeWindow : ChildWindow
             return hold.MainSupport;
         (string Label, double Value)[] supports =
         [
-            ("EMA trend", 0.30 * hold.TrendComponent),
-            ("Breadth", 0.25 * hold.BreadthComponent),
-            ("Phase", 0.20 * hold.PhaseComponent),
-            ("Calm ATRP", 0.10 * hold.VolatilityComponent),
-            ("Contango", 0.10 * hold.ContangoComponent),
-            ("Zweig", 0.05 * hold.ZweigComponent)
+            ("бычий порядок средних", 0.30 * hold.TrendComponent),
+            ("широта рынка", 0.25 * hold.BreadthComponent),
+            ("текущая фаза рынка", 0.20 * hold.PhaseComponent),
+            ("спокойная дневная волатильность", 0.10 * hold.VolatilityComponent),
+            ("контанго", 0.10 * hold.ContangoComponent),
+            ("импульс широты Цвейга", 0.05 * hold.ZweigComponent)
         ];
         (string Label, double Value) strongest = supports.MaxBy(item => item.Value);
-        return $"{strongest.Label} (+{strongest.Value * 100.0:F0} pp)";
+        return $"{strongest.Label}: +{strongest.Value * 100.0:F1} балла к оценке модели";
     }
 
     private static string MainHoldRisk(HoldConfidencePoint hold)
@@ -1230,21 +1935,21 @@ public partial class BreezeWindow : ChildWindow
             return hold.MainRisk;
         (string Label, double Value)[] risks =
         [
-            ("EMA weakness", 0.30 * (1.0 - hold.TrendComponent)),
-            ("Weak breadth", 0.25 * (1.0 - hold.BreadthComponent)),
-            ("Weak Phase", 0.20 * (1.0 - hold.PhaseComponent)),
-            ("High ATRP", 0.10 * (1.0 - hold.VolatilityComponent)),
-            ("VIX curve", 0.10 * (1.0 - hold.ContangoComponent)),
-            ("Titanic", 0.20 * hold.TitanicPenalty),
-            ("Shock / Reduce Risk", 0.25 * hold.ShockPenalty)
+            ("нарушение порядка средних", 0.30 * (1.0 - hold.TrendComponent)),
+            ("слабая широта рынка", 0.25 * (1.0 - hold.BreadthComponent)),
+            ("неблагоприятная фаза рынка", 0.20 * (1.0 - hold.PhaseComponent)),
+            ("высокая дневная волатильность", 0.10 * (1.0 - hold.VolatilityComponent)),
+            ("неблагоприятная кривая VIX", 0.10 * (1.0 - hold.ContangoComponent)),
+            ("сигнал «Титаник»", 0.20 * hold.TitanicPenalty),
+            ("ценовой шок и сокращение риска", 0.25 * hold.ShockPenalty)
         ];
         (string Label, double Value) strongest = risks.MaxBy(item => item.Value);
         return strongest.Value < 0.015
-            ? "No material pressure"
-            : $"{strongest.Label} (−{strongest.Value * 100.0:F0} pp)";
+            ? "заметного давления нет"
+            : $"{strongest.Label}: -{strongest.Value * 100.0:F1} балла к оценке модели";
     }
 
-    private static string BuildMarketStateExplanation(
+    private string BuildMarketStateExplanation(
         DateTime date,
         FuzzyMarketStatePoint? fuzzy,
         HoldConfidencePoint? hold,
@@ -1295,15 +2000,16 @@ public partial class BreezeWindow : ChildWindow
             : $"Крупного красного импульса нет ({fuzzy.LargeRedDay:P0}).";
         string vixText = curve is null
             ? "VIX curve ещё не загружена."
-            : $"VIX curve: {VixCurveStateClassifier.Label(curve.State)}, " +
-              $"score {curve.CurveRegimeScore:+0.00;-0.00;0.00}, 30–60 " +
+            : $"Кривая фьючерсов VIX: {HumanLanguage.CurveState(curve.State)}; " +
+              $"оценка формы {curve.CurveRegimeScore:+0.00;-0.00;0.00}, участок 30–60 дней " +
               $"{curve.Contango30To60Pct:+0.00;-0.00;0.00}%. " +
               DescribeSvxyRecommendation(curve);
         string titanicText = titanic is null
             ? "Titanic: нет данных."
             : titanic.Signal
                 ? $"Titanic активен d{titanic.RunLength}" +
-                  (titanic.Persistent ? ", устойчивый режим." : ", ранняя стадия.")
+                  (titanic.Persistent ? ", устойчивый режим. " : ", ранняя стадия. ") +
+                  DescribeTitanicHistoricalStatus(date, titanic)
                 : "Titanic выключен.";
         string zweigText = zweig is null
             ? "Zweig: нет данных."
@@ -1312,35 +2018,31 @@ public partial class BreezeWindow : ChildWindow
                 : "Zweig: активного прикрытия нет.";
 
         var text = new StringBuilder();
-        text.AppendLine($"{date:yyyy-MM-dd}   {FuzzyStatePalette.Label(fuzzy.DominantZone)} " +
+        text.AppendLine($"{date:yyyy-MM-dd}   {HumanLanguage.MarketZone(fuzzy.DominantZone)} " +
                         $"({fuzzy.Confidence:P0})");
         if (hold is not null)
         {
-            text.AppendLine($"Позиционная модель {hold.Profile}: score {hold.Value:F1}%; " +
-                            $"цель {ModelPositionSizing.TargetContracts(hold.Value)}/10 по порогу " +
-                            $"{ModelPositionSizing.FixedLevel:F0}%.");
             if (hold.Profile == "Legacy")
             {
-                text.AppendLine($"Вклад: EMA {hold.TrendComponent:P0}, breadth {hold.BreadthComponent:P0}, " +
-                                $"Phase {hold.PhaseComponent:P0}, спокойный ATRP {hold.VolatilityComponent:P0}, " +
-                                $"Contango {hold.ContangoComponent:P0}, Zweig {hold.ZweigComponent:P0}; " +
-                                $"штраф Titanic {hold.TitanicPenalty:P0}, шок {hold.ShockPenalty:P0}.");
-            }
-            else
-            {
-                text.AppendLine($"Главная поддержка: {MainHoldSupport(hold)}.");
-                text.AppendLine($"Главный риск: {MainHoldRisk(hold)}.");
-                text.AppendLine($"Активные события: {(string.IsNullOrWhiteSpace(hold.ActiveEvents) ? "нет ненулевого вклада" : hold.ActiveEvents)}.");
+                text.AppendLine($"Состав расчёта: средние {hold.TrendComponent:P0}, широта {hold.BreadthComponent:P0}, " +
+                                $"фаза рынка {hold.PhaseComponent:P0}, спокойная волатильность {hold.VolatilityComponent:P0}, " +
+                                $"контанго {hold.ContangoComponent:P0}, импульс Цвейга {hold.ZweigComponent:P0}; " +
+                                $"давление «Титаника» {hold.TitanicPenalty:P0}, ценовой шок {hold.ShockPenalty:P0}.");
             }
         }
         text.AppendLine(conclusion);
-        AppendResearchLine(text, "История этой фазы", research?.PhaseOutcomes.GetValueOrDefault(fuzzy.DominantZone),
+        AppendResearchLine(text, $"Режим «{HumanLanguage.MarketRegime(fuzzy.DominantZone)}» за исследуемый период",
+            research?.PhaseOutcomes.GetValueOrDefault(fuzzy.DominantZone),
             research?.HorizonBars ?? 20);
         text.AppendLine();
-        text.AppendLine($"EMA: {emaState} ({fuzzy.BullishEmaOrder:P0}); " +
-                        $"SPY к EMA20 {ema20Distance:+0.0%;-0.0%;0.0%}.");
+        string emaDistanceText = ema20Distance >= 0
+            ? $"индекс SPY находится на {ema20Distance:P1} выше 20-дневной EMA"
+            : $"индекс SPY находится на {Math.Abs(ema20Distance):P1} ниже 20-дневной EMA";
+        text.AppendLine($"EMA: {emaState} ({fuzzy.BullishEmaOrder:P0}); {emaDistanceText}. " +
+                        DescribeEmaDirections(date));
         EmaResearchRegime emaRegime = ClassifyEmaRegime(fuzzy.BullishEmaOrder);
-        AppendResearchLine(text, "История такого EMA-режима", research?.EmaOutcomes.GetValueOrDefault(emaRegime),
+        AppendResearchLine(text, "Аналогичный EMA-режим за исследуемый период",
+            research?.EmaOutcomes.GetValueOrDefault(emaRegime),
             research?.HorizonBars ?? 20);
         text.AppendLine($"MyRSI 14,8 {technical.MyRsiRep:+0.00;-0.00;0.00}: {slowRsiState}. " +
                         $"MyRSI 10,8 {technical.MyRsiRep10:+0.00;-0.00;0.00}: {fastRsiState}." +
@@ -1350,10 +2052,383 @@ public partial class BreezeWindow : ChildWindow
                         $"Nasdaq 100 = {fuzzy.Nasdaq100:F0}%; сила разворота {fuzzy.BreadthTurnUp:P0}.");
         text.AppendLine(candleText);
         text.AppendLine();
+        string recentEvents = BuildRecentMarketNarrative(date);
+        if (!string.IsNullOrWhiteSpace(recentEvents))
+        {
+            text.AppendLine("Что изменилось за последние торговые дни:");
+            text.AppendLine(recentEvents);
+        }
         text.AppendLine(vixText);
         text.AppendLine(titanicText);
         text.Append(zweigText);
         return text.ToString();
+    }
+
+    private string BuildRecentMarketNarrative(DateTime date)
+    {
+        var lines = new List<string>();
+        PricePoint[] allPrices = _sp500PriceSeries?.Points
+            .Where(point => point.Date <= date)
+            .ToArray() ?? [];
+        PricePoint[] prices = allPrices.TakeLast(3).ToArray();
+        var technicalByDate = _technicalIndicators?.Points
+            .ToDictionary(point => point.Date) ?? [];
+        string[] dayNames = prices.Length switch
+        {
+            3 => ["Два торговых дня назад", "В предыдущий торговый день", "В выбранный день"],
+            2 => ["В предыдущий торговый день", "В выбранный день"],
+            _ => ["В выбранный день"]
+        };
+        for (int index = 0; index < prices.Length; index++)
+        {
+            PricePoint price = prices[index];
+            if (!technicalByDate.TryGetValue(price.Date, out TechnicalIndicatorPoint? technical))
+                continue;
+            double move = price.Open == 0.0 ? 0.0 : price.Close / price.Open - 1.0;
+            string color = price.Close >= price.Open ? "зелёная" : "красная";
+            int allIndex = Array.FindIndex(allPrices, point => point.Date == price.Date);
+            PricePoint? previousPrice = allIndex > 0 ? allPrices[allIndex - 1] : null;
+            TechnicalIndicatorPoint? previousTechnical = previousPrice is not null &&
+                technicalByDate.TryGetValue(previousPrice.Date, out TechnicalIndicatorPoint? foundPreviousTechnical)
+                    ? foundPreviousTechnical
+                    : null;
+            string emaPosition = DescribeDailyEma20And50Position(
+                price, technical, previousPrice, previousTechnical);
+            lines.Add($"• {dayNames[index]} ({price.Date:dd.MM}): {color} свеча {move:+0.0%;-0.0%;0.0%}; {emaPosition}.");
+        }
+
+        int betweenRun = CountConsecutiveBodiesBetweenEma20And50(allPrices, technicalByDate);
+        if (betweenRun >= 2 && prices.Length > 0 && technicalByDate.TryGetValue(prices[^1].Date, out TechnicalIndicatorPoint? latestTechnical))
+        {
+            string upper = latestTechnical.Ema20 >= latestTechnical.Ema50 ? "EMA20" : "EMA50";
+            string lower = latestTechnical.Ema20 >= latestTechnical.Ema50 ? "EMA50" : "EMA20";
+            lines.Add($"• Уже {betweenRun} {RussianSessionWord(betweenRun)} подряд тела дневных свечей SPY остаются между {upper} и {lower}; внутридневные выходы теней за средние описаны отдельно для каждого дня.");
+        }
+
+        FuzzyMarketStatePoint[] breadth = _fuzzyStates?.Points
+            .Where(point => point.Date <= date)
+            .TakeLast(2)
+            .ToArray() ?? [];
+        if (breadth.Length == 2)
+        {
+            int rising = 0;
+            if (breadth[1].Sp50 > breadth[0].Sp50) rising++;
+            if (breadth[1].Sp100 > breadth[0].Sp100) rising++;
+            if (breadth[1].Sp200 > breadth[0].Sp200) rising++;
+            if (breadth[1].Nasdaq100 > breadth[0].Nasdaq100) rising++;
+            lines.Add(rising switch
+            {
+                >= 3 => $"• Широта продолжает расти: улучшились {rising} из 4 наблюдаемых рядов.",
+                0 => "• Широта не подтвердила рост цены: ни один из четырёх рядов не улучшился.",
+                _ => $"• Широта неоднородна: улучшились {rising} из 4 наблюдаемых рядов."
+            });
+        }
+
+        VixCurveStatePoint[] curves = _contangoStates?.Points
+            .Where(point => point.Date <= date)
+            .TakeLast(2)
+            .ToArray() ?? [];
+        if (curves.Length == 2)
+        {
+            bool previousBackwardation = curves[0].M1ToM2Pct <= 0.0;
+            bool currentContango = curves[1].M1ToM2Pct > 0.0;
+            if (previousBackwardation && currentContango)
+            {
+                int run = 0;
+                if (_contangoStates is not null)
+                {
+                    foreach (VixCurveStatePoint point in _contangoStates.Points.Where(point => point.Date < curves[1].Date).Reverse())
+                    {
+                        if (!point.M1ToM2Pct.HasValue || point.M1ToM2Pct > 0.0) break;
+                        run++;
+                    }
+                }
+                lines.Add($"• В выбранный день между двумя ближайшими фьючерсами VIX началось контанго после бэквордации; " +
+                          $"предыдущая бэквордация длилась {run} " +
+                          RussianDayWord(run) + ".");
+            }
+            else if (curves[0].State != curves[1].State)
+            {
+                lines.Add($"• Кривая VIX изменилась: было «{HumanLanguage.CurveState(curves[0].State)}», " +
+                          $"стало «{HumanLanguage.CurveState(curves[1].State)}».");
+            }
+        }
+
+        PricePoint[] svxy = _svxyPriceSeries?.Points
+            .Where(point => point.Date <= date)
+            .TakeLast(2)
+            .ToArray() ?? [];
+        if (svxy.Length == 2 && svxy[0].Close > 0.0)
+        {
+            double change = svxy[1].Close / svxy[0].Close - 1.0;
+            double range = svxy[0].High - svxy[0].Low;
+            double location = range <= 0.0 ? 0.5 : Math.Clamp((svxy[1].Close - svxy[0].Low) / range, 0.0, 1.0);
+            string locationText = location is >= 0.40 and <= 0.60
+                ? "около середины диапазона предыдущей сессии"
+                : location < 0.40 ? "в нижней части диапазона предыдущей сессии" : "в верхней части диапазона предыдущей сессии";
+            lines.Add($"• SVXY изменился на {change:+0.0%;-0.0%;0.0%} и находится {locationText}.");
+        }
+
+        DateTime? spxExpiration = AdjustedSpxExpiration(date.Year, date.Month);
+        if (spxExpiration.HasValue && prices.Any(point => point.Date == spxExpiration.Value))
+        {
+            int tradingDaysAgo = prices.Length - 1 - Array.FindIndex(prices, point => point.Date == spxExpiration.Value);
+            string when = tradingDaysAgo == 0 ? "Выбранный день" : tradingDaysAgo == 1 ? "Предыдущий торговый день" : "Два торговых дня назад";
+            lines.Add($"• {when} был днём месячной экспирации SPX. Исторически такие сессии чаще завершались снижением, но повышения дневной волатильности и устойчивого эффекта следующего дня не обнаружено; вес признака равен 0.");
+        }
+
+        DateTime? vixSettlement = StandardVixSettlement(date.Year, date.Month);
+        if (vixSettlement.HasValue && prices.Any(point => point.Date == vixSettlement.Value))
+        {
+            int tradingDaysAgo = prices.Length - 1 - Array.FindIndex(prices, point => point.Date == vixSettlement.Value);
+            string when = tradingDaysAgo == 0 ? "Выбранный день" : tradingDaysAgo == 1 ? "Предыдущий торговый день" : "Два торговых дня назад";
+            lines.Add($"• {when} был расчётной датой стандартного фьючерса VIX. Самостоятельный эффект календарной даты статистически не подтверждён; на оценку модели эта дата не влияет.");
+        }
+
+        PricePoint[] loadedPrices = _sp500PriceSeries?.Points
+            .Where(point => point.Date <= date)
+            .ToArray() ?? [];
+        if (loadedPrices.Length > 1)
+        {
+            PricePoint current = loadedPrices[^1];
+            double priorHigh = loadedPrices[..^1].Max(point => point.High);
+            if (current.High > priorHigh)
+            {
+                lines.Add($"• НОВЫЙ МАКСИМУМ SPY: {current.High:F2} — самый высокий уровень " +
+                          $"за всю загруженную историю с {loadedPrices[0].Date:dd.MM.yyyy}. " +
+                          "Это максимум доступного набора данных, а не утверждение о всей истории инструмента.");
+            }
+        }
+        return string.Join(Environment.NewLine, lines);
+    }
+
+    private static string DescribeDailyEma20And50Position(
+        PricePoint price,
+        TechnicalIndicatorPoint technical,
+        PricePoint? previousPrice,
+        TechnicalIndicatorPoint? previousTechnical)
+    {
+        var events = new List<string>();
+        if (previousPrice is not null && previousTechnical is not null)
+        {
+            AppendCloseCross(events, "EMA20", previousPrice.Close, previousTechnical.Ema20,
+                price.Close, technical.Ema20);
+            AppendCloseCross(events, "EMA50", previousPrice.Close, previousTechnical.Ema50,
+                price.Close, technical.Ema50);
+        }
+
+        AppendIntradayTest(events, "EMA20", price, technical.Ema20);
+        AppendIntradayTest(events, "EMA50", price, technical.Ema50);
+
+        string upperName = technical.Ema20 >= technical.Ema50 ? "EMA20" : "EMA50";
+        string lowerName = technical.Ema20 >= technical.Ema50 ? "EMA50" : "EMA20";
+        double upperValue = Math.Max(technical.Ema20, technical.Ema50);
+        double lowerValue = Math.Min(technical.Ema20, technical.Ema50);
+        string closePosition = price.Close >= technical.Ema20
+            ? price.Close >= technical.Ema50
+                ? "закрытие выше EMA20 и EMA50"
+                : "закрытие выше EMA20, но ниже EMA50"
+            : price.Close >= technical.Ema50
+                ? "закрытие между EMA20 и EMA50: ниже EMA20 и выше EMA50"
+                : "закрытие ниже EMA20 и EMA50";
+        events.Add(closePosition);
+
+        if (IsCandleBodyBetweenEma20And50(price, technical))
+            events.Add($"тело свечи полностью осталось между {upperName} и {lowerName}");
+
+        string rangePosition = IsEntireRangeBetweenEma20And50(price, technical)
+            ? $"весь дневной диапазон находился между {upperName} и {lowerName}: цена не поднялась выше {upperName} и не опустилась ниже {lowerName}"
+            : price.Low > upperValue
+                ? $"весь дневной диапазон находился выше EMA20 и EMA50"
+                : price.High < lowerValue
+                    ? $"весь дневной диапазон находился ниже EMA20 и EMA50"
+                    : price.Low < lowerValue && price.High > upperValue
+                        ? $"внутридневной диапазон вышел выше {upperName} и ниже {lowerName}"
+                        : price.High > upperValue
+                            ? $"внутридневной диапазон выходил выше {upperName}, но не опускался ниже {lowerName}"
+                            : price.Low < lowerValue
+                                ? $"внутридневной диапазон опускался ниже {lowerName}, но не поднимался выше {upperName}"
+                                : $"внутридневной диапазон коснулся одной из границ коридора {upperName}–{lowerName}";
+        events.Add(rangePosition);
+        return string.Join("; ", events.Distinct());
+    }
+
+    private static void AppendCloseCross(
+        ICollection<string> events,
+        string name,
+        double previousClose,
+        double previousEma,
+        double currentClose,
+        double currentEma)
+    {
+        if (previousClose >= previousEma && currentClose < currentEma)
+            events.Add($"закрытие пробило {name} сверху вниз");
+        else if (previousClose <= previousEma && currentClose > currentEma)
+            events.Add($"закрытие вернулось выше {name}");
+    }
+
+    private static void AppendIntradayTest(
+        ICollection<string> events,
+        string name,
+        PricePoint price,
+        double ema)
+    {
+        if (price.Open >= ema && price.Low < ema && price.Close >= ema)
+            events.Add($"внутри дня цена опускалась ниже {name}, но закрылась выше неё");
+        else if (price.Open <= ema && price.High > ema && price.Close <= ema)
+            events.Add($"внутри дня цена поднималась выше {name}, но закрылась ниже неё");
+    }
+
+    private static bool IsEntireRangeBetweenEma20And50(
+        PricePoint price,
+        TechnicalIndicatorPoint technical)
+    {
+        double upper = Math.Max(technical.Ema20, technical.Ema50);
+        double lower = Math.Min(technical.Ema20, technical.Ema50);
+        return price.High <= upper && price.Low >= lower;
+    }
+
+    private static bool IsCandleBodyBetweenEma20And50(
+        PricePoint price,
+        TechnicalIndicatorPoint technical)
+    {
+        double upper = Math.Max(technical.Ema20, technical.Ema50);
+        double lower = Math.Min(technical.Ema20, technical.Ema50);
+        return Math.Max(price.Open, price.Close) <= upper &&
+               Math.Min(price.Open, price.Close) >= lower;
+    }
+
+    private static int CountConsecutiveBodiesBetweenEma20And50(
+        IReadOnlyList<PricePoint> prices,
+        IReadOnlyDictionary<DateTime, TechnicalIndicatorPoint> technicalByDate)
+    {
+        int count = 0;
+        for (int index = prices.Count - 1; index >= 0; index--)
+        {
+            if (!technicalByDate.TryGetValue(prices[index].Date, out TechnicalIndicatorPoint? technical) ||
+                !IsCandleBodyBetweenEma20And50(prices[index], technical))
+                break;
+            count++;
+        }
+        return count;
+    }
+
+    private static string RussianSessionWord(int count)
+    {
+        int lastTwo = count % 100;
+        int last = count % 10;
+        return lastTwo is >= 11 and <= 14
+            ? "торговых сессий"
+            : last == 1
+                ? "торговую сессию"
+                : last is >= 2 and <= 4
+                    ? "торговые сессии"
+                    : "торговых сессий";
+    }
+
+    private string DescribeTitanicHistoricalStatus(DateTime date, TitanicPoint current)
+    {
+        TitanicPoint[] points = _titanicSeries?.Points
+            .Where(point => point.Date <= date)
+            .ToArray() ?? [];
+        if (!current.Signal || points.Length == 0)
+            return string.Empty;
+
+        int currentIndex = Array.FindLastIndex(points, point => point.Date == current.Date);
+        if (currentIndex < 0)
+            return string.Empty;
+        int startIndex = currentIndex;
+        while (startIndex > 0 && points[startIndex - 1].Signal)
+            startIndex--;
+
+        TitanicPoint? priorRecord = points
+            .Take(startIndex)
+            .Where(point => point.Signal)
+            .OrderByDescending(point => point.RunLength)
+            .ThenByDescending(point => point.Date)
+            .FirstOrDefault();
+        if (priorRecord is null)
+        {
+            return "Это первый сигнал Titanic в загруженной исследуемой истории. " +
+                   "Историческая уникальность сама по себе не означает торговой значимости.";
+        }
+        if (current.RunLength > priorRecord.RunLength)
+        {
+            return $"ЭКСТРАОРДИНАРНОЕ СОСТОЯНИЕ: текущая серия длится {current.RunLength} " +
+                   $"{RussianDayWord(current.RunLength)} — такого продолжительного сигнала раньше в загруженной истории не было. " +
+                   $"Предыдущий рекорд составлял {priorRecord.RunLength} {RussianDayWord(priorRecord.RunLength)} " +
+                   $"и был достигнут {priorRecord.Date:dd.MM.yyyy}. " +
+                   "Историческая уникальность сама по себе не означает торговой значимости.";
+        }
+        if (current.RunLength == priorRecord.RunLength)
+        {
+            return $"Текущая серия повторила прежний рекорд: {priorRecord.RunLength} " +
+                   $"{RussianDayWord(priorRecord.RunLength)}, достигнутый {priorRecord.Date:dd.MM.yyyy}. " +
+                   "Само совпадение с рекордом не означает торговой значимости.";
+        }
+        return $"Предыдущий рекорд загруженной истории — {priorRecord.RunLength} " +
+               $"{RussianDayWord(priorRecord.RunLength)}, достигнут {priorRecord.Date:dd.MM.yyyy}.";
+    }
+
+    private string DescribeEmaDirections(DateTime date)
+    {
+        TechnicalIndicatorPoint[] points = _technicalIndicators?.Points
+            .Where(point => point.Date <= date)
+            .ToArray() ?? [];
+        if (points.Length < 2)
+            return "Направление средних пока определить нельзя.";
+
+        return "Направление средних: " + string.Join("; ",
+        [
+            DescribeEmaDirection(points, point => point.Ema20, "EMA20"),
+            DescribeEmaDirection(points, point => point.Ema50, "EMA50"),
+            DescribeEmaDirection(points, point => point.Ema100, "EMA100"),
+            DescribeEmaDirection(points, point => point.Ema200, "EMA200")
+        ]) + ".";
+    }
+
+    private static string DescribeEmaDirection(
+        IReadOnlyList<TechnicalIndicatorPoint> points,
+        Func<TechnicalIndicatorPoint, double> selector,
+        string name)
+    {
+        int last = points.Count - 1;
+        int direction = Math.Sign(selector(points[last]) - selector(points[last - 1]));
+        if (direction == 0)
+            return $"{name} не изменилась по сравнению с предыдущим торговым днём";
+
+        int sessions = 1;
+        for (int index = last - 1; index > 0; index--)
+        {
+            int priorDirection = Math.Sign(selector(points[index]) - selector(points[index - 1]));
+            if (priorDirection != direction)
+                break;
+            sessions++;
+        }
+
+        string verb = direction > 0 ? "растёт" : "снижается";
+        return $"{name} {verb} {TradingSessionsPhrase(sessions)} подряд";
+    }
+
+    private static string TradingSessionsPhrase(int value)
+    {
+        int mod100 = Math.Abs(value) % 100;
+        int mod10 = mod100 % 10;
+        if (mod100 is >= 11 and <= 14) return $"{value} торговых сессий";
+        return mod10 switch
+        {
+            1 => $"{value} торговую сессию",
+            >= 2 and <= 4 => $"{value} торговые сессии",
+            _ => $"{value} торговых сессий"
+        };
+    }
+
+    private static string RussianDayWord(int value)
+    {
+        int mod100 = Math.Abs(value) % 100;
+        int mod10 = mod100 % 10;
+        if (mod100 is >= 11 and <= 14) return "дней";
+        return mod10 switch { 1 => "день", >= 2 and <= 4 => "дня", _ => "дней" };
     }
 
     private static MarketResearchSummary BuildMarketResearchSummary(
@@ -1364,6 +2439,8 @@ public partial class BreezeWindow : ChildWindow
         var fuzzyByDate = fuzzyStates.Points.ToDictionary(point => point.Date);
         var phaseReturns = new Dictionary<MarketZone, List<double>>();
         var emaReturns = new Dictionary<EmaResearchRegime, List<double>>();
+        MarketZone? previousPhase = null;
+        EmaResearchRegime? previousEmaRegime = null;
         for (int index = 0; index + horizonBars < spy.Points.Count; index++)
         {
             PricePoint current = spy.Points[index];
@@ -1373,14 +2450,22 @@ public partial class BreezeWindow : ChildWindow
             if (!double.IsFinite(forwardReturn))
                 continue;
 
-            if (!phaseReturns.TryGetValue(fuzzy.DominantZone, out List<double>? phaseValues))
-                phaseReturns[fuzzy.DominantZone] = phaseValues = [];
-            phaseValues.Add(forwardReturn);
+            if (previousPhase != fuzzy.DominantZone)
+            {
+                if (!phaseReturns.TryGetValue(fuzzy.DominantZone, out List<double>? phaseValues))
+                    phaseReturns[fuzzy.DominantZone] = phaseValues = [];
+                phaseValues.Add(forwardReturn);
+            }
+            previousPhase = fuzzy.DominantZone;
 
             EmaResearchRegime emaRegime = ClassifyEmaRegime(fuzzy.BullishEmaOrder);
-            if (!emaReturns.TryGetValue(emaRegime, out List<double>? emaValues))
-                emaReturns[emaRegime] = emaValues = [];
-            emaValues.Add(forwardReturn);
+            if (previousEmaRegime != emaRegime)
+            {
+                if (!emaReturns.TryGetValue(emaRegime, out List<double>? emaValues))
+                    emaReturns[emaRegime] = emaValues = [];
+                emaValues.Add(forwardReturn);
+            }
+            previousEmaRegime = emaRegime;
         }
 
         return new MarketResearchSummary(
@@ -1412,10 +2497,11 @@ public partial class BreezeWindow : ChildWindow
             return;
         }
 
-        string sampleWarning = stats.Count < 30 ? "; малая выборка" : string.Empty;
-        text.AppendLine($"{label}: через {horizonBars} баров SPY был выше в {stats.PositiveRate:P0}, " +
-                        $"средняя доходность {stats.AverageReturn:+0.0%;-0.0%;0.0%} " +
-                        $"(n={stats.Count}{sampleWarning}).");
+        string sampleWarning = stats.Count < 30 ? " Исторических данных для этого режима пока мало." : string.Empty;
+        text.AppendLine($"{label}: через {horizonBars} торговых дней SPY был выше исходного уровня " +
+                        $"в {stats.PositiveRate:P0} случаев. " +
+                        $"Среднее изменение цены SPY за эти {horizonBars} дней составило " +
+                        $"{stats.AverageReturn:+0.0%;-0.0%;0.0%}.{sampleWarning}");
     }
 
     private static string DescribeMyRsi(double value) => value switch
@@ -1430,11 +2516,11 @@ public partial class BreezeWindow : ChildWindow
     private static string DescribeSvxyRecommendation(VixCurveStatePoint curve) =>
         curve.SvxyRecommendation switch
         {
-            SvxyRecommendation.StrongBuy => "SVXY: новый Strong Buy.",
-            SvxyRecommendation.Buy => $"SVXY: Buy/Hold d{curve.SvxyBarsSinceCandidate}.",
+            SvxyRecommendation.StrongBuy => "SVXY: первый день после выхода кривой из красной зоны.",
+            SvxyRecommendation.Buy => $"SVXY: окно покупки или удержания, день {curve.SvxyBarsSinceCandidate}.",
             SvxyRecommendation.ExtendedHold =>
-                $"SVXY: Extended Hold d{curve.SvxyBarsSinceCandidate}.",
-            _ => "SVXY: Neutral."
+                $"SVXY: продлённое удержание, день {curve.SvxyBarsSinceCandidate}.",
+            _ => "SVXY: активного сигнала нет."
         };
 
     private async void TitanicPersistentDaysChanged(int days)
@@ -1840,7 +2926,7 @@ public partial class BreezeWindow : ChildWindow
     private static void WriteTitanicCsv(string path, TitanicSeries series, bool eventsOnly)
     {
         var csv = new StringBuilder();
-        csv.AppendLine("Date,Signal,RunLength,Persistent,QQQOpen,QQQHigh,QQQLow,QQQClose,AnnualHigh,RecentlyAtHigh,NasdaqNewHighs,NasdaqNewLows,LowsExceedHighs,Nasdaq100AboveSMA50,ValidBreadthMembers,BreadthFilterPassed,Lookback,RecentHighWindow,HighTolerancePercent,PersistentDays,UseBreadthFilter,BreadthThreshold");
+        csv.AppendLine("Date,Signal,RunLength,Persistent,QQQOpen,QQQHigh,QQQLow,QQQClose,AnnualHigh,RecentlyAtHigh,NasdaqNewHighs,NasdaqNewLows,NasdaqHighLowRatio,LowsExceedHighs,Nasdaq100AboveSMA50,ValidBreadthMembers,BreadthFilterPassed,Lookback,RecentHighWindow,HighTolerancePercent,PersistentDays,UseBreadthFilter,BreadthThreshold");
         foreach (TitanicPoint point in series.Points.Where(point => !eventsOnly || point.Signal))
         {
             csv.Append(point.Date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)).Append(',')
@@ -1855,6 +2941,9 @@ public partial class BreezeWindow : ChildWindow
                 .Append(point.RecentlyAtHigh ? "1" : "0").Append(',')
                 .Append(point.NasdaqNewHighs.ToString("0.####", CultureInfo.InvariantCulture)).Append(',')
                 .Append(point.NasdaqNewLows.ToString("0.####", CultureInfo.InvariantCulture)).Append(',')
+                .Append(double.IsFinite(point.NasdaqHighLowRatio)
+                    ? point.NasdaqHighLowRatio.ToString("0.######", CultureInfo.InvariantCulture)
+                    : string.Empty).Append(',')
                 .Append(point.LowsExceedHighs ? "1" : "0").Append(',')
                 .Append(point.NasdaqBreadth50.ToString("0.####", CultureInfo.InvariantCulture)).Append(',')
                 .Append(point.ValidBreadthMembers).Append(',')
@@ -2018,6 +3107,7 @@ public partial class BreezeWindow : ChildWindow
         int pointCount = _viewportMaster.Points.Count;
         int currentStart = Math.Clamp((int)Math.Round(HistorySlider.Value), 0, Math.Max(0, pointCount - 1));
         int currentEnd = Math.Min(pointCount - 1, currentStart + _visibleBarCount - 1);
+        bool keepRightEdge = currentEnd >= pointCount - 1;
         int newCount = Math.Clamp(_visibleBarCount + delta, Math.Min(MinimumVisibleBarCount, pointCount), pointCount);
         if (newCount == _visibleBarCount)
             return;
@@ -2032,7 +3122,9 @@ public partial class BreezeWindow : ChildWindow
 
         int maximumStart = Math.Max(0, pointCount - newCount);
         int anchorIndexForViewport = currentStart + (int)Math.Round(anchorFraction * Math.Max(0, currentEnd - currentStart));
-        int newStart = (int)Math.Round(anchorIndexForViewport - anchorFraction * Math.Max(0, newCount - 1));
+        int newStart = keepRightEdge
+            ? maximumStart
+            : (int)Math.Round(anchorIndexForViewport - anchorFraction * Math.Max(0, newCount - 1));
         newStart = Math.Clamp(newStart, 0, maximumStart);
         _visibleBarCount = newCount;
         HistorySlider.Maximum = maximumStart;
@@ -2049,7 +3141,7 @@ public partial class BreezeWindow : ChildWindow
         {
             if (current is BreadthChart || current is FuzzyStateChart ||
                 current is TitanicChart || current is ZweigChart || current is MyRsiChart ||
-                current is AtrpChart)
+                current is AtrpChart || current is TradingEnsembleChart)
                 return current as FrameworkElement;
             current = current is Visual ? VisualTreeHelper.GetParent(current) : null;
         }
@@ -2116,6 +3208,7 @@ public partial class BreezeWindow : ChildWindow
         FuzzyChart.SetCursorPinned(pinned);
         TitanicChart.SetCursorPinned(pinned);
         ZweigChart.SetCursorPinned(pinned);
+        TradingEnsembleChart.SetCursorPinned(pinned);
     }
 
     private void HistorySliderValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e) =>
@@ -2152,6 +3245,7 @@ public partial class BreezeWindow : ChildWindow
         FuzzyChart.SetViewport(start, end);
         TitanicChart.SetViewport(start, end);
         ZweigChart.SetViewport(start, end);
+        TradingEnsembleChart.SetViewport(start, end);
         ContangoSpChart.SetViewport(start, end);
         ContangoSvxyChart.SetViewport(start, end);
         ContangoMyRsiChart.SetViewport(start, end);
@@ -2168,11 +3262,14 @@ public partial class BreezeWindow : ChildWindow
         OverviewCombinedChart.SetMessage("Market breadth", "Waiting for calculation");
         OverviewAtrpChart.SetMessage("Waiting for calculation");
         FuzzyChart.SetMessage("Fuzzy market-state map", "Waiting for calculation");
-        OperationalPositionTitle.Text = "MODEL POSITION";
-        OperationalPositionText.Text = "Waiting for calculation";
-        FuzzyAnalysisText.Text = "Calculate the data, then move the cursor over the chart.";
+        OperationalPositionTitle.Text = "ПОЗИЦИЯ ПО МОДЕЛИ";
+        OperationalEventWarning.Text = string.Empty;
+        OperationalEventWarning.Visibility = Visibility.Collapsed;
+        OperationalPositionText.Text = "Ожидание расчёта";
+        FuzzyAnalysisText.Text = "Рассчитайте данные, затем наведите курсор на график.";
         TitanicChart.SetMessage("SentimenTrader Titanic", "Waiting for calculation");
         ZweigChart.SetMessage("Zweig Breadth Thrust", "Waiting for calculation");
+        TradingEnsembleChart.SetMessage("После завершения общего расчёта откройте эту вкладку: расчёт ZZ1, ZZ2 и ZZ3 запустится один раз автоматически.");
         ContangoSpChart.SetMessage("S&P 500 — above SMA(200)", "Waiting for calculation");
         ContangoSvxyChart.SetMessage("SVXY", "Waiting for calculation");
         ContangoMyRsiChart.SetMessage("Waiting for calculation");

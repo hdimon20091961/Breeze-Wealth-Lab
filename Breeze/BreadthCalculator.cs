@@ -336,12 +336,8 @@ internal static class BreadthCalculator
     public static PriceSeries LoadSp500Price(DataSet dataSet, DateTime startDate, DateTime endDate)
         => LoadPriceSeries(dataSet, "SPY", startDate, endDate, "S&P 500 (SPY)");
 
-    public static PriceSeries LoadPriceSeries(
-        DataSet dataSet,
-        string symbol,
-        DateTime startDate,
-        DateTime endDate,
-        string? displayName = null)
+    public static BarHistory LoadRawHistory(
+        DataSet dataSet, string symbol, DateTime startDate, DateTime endDate)
     {
         BarHistory? bars = WLHost.Instance.GetHistory(
             symbol,
@@ -350,25 +346,32 @@ internal static class BreadthCalculator
             endDate,
             0,
             new DataRequestOptions { DataSet = dataSet });
+        return bars is { Count: > 0 }
+            ? bars
+            : throw new InvalidOperationException($"{symbol} history could not be loaded.");
+    }
 
-        if (bars is null || bars.Count == 0)
-            throw new InvalidOperationException($"{symbol} history could not be loaded.");
-
+    public static PriceSeries ToPriceSeries(BarHistory bars, string displayName)
+    {
         var points = Enumerable.Range(0, bars.Count)
             .Select(index => new PricePoint(
-                bars.DateTimes[index].Date,
-                bars.Open[index],
-                bars.High[index],
-                bars.Low[index],
-                bars.Close[index],
-                bars.Volume[index]))
-            .Where(point =>
-                !double.IsNaN(point.Open) && !double.IsInfinity(point.Open) &&
-                !double.IsNaN(point.High) && !double.IsInfinity(point.High) &&
-                !double.IsNaN(point.Low) && !double.IsInfinity(point.Low) &&
-                !double.IsNaN(point.Close) && !double.IsInfinity(point.Close))
+                bars.DateTimes[index].Date, bars.Open[index], bars.High[index],
+                bars.Low[index], bars.Close[index], bars.Volume[index]))
+            .Where(point => double.IsFinite(point.Open) && double.IsFinite(point.High) &&
+                            double.IsFinite(point.Low) && double.IsFinite(point.Close))
             .ToList();
-        return new PriceSeries(displayName ?? symbol, points);
+        return new PriceSeries(displayName, points);
+    }
+
+    public static PriceSeries LoadPriceSeries(
+        DataSet dataSet,
+        string symbol,
+        DateTime startDate,
+        DateTime endDate,
+        string? displayName = null)
+    {
+        BarHistory bars = LoadRawHistory(dataSet, symbol, startDate, endDate);
+        return ToPriceSeries(bars, displayName ?? symbol);
     }
 
     private static bool[] BuildHistoricallyActiveMask(BarHistory bars)

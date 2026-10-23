@@ -15,7 +15,8 @@ internal sealed record HoldConfidencePoint(
     string Profile = "Legacy",
     string MainSupport = "",
     string MainRisk = "",
-    string ActiveEvents = "");
+    string ActiveEvents = "",
+    string TopContributions = "");
 
 internal sealed record HoldConfidenceSeries(IReadOnlyList<HoldConfidencePoint> Points);
 

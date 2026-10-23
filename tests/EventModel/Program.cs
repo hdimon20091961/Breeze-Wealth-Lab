@@ -2,7 +2,7 @@ using System.Text.Json;
 using BreezeHoldPosition.Strategies;
 using M = BreezeHoldPosition.Strategies.BreezeEventModelNew;
 
-var output = Path.GetFullPath(args.Length > 0 ? args[0] : "artifacts/event-model-new-validation");
+var output = Path.GetFullPath(args.Length > 0 ? args[0] : "research/artifacts/event-model-new-validation");
 Directory.CreateDirectory(output);
 int checks = 0;
 void Check(bool valid, string name) { checks++; if (!valid) throw new Exception("FAILED: " + name); }
@@ -14,18 +14,22 @@ var researchWeights = M.Features.Select(f => M.ResearchWeight(f.Id)).ToArray();
 var searchWeights = M.SearchIndexes.Select(i=>M.ResearchWeight(M.Features[i].Id)).ToArray();
 var scores = M.Score(rows, weights, 50, 1);
 var researchScores = M.Score(rows, researchWeights, 50, 1);
-Check(M.Features.Length == 74, "74 market cards");
-Check(M.Features.Select(x => x.Id).Distinct().Count() == 74, "unique IDs");
+Check(M.Features.Length == 75, "75 market cards");
+Check(M.Features.Select(x => x.Id).Distinct().Count() == 75, "unique IDs");
 Check(M.SearchIndexes.Length == 35, "35 non-zero jointly optimized weights");
 Check(M.SearchIndexes.All(i=>M.ResearchWeight(M.Features[i].Id)!=0), "joint search contains only non-zero balanced weights");
 Check(M.Features.Where(f=>!M.IsSearch(f.Id)).All(f=>M.ResearchWeight(f.Id)==0), "all zero weights remain fixed outside optimizer");
 var softWeights=M.PresetWeights(0); var standardWeights=M.PresetWeights(1); var strongWeights=M.PresetWeights(2);
 Check(new[]{softWeights,standardWeights,strongWeights}.All(x=>x.Length==M.Features.Length),"three complete preset vectors");
-Check(M.PresetName(0)=="Soft"&&M.PresetName(1)=="Standard"&&M.PresetName(2)=="Strong","preset names");
+Check(M.PresetName(0)=="Soft"&&M.PresetName(1)=="Standard"&&M.PresetName(2)=="Hard","preset names");
 Check(standardWeights[Array.FindIndex(M.Features,f=>f.Id=="E02")]==5,"Standard is the selected 251.19% run");
 Check(strongWeights[Array.FindIndex(M.Features,f=>f.Id=="E02")]==10,"Strong is the 251.51% run");
 Check(softWeights[Array.FindIndex(M.Features,f=>f.Id=="C01")]==15&&softWeights[Array.FindIndex(M.Features,f=>f.Id=="V03")]==0,"Soft is the minimum-drawdown candidate");
 Check(new[]{softWeights,standardWeights,strongWeights}.All(w=>M.Features.Select((f,i)=>(f,i)).Where(x=>!M.IsSearch(x.f.Id)).All(x=>w[x.i]==0)),"zero-weight catalog features stay inactive in every preset");
+int spxExpirationIndex=Array.FindIndex(M.Features,f=>f.Id=="U03");
+Check(spxExpirationIndex>=0&&new[]{softWeights,standardWeights,strongWeights}.All(w=>w[spxExpirationIndex]==0),"SPX expiration remains research-only with zero profile weight");
+Check(rows.Single(r=>r.Date==new DateTime(2025,4,17)).Get("U03")==1,"Good Friday SPX expiration adjusts to Thursday");
+Check(rows.Count(r=>r.Get("U03")==1)==144,"144 adjusted monthly SPX expirations in loaded history");
 double ProxyProfit(double[] profile)
 {
     double cash=3000; int held=0, next=0;
@@ -63,7 +67,7 @@ foreach (int size in new[] { 1, 10, 20 })
 Check(M.Contracts(49,10)==5 && M.Contracts(90,10)==9,"rounding not old 90=>10");
 Check(M.TradingContracts(49,0,50)==5 && M.TradingContracts(50,0,50)==5,"gradual engine");
 Check(M.TradingContracts(49,1,50)==0 && M.TradingContracts(50,1,50)==10,"level engine boundary");
-var flat = M.Score(rows, new double[74], 37, 1);
+var flat = M.Score(rows, new double[M.Features.Length], 37, 1);
 foreach (int i in Enumerable.Range(0,rows.Count).Where(i=>rows[i].Ready))
 {
     Equal(flat[i],37,"zero weights => bias");
@@ -111,7 +115,7 @@ var report=new {
 };
 File.WriteAllText(Path.Combine(output,"validation.json"),JsonSerializer.Serialize(report,new JsonSerializerOptions{WriteIndented=true}));
 var description=new System.Text.StringBuilder("# Параметры признаков Breeze Hold Position_new\n\n");
-description.AppendLine("Версия 0.10.0-alpha.13. В стратегии заморожены три профиля Soft, Standard и Strong, выбранные из пяти выборочных прогонов. Standard — указанная пользователем кривая 251.19%, Strong — максимум доходности 251.51%, Soft — кандидат с минимальной просадкой 9.16%. Все 74 признака продолжают ежедневно рассчитываться. Отдельный режим выполняет однофакторный стресс-тест ненулевых весов Strong. Признак нормирован в 0..1 или -1..1; вес измеряется в процентных пунктах целевой позиции.\n");
+description.AppendLine("Версия 0.10.0-alpha.13. В стратегии заморожены три профиля Soft, Standard и Hard, выбранные из пяти выборочных прогонов. Standard — указанная пользователем кривая 251.19%, Hard — максимум доходности 251.51%, Soft — кандидат с минимальной просадкой 9.16%. Все 75 признаков продолжают ежедневно рассчитываться. Отдельный режим выполняет однофакторный стресс-тест ненулевых весов Hard. Признак нормирован в 0..1 или -1..1; вес измеряется в процентных пунктах целевой позиции.\n");
 description.AppendLine("| ID | Признак | Вес | Min | Max | Step | Ненулевых дат после прогрева | Реализованное правило |\n|---|---|---:|---:|---:|---:|---:|---|");
 foreach(var f in M.Features)
 {
@@ -129,4 +133,4 @@ for(int i=0;i<rows.Count;i++)writer.WriteLine(JsonSerializer.Serialize(new {
     features=rows[i].Values.ToDictionary(x=>x.Key,x=>double.IsFinite(x.Value)?(double?)x.Value:null),
     details=rows[i].Details.ToDictionary(x=>x.Key,x=>double.IsFinite(x.Value)?(double?)x.Value:null)
 }));
-Console.WriteLine($"PASS: {checks} checks; {active.Length}/{rows.Count} usable rows; 74 features; Soft/Standard/Strong alpha.13 presets validated. Report: {output}");
+Console.WriteLine($"PASS: {checks} checks; {active.Length}/{rows.Count} usable rows; 75 features; Soft/Standard/Hard alpha.13 presets validated. Report: {output}");

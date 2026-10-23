@@ -1,9 +1,17 @@
+using System.IO;
 using M = BreezeHoldPosition.Strategies.BreezeEventModelNew;
 
 namespace BreezeVL;
 
+internal enum ResearchCalculationFailure
+{
+    None,
+    SnapshotNotReady,
+    Unexpected
+}
+
 /// <summary>
-/// Adapter between the autonomous 74-event research model and the Breeze UI.
+/// Adapter between the autonomous 75-event research model and the Breeze UI.
 /// The calculation itself is compiled from the same source as the standalone
 /// Wealth-Lab strategy, so the DLL cannot silently drift to a different rule.
 /// </summary>
@@ -13,12 +21,13 @@ internal static class ResearchHoldConfidenceCalculator
     private static readonly string CurvePath = @"D:\fear_greed_close\vix_term_structure.csv";
     private const double BiasPct = 50.0;
 
-    public static bool TryCalculate(int profile, out HoldConfidenceSeries series, out string error)
+    public static bool TryCalculate(int profile, out HoldConfidenceSeries series, out string error,
+        out ResearchCalculationFailure failure)
     {
         try
         {
             IReadOnlyList<M.Row> rows = M.LoadCached(DataDirectory, CurvePath);
-            double[] weights = M.PresetWeights(profile);
+            double[] weights = BreezeRuleCatalog.Current.BreezeWeights(profile);
             string profileName = M.PresetName(profile);
             var points = new List<HoldConfidencePoint>(rows.Count);
             for (int i = 0; i < rows.Count; i++)
@@ -40,10 +49,16 @@ internal static class ResearchHoldConfidenceCalculator
                     .Where(item => item.Value < 0)
                     .OrderBy(item => item.Value)
                     .FirstOrDefault(), false);
-                string active = string.Join(", ", contributions
+                string active = string.Join("; ", contributions
                     .OrderByDescending(item => Math.Abs(item.Value))
                     .Take(6)
-                    .Select(item => $"{item.Id} {item.Value:+0.0;-0.0} pp"));
+                    .Select(item => HumanLanguage.Contribution(item.Id, item.Value)));
+                string topContributions = string.Join(Environment.NewLine, contributions
+                    .OrderByDescending(item => Math.Abs(item.Value))
+                    .Take(10)
+                    .Select(item => "• " + HumanLanguage.Contribution(item.Id, item.Value) + "."));
+                if (string.IsNullOrWhiteSpace(topContributions))
+                    topContributions = "• Ненулевых вкладов в оценку модели нет.";
 
                 points.Add(new HoldConfidencePoint(
                     row.Date,
@@ -56,22 +71,35 @@ internal static class ResearchHoldConfidenceCalculator
                     GroupState(row, weights, "Z"),
                     NegativeState(row, weights, "I"),
                     NegativeState(row, weights, "T", "E", "P", "V", "C"),
-                    $"{profileName}: score {value:F1}%; support {support}; risk {risk}.",
+                    $"{HumanLanguage.Profile(profileName)} модель: оценка {value:F1} балла из 100; " +
+                    $"положительный фактор — {support}; отрицательный фактор — {risk}.",
                     profileName,
                     support,
                     risk,
-                    active));
+                    active,
+                    topContributions));
             }
             if (points.Count == 0)
                 throw new InvalidOperationException("The research model produced no usable dates after its 252-bar warm-up.");
             series = new HoldConfidenceSeries(points);
             error = string.Empty;
+            failure = ResearchCalculationFailure.None;
             return true;
+        }
+        catch (Exception ex) when (ex is FileNotFoundException or DirectoryNotFoundException ||
+                                   ex is InvalidOperationException &&
+                                   ex.Message.Contains("no usable dates", StringComparison.OrdinalIgnoreCase))
+        {
+            series = new HoldConfidenceSeries([]);
+            error = ex.Message;
+            failure = ResearchCalculationFailure.SnapshotNotReady;
+            return false;
         }
         catch (Exception ex)
         {
             series = new HoldConfidenceSeries([]);
             error = ex.Message;
+            failure = ResearchCalculationFailure.Unexpected;
             return false;
         }
     }
@@ -81,8 +109,8 @@ internal static class ResearchHoldConfidenceCalculator
     private static string DescribeContribution(Contribution? item, bool support)
     {
         if (item is null)
-            return support ? "no positive event" : "no negative event";
-        return $"{item.Id} {item.Name} ({item.Value:+0.0;-0.0} pp)";
+            return support ? "заметной поддержки нет" : "заметного давления нет";
+        return HumanLanguage.Contribution(item.Id, item.Value);
     }
 
     private static double GroupState(M.Row row, double[] weights, params string[] prefixes)

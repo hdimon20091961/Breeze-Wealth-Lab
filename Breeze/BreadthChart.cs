@@ -347,7 +347,7 @@ internal sealed class BreadthChart : Border
             {
                 Brush candleBrush = Brushes.Black;
                 Brush hollowFill = new SolidColorBrush(Color.FromRgb(255, 252, 244));
-                double bodyWidth = Math.Clamp(width / Math.Max(count, 1) * 0.65, 1.0, 7.0);
+                double bodyWidth = ChartDrawingMetrics.CandleBodyWidth(width / horizontalSlots);
                 for (int index = 0; index < count; index++)
                 {
                     BreadthPoint point = visiblePoints[index];
@@ -459,7 +459,7 @@ internal sealed class BreadthChart : Border
 
             if (_showPriceCandles)
             {
-                double bodyWidth = Math.Clamp(width / Math.Max(visiblePricePoints.Count, 1) * 0.65, 1.0, 7.0);
+                double bodyWidth = ChartDrawingMetrics.CandleBodyWidth(width / horizontalSlots);
                 Brush risingBrush = new SolidColorBrush(Color.FromRgb(40, 164, 64));
                 Brush fallingBrush = new SolidColorBrush(Color.FromRgb(183, 52, 45));
                 Brush hollowFill = new SolidColorBrush(Color.FromRgb(255, 252, 244));
@@ -530,8 +530,7 @@ internal sealed class BreadthChart : Border
                 Brush vixBrush = new SolidColorBrush(Color.FromRgb(92, 76, 153));
                 if (_showPriceCandles)
                 {
-                    double bodyWidth = Math.Clamp(
-                        width / Math.Max(visibleLeftOverlayPoints.Count, 1) * 0.48, 1.0, 5.0);
+                    double bodyWidth = ChartDrawingMetrics.CandleBodyWidth(width / horizontalSlots);
                     Brush hollowFill = new SolidColorBrush(Color.FromArgb(205, 255, 252, 244));
                     foreach (PricePoint point in visibleLeftOverlayPoints)
                     {
@@ -742,7 +741,7 @@ internal sealed class BreadthChart : Border
             {
                 Brush candleBrush = new SolidColorBrush(color);
                 Brush hollowFill = new SolidColorBrush(Color.FromRgb(255, 252, 244));
-                double bodyWidth = Math.Clamp(width / Math.Max(masterPoints.Count, 1) * 0.55, 1.0, 6.0);
+                double bodyWidth = ChartDrawingMetrics.CandleBodyWidth(width / horizontalSlots);
                 foreach (BreadthPoint point in points)
                 {
                     double x = X(point.Date);

@@ -6,6 +6,8 @@ using System.Linq;
 using System.Text;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Reflection;
+using System.Text.Json;
 #if !EVENT_MODEL_TEST
 using WealthLab.Backtest;
 using WealthLab.Core;
@@ -19,7 +21,7 @@ public sealed class BreezeHoldPositionStrategy_new : UserStrategyBase
     public const string DefaultDataDirectory = @"D:\fear_greed_close\Breeze";
     public const string CurvePath = @"D:\fear_greed_close\vix_term_structure.csv";
     public override string StrategyName => "Breeze Hold Position_new";
-    public override string Description => "0.10.0-alpha.13: frozen Soft, Standard and Strong score profiles plus an in-strategy factor significance report. Zero-weight features remain present and calculated.";
+    public override string Description => "0.10.0-alpha.13: frozen Soft, Standard and Hard score profiles plus an in-strategy factor significance report. Zero-weight features remain present and calculated.";
     private const double BiasPct = 50.0;
     private const int FullContracts = 10;
     private const double DiagnosticCapital = 3000.0;
@@ -110,7 +112,7 @@ public sealed class BreezeHoldPositionStrategy_new : UserStrategyBase
         SetPaneMinMax("Breeze_new availability", 0, 1); SetPaneDrawingOptions("Breeze_new availability", 10);
         WriteToDebugLog($"Breeze_new 0.10.0-alpha.13: {valid} usable bars; {missing} warm-up/missing bars (no orders). " +
             $"Profile={BreezeEventModelNew.PresetName(_mode)}; Engine={_engine}; Level={_level}%; scoring runs bar-by-bar in Execute. " +
-            "Soft/Standard/Strong are frozen from the five supplied selective runs. All 74 event features remain calculated; zero profile weights contribute zero. " +
+            "Soft/Standard/Hard are frozen from the five supplied selective runs. All 75 event features remain calculated; zero profile weights contribute zero. " +
             "Orders: one share/contract each; next open. 100% means 10 contracts, not 100% equity. " +
             "Baseline is fixed. Old Hold is display-only and optional.");
         if (_factorTest == 1) WriteFactorSignificance(bars);
@@ -364,7 +366,8 @@ public static class BreezeEventModelNew
         new("C11","Gap recovery complex",0,true,"Full gap, at least one EMA reclaim, >=3 breadth rising and contango return"),
         new("C12","Breadth bottom in stress",0,true,"B08>0, drawdown>=5%, both RSI lower and front<0; green trigger kept separately"),
         new("U01","Repeated RSI release",0,true,"Current slow RSI lower release, previous release 5..15 bars ago with renewed saturation between; green body>=past median; signed B200 difference retained"),
-        new("U02","Healthy to double break",0,true,"Yesterday bull order above all EMA, front>0 and Working density=30; today double EMA20/50 break and backwardation start")
+        new("U02","Healthy to double break",0,true,"Yesterday bull order above all EMA, front>0 and Working density=30; today double EMA20/50 break and backwardation start"),
+        new("U03","SPX monthly expiration",0,false,"Adjusted standard third-Friday SPX expiration; research-only calendar context with zero score weight")
     };
     private static readonly Dictionary<string,double> ResearchWeights = new(StringComparer.Ordinal)
     {
@@ -385,50 +388,66 @@ public static class BreezeEventModelNew
         ["B12"]=0, ["B14"]=0, ["P04"]=0, ["V03"]=-5, ["V07"]=-5,
         ["Z01"]=0, ["Z03"]=10, ["Z04"]=0, ["I03"]=0, ["C01"]=10, ["C09"]=0,
         ["E07"]=0, ["P06"]=0, ["C02"]=0, ["C03"]=0, ["C07"]=0,
-        ["C10"]=0, ["C11"]=0, ["C12"]=0, ["U01"]=0, ["U02"]=0
+        ["C10"]=0, ["C11"]=0, ["C12"]=0, ["U01"]=0, ["U02"]=0, ["U03"]=0
     };
-    private static readonly Dictionary<string,double>[] PresetWeightMaps =
-    {
-        // Soft: run 1838, 248.03% profit, -9.16% maximum drawdown, Sharpe 1.620.
-        new(StringComparer.Ordinal)
-        {
-            ["T03"]=15,["T05"]=5,["T06"]=10,["T07"]=-10,["T08"]=5,["T09"]=-10,
-            ["E01"]=-5,["E02"]=10,["E05"]=5,["E06"]=10,
-            ["R01"]=10,["R03"]=15,
-            ["B01"]=15,["B02"]=20,["B03"]=5,["B07"]=-10,["B08"]=10,["B09"]=5,
-            ["P02"]=10,["P03"]=-10,["P05"]=5,
-            ["V01"]=5,["V04"]=-10,["V07"]=-5,["V08"]=10,
-            ["Z02"]=5,["Z03"]=5,["I01"]=-5,["C01"]=15,["C05"]=10,["C08"]=-10
-        },
-        // Standard: the user-selected 251.19% equity curve, run 1264/1221.
-        new(StringComparer.Ordinal)
-        {
-            ["T03"]=15,["T05"]=5,["T06"]=10,["T07"]=-10,["T08"]=5,["T09"]=-10,
-            ["E01"]=-5,["E02"]=5,["E05"]=10,["E06"]=10,
-            ["R01"]=10,["R03"]=15,
-            ["B01"]=15,["B02"]=20,["B03"]=5,["B07"]=-10,["B08"]=10,["B09"]=5,
-            ["P02"]=10,["P03"]=-10,["P05"]=5,
-            ["V01"]=5,["V03"]=-5,["V04"]=-5,["V07"]=-5,["V08"]=10,
-            ["Z02"]=5,["Z03"]=5,["I01"]=-5,["C01"]=10,["C05"]=10,["C08"]=-10
-        },
-        // Strong: maximum profit in the supplied selective runs, run 1109.
-        new(StringComparer.Ordinal)
-        {
-            ["T03"]=15,["T05"]=5,["T06"]=10,["T07"]=-10,["T08"]=5,["T09"]=-10,
-            ["E01"]=-5,["E02"]=10,["E05"]=10,["E06"]=10,
-            ["R01"]=10,["R03"]=15,
-            ["B01"]=15,["B02"]=20,["B03"]=5,["B07"]=-10,["B08"]=10,["B09"]=5,
-            ["P02"]=10,["P03"]=-10,["P05"]=5,
-            ["V01"]=5,["V03"]=-5,["V04"]=-5,["V07"]=-5,["V08"]=10,
-            ["Z02"]=5,["Z03"]=5,["I01"]=-5,["C01"]=10,["C05"]=10,["C08"]=-10
-        }
-    };
-    public static string PresetName(int mode) => mode switch { 0 => "Soft", 1 => "Standard", 2 => "Strong", _ => throw new ArgumentOutOfRangeException(nameof(mode)) };
+    private const string RuleFileName = "BreezeRules.json";
+    private static readonly Lazy<double[][]> PresetWeightsFromRules = new(LoadPresetWeights);
+    public static string PresetName(int mode) => mode switch { 0 => "Soft", 1 => "Standard", 2 => "Hard", _ => throw new ArgumentOutOfRangeException(nameof(mode)) };
     public static double[] PresetWeights(int mode)
     {
-        if (mode < 0 || mode >= PresetWeightMaps.Length) throw new ArgumentOutOfRangeException(nameof(mode));
-        var map = PresetWeightMaps[mode];
-        return Features.Select(f => map.TryGetValue(f.Id, out double value) ? value : 0.0).ToArray();
+        if (mode is < 0 or > 2) throw new ArgumentOutOfRangeException(nameof(mode));
+        return (double[])PresetWeightsFromRules.Value[mode].Clone();
+    }
+    private static double[][] LoadPresetWeights()
+    {
+        Assembly assembly = typeof(BreezeEventModelNew).Assembly;
+        string assemblyDirectory = Path.GetDirectoryName(assembly.Location) ?? AppContext.BaseDirectory;
+        string externalPath = Path.Combine(assemblyDirectory, RuleFileName);
+        Stream stream;
+        string source;
+        if (File.Exists(externalPath))
+        {
+            stream = File.OpenRead(externalPath);
+            source = externalPath;
+        }
+        else
+        {
+            string? resourceName = assembly.GetManifestResourceNames()
+                .FirstOrDefault(name => name.EndsWith(RuleFileName, StringComparison.OrdinalIgnoreCase));
+            if (resourceName is null)
+                throw new FileNotFoundException($"{RuleFileName} was not found beside the strategy assembly and no embedded fallback exists.", externalPath);
+            stream = assembly.GetManifestResourceStream(resourceName)
+                ?? throw new InvalidOperationException($"Embedded resource {resourceName} cannot be opened.");
+            source = $"embedded:{resourceName}";
+        }
+        using (stream)
+        using (JsonDocument document = JsonDocument.Parse(stream))
+        {
+            JsonElement[] rules = document.RootElement.GetProperty("rules").EnumerateArray().ToArray();
+            if (rules.Length != Features.Length)
+                throw new InvalidDataException($"{source}: expected {Features.Length} rules, got {rules.Length}.");
+            double[][] result =
+            [
+                new double[Features.Length],
+                new double[Features.Length],
+                new double[Features.Length]
+            ];
+            for (int i = 0; i < rules.Length; i++)
+            {
+                JsonElement rule = rules[i];
+                int number = rule.GetProperty("number").GetInt32();
+                string id = rule.GetProperty("id").GetString() ?? string.Empty;
+                if (number != i + 1 || !string.Equals(id, Features[i].Id, StringComparison.Ordinal))
+                    throw new InvalidDataException($"{source}: rule order differs from the compiled detector at position {i + 1}.");
+                JsonElement weights = rule.GetProperty("breeze").GetProperty("weights");
+                result[0][i] = weights.GetProperty("soft").GetDouble();
+                result[1][i] = weights.GetProperty("standard").GetDouble();
+                result[2][i] = weights.GetProperty("hard").GetDouble();
+                if (!result.All(profile => double.IsFinite(profile[i])))
+                    throw new InvalidDataException($"{source}: {id} contains a non-finite Breeze weight.");
+            }
+            return result;
+        }
     }
     public static double ResearchWeight(string id)
     {
@@ -589,6 +608,8 @@ public static class BreezeEventModelNew
     public static void Build(List<Row> rows)
     {
         double[] closes=rows.Select(r=>r.Close).ToArray();
+        var tradingDays=rows.Select(r=>r.Date.Date).ToHashSet();
+        var spxMonthlyExpirations=AdjustedSpxMonthlyExpirations(rows,tradingDays);
         var emas=new[]{20,50,100,200}.Select(n=>Ema(closes,n)).ToArray();
         var slow=MyRsi(closes,14); var fast=MyRsi(closes,10);
         int stable=0, break20=-1, lastPickup=-1, lastRelease=-1, titanicEnd=-1, lastFastZero=-1, lastSlowZero=-1;
@@ -689,6 +710,7 @@ public static class BreezeEventModelNew
             Yes("U01",repeat&&green&&r.Body>=bodyMedian);
             r.Details["U01.B200_delta_pp"]=repeat?r.B[2]-rows[lastRelease].B[2]:double.NaN; if(release[0])lastRelease=i;
             Yes("U02",p.Get("T01")==1&&p.E.All(e=>p.Close>e)&&p.Front>0&&p.Zw==30&&r.Get("E03")>0&&r.Get("V04")>0);
+            Yes("U03",spxMonthlyExpirations.Contains(r.Date.Date));
             r.Details["ATRP1"]=r.Atr; r.Details["Drawdown252Pct"]=dd; r.Details["FrontSpreadPct"]=r.Front; r.Details["FrontRoll"]=Flag(roll);
             r.Details["EMA20GraceAge"]=break20<0?double.NaN:i-break20;
             r.Details["EMA20GraceCompleted"]=Flag(break20>=0&&i-break20>=3);
@@ -701,6 +723,43 @@ public static class BreezeEventModelNew
             // Compute history states during warm-up, but do not trade them.
             r.Ready=i>=252;
         }
+    }
+
+    private static HashSet<DateTime> AdjustedSpxMonthlyExpirations(List<Row> rows,HashSet<DateTime> tradingDays)
+    {
+        var result=new HashSet<DateTime>();
+        if(rows.Count==0)return result;
+        DateTime cursor=new(rows[0].Date.Year,rows[0].Date.Month,1), end=new(rows[^1].Date.Year,rows[^1].Date.Month,1);
+        while(cursor<=end)
+        {
+            DateTime first=new(cursor.Year,cursor.Month,1);
+            int offset=((int)DayOfWeek.Friday-(int)first.DayOfWeek+7)%7;
+            DateTime expiry=first.AddDays(offset+14);
+            for(int attempts=0;attempts<10;attempts++)
+            {
+                bool knownLoadedDay=tradingDays.Contains(expiry.Date);
+                bool futureRegularDay=expiry.Date>rows[^1].Date.Date&&IsRegularUsTradingDay(expiry.Date);
+                if(knownLoadedDay||futureRegularDay)break;
+                expiry=expiry.AddDays(-1);
+            }
+            if(tradingDays.Contains(expiry.Date))result.Add(expiry.Date);
+            cursor=cursor.AddMonths(1);
+        }
+        return result;
+    }
+    private static bool IsRegularUsTradingDay(DateTime date)
+    {
+        date=date.Date;if(date.DayOfWeek is DayOfWeek.Saturday or DayOfWeek.Sunday)return false;
+        DateTime Observed(DateTime h)=>h.DayOfWeek==DayOfWeek.Saturday?h.AddDays(-1):h.DayOfWeek==DayOfWeek.Sunday?h.AddDays(1):h;
+        DateTime Nth(int month,DayOfWeek day,int n){DateTime first=new(date.Year,month,1);return first.AddDays(((int)day-(int)first.DayOfWeek+7)%7+7*(n-1));}
+        DateTime Last(int month,DayOfWeek day){DateTime last=new(date.Year,month,DateTime.DaysInMonth(date.Year,month));return last.AddDays(-(((int)last.DayOfWeek-(int)day+7)%7));}
+        var holidays=new HashSet<DateTime>{Observed(new(date.Year,1,1)),Nth(1,DayOfWeek.Monday,3),Nth(2,DayOfWeek.Monday,3),EasterSunday(date.Year).AddDays(-2),Last(5,DayOfWeek.Monday),Observed(new(date.Year,7,4)),Nth(9,DayOfWeek.Monday,1),Nth(11,DayOfWeek.Thursday,4),Observed(new(date.Year,12,25))};
+        if(date.Year>=2022)holidays.Add(Observed(new(date.Year,6,19)));return !holidays.Contains(date);
+    }
+    private static DateTime EasterSunday(int year)
+    {
+        int a=year%19,b=year/100,c=year%100,d=b/4,e=b%4,f=(b+8)/25,g=(b-f+1)/3,h=(19*a+b-d-g+15)%30,i=c/4,k=c%4,l=(32+2*e+2*i-h-k)%7,m=(a+11*h+22*l)/451;
+        int month=(h+l-7*m+114)/31,day=(h+l-7*m+114)%31+1;return new(year,month,day);
     }
     public static double[] Score(IReadOnlyList<Row> rows,double[] weights,double bias,double alpha)
     {

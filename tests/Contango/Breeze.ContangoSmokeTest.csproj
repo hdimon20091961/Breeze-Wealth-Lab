@@ -6,6 +6,6 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="..\Breeze\VixTermStructure.cs" Link="VixTermStructure.cs" />
+    <Compile Include="..\..\Breeze\VixTermStructure.cs" Link="VixTermStructure.cs" />
   </ItemGroup>
 </Project>

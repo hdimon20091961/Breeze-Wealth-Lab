@@ -8,11 +8,14 @@
 
 # Local research inputs and generated working data
 .cache/
-artifacts/
-Исходные видео для обучения/
+.codex/
+research/artifacts/
+research/inputs/videos/
+research/reference/
+tests/FuturesCompileCheckTemp/
+E.ZIP
 deployment-result.txt
 
 # Bundled local runtimes/dependencies and upstream checkouts
 tools/transcription/
-reference/
 

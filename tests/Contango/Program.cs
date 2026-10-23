@@ -1,3 +1,4 @@
+// Integration smoke test for the VIX term-structure data pipeline.
 using BreezeVL;
 
 string source = args.ElementAtOrDefault(0) ?? @"D:\fear_greed_close\VIX";

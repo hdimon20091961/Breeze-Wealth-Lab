@@ -295,7 +295,7 @@ internal sealed class FuzzyStateChart : Border
         AddText("Phase", 8, top + priceHeight + 3, 9,
             new SolidColorBrush(Color.FromRgb(90, 92, 95)), FontWeights.Normal);
         if (_showHoldConfidence)
-            AddText("Hold %", 5, top + priceHeight + 19, 9,
+            AddText("Оценка", 5, top + priceHeight + 19, 9,
                 new SolidColorBrush(Color.FromRgb(90, 92, 95)), FontWeights.SemiBold);
         AddText("Contango", 2, top + priceHeight + (_showHoldConfidence ? 35 : 19), 9,
             new SolidColorBrush(Color.FromRgb(90, 92, 95)), FontWeights.Normal);
@@ -326,7 +326,7 @@ internal sealed class FuzzyStateChart : Border
 
         if (_showCandles)
         {
-            double bodyWidth = Math.Clamp(slotWidth * 0.65, 1.0, 7.0);
+            double bodyWidth = ChartDrawingMetrics.CandleBodyWidth(slotWidth);
             Brush risingBrush = new SolidColorBrush(Color.FromRgb(40, 142, 68));
             Brush fallingBrush = new SolidColorBrush(Color.FromRgb(177, 51, 47));
             Brush hollowFill = Brushes.White;
@@ -435,7 +435,7 @@ internal sealed class FuzzyStateChart : Border
         string lastText =
             $"Last {last.Date:yyyy-MM-dd}: {FuzzyStatePalette.Label(last.DominantZone)} {last.Confidence:P0}" +
             (_showHoldConfidence
-                ? lastHold is null ? "; hold n/a" : $"; hold {lastHold.Value:F0}%"
+                ? lastHold is null ? "; оценка н/д" : $"; оценка {lastHold.Value:F0}"
                 : string.Empty);
         AddRightAlignedText(lastText, right + 3, 27, 11, axisBrush, FontWeights.Normal);
 
@@ -595,7 +595,7 @@ internal sealed class FuzzyStateChart : Border
 
     private void AddHoldConfidenceLegend(double x, double y)
     {
-        AddText("Hold", x - 34, y - 2, 9,
+        AddText("Оценка", x - 43, y - 2, 9,
             new SolidColorBrush(Color.FromRgb(90, 92, 95)), FontWeights.SemiBold);
         const int segments = 20;
         const double width = 140.0;
@@ -615,6 +615,6 @@ internal sealed class FuzzyStateChart : Border
         }
         AddText("0", x, y + 9, 8, Brushes.DimGray, FontWeights.Normal);
         AddText("50", x + width / 2 - 7, y + 9, 8, Brushes.DimGray, FontWeights.Normal);
-        AddText("100%", x + width - 19, y + 9, 8, Brushes.DimGray, FontWeights.Normal);
+        AddText("100", x + width - 15, y + 9, 8, Brushes.DimGray, FontWeights.Normal);
     }
 }

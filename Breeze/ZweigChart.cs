@@ -182,7 +182,7 @@ internal sealed class ZweigChart : Border
 
         if (_showCandles)
         {
-            double bodyWidth = Math.Clamp(slotWidth * 0.65, 1.0, 7.0);
+            double bodyWidth = ChartDrawingMetrics.CandleBodyWidth(slotWidth);
             Brush risingBrush = new SolidColorBrush(Color.FromRgb(42, 145, 70));
             Brush fallingBrush = new SolidColorBrush(Color.FromRgb(185, 47, 47));
             for (int index = 0; index < _rendered.Count; index++)
@@ -231,7 +231,7 @@ internal sealed class ZweigChart : Border
                 Canvas.SetTop(ribbon, _top + priceHeight + 5);
                 _canvas.Children.Add(ribbon);
             }
-            AddText("Hold %", 5, _top + priceHeight + 3, 9,
+            AddText("Оценка", 5, _top + priceHeight + 3, 9,
                 Color.FromRgb(90, 92, 85), FontWeights.SemiBold);
         }
 
