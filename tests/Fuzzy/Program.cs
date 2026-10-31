@@ -101,7 +101,8 @@ if (BreezeRuleCatalog.Current.Rules.Count != 75 ||
     BreezeRuleCatalog.Current.ById("R03").SoftWeight != 15 ||
     BreezeRuleCatalog.Current.ById("Z02").HardWeight != 5)
     throw new InvalidOperationException("BreezeRules.json was not loaded or validated correctly.");
-if (!researchHelp.Contains("Полный каталог 75 состояний", StringComparison.Ordinal) ||
+if (!researchHelp.Contains("Полный каталог 86 вычисляемых состояний", StringComparison.Ordinal) ||
+    !researchHelp.Contains("T04_6", StringComparison.Ordinal) || !researchHelp.Contains("T03_1B", StringComparison.Ordinal) ||
     !researchHelp.Contains("Единый каталог правил", StringComparison.Ordinal) ||
     !researchHelp.Contains("TorchSharp, п.п.", StringComparison.Ordinal) ||
     !researchHelp.Contains("T09", StringComparison.Ordinal) ||
@@ -195,9 +196,10 @@ var syntheticLows = new PriceSeries("NL", Enumerable.Range(0, 280)
         i >= 272 ? 150 : 50, i >= 272 ? 150 : 50, 1)).ToList());
 var syntheticBreadth = new BreadthSeries("Nasdaq SMA50", 50, Enumerable.Range(0, 280)
     .Select(i => new BreadthPoint(syntheticStart.AddDays(i), 60, 60, 60, 60, 100)).ToList(), true);
+HashSet<DateTime> syntheticTradingDates = syntheticQqq.Points.Select(point => point.Date.Date).ToHashSet();
 TitanicSeries titanic = TitanicSyndromeCalculator.Calculate(
     syntheticQqq, syntheticHighs, syntheticLows, syntheticBreadth,
-    syntheticStart, syntheticStart.AddDays(279));
+    syntheticTradingDates, syntheticStart, syntheticStart.AddDays(279));
 IReadOnlyList<TitanicPoint> activeTitanic = titanic.Points.Where(point => point.Signal).ToList();
 if (activeTitanic.Count != 8 || activeTitanic[0].RunLength != 1 || activeTitanic[0].Persistent ||
     activeTitanic[6].RunLength != 7 || !activeTitanic[6].Persistent || titanic.UseBreadthFilter ||
@@ -217,7 +219,7 @@ PriceSeries highsWithGap = syntheticHighs with
 };
 TitanicSeries titanicWithGap = TitanicSyndromeCalculator.Calculate(
     syntheticQqq, highsWithGap, syntheticLows, syntheticBreadth,
-    syntheticStart, syntheticStart.AddDays(279));
+    syntheticTradingDates, syntheticStart, syntheticStart.AddDays(279));
 TitanicPoint firstAfterGap = titanicWithGap.Points.Single(point => point.Date == syntheticStart.AddDays(276));
 if (firstAfterGap.RunLength != 1 || titanicWithGap.Points.Any(point => point.Persistent))
     throw new InvalidOperationException("Titanic persistence incorrectly crosses a missing market-data date.");
@@ -229,9 +231,11 @@ var zweigDeclining = new PriceSeries("DEC", Enumerable.Range(0, 120)
     .Select(i => new PricePoint(syntheticStart.AddDays(i), i < 20 ? 50 : 30,
         i < 20 ? 50 : 30, i < 20 ? 50 : 30, i < 20 ? 50 : 30, 1)).ToList());
 ZweigSeries strongZweig = ZweigBreadthCalculator.Calculate(
-    zweigAdvancing, zweigDeclining, ZweigMode.Strong, syntheticStart, syntheticStart.AddDays(119));
+    zweigAdvancing, zweigDeclining, syntheticTradingDates, ZweigMode.Strong,
+    syntheticStart, syntheticStart.AddDays(119));
 ZweigSeries workingZweig = ZweigBreadthCalculator.Calculate(
-    zweigAdvancing, zweigDeclining, ZweigMode.Working, syntheticStart, syntheticStart.AddDays(119));
+    zweigAdvancing, zweigDeclining, syntheticTradingDates, ZweigMode.Working,
+    syntheticStart, syntheticStart.AddDays(119));
 if (strongZweig.TriggerLevel != 60 || strongZweig.TransitionDays != 11 || strongZweig.MinimumMove != 21 ||
     workingZweig.TriggerLevel != 60 || workingZweig.TransitionDays != 13 || workingZweig.MinimumMove != 15)
     throw new InvalidOperationException("Fixed Zweig modes changed unexpectedly.");

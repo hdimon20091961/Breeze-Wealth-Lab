@@ -25,10 +25,14 @@ internal sealed class BreadthChart : Border
     private FuzzyMarketStateSeries? _marketStates;
     private VixCurveStateSeries? _vixCurveStates;
     private bool _showVixCurveRibbon;
+    private bool _showLegacyVixCurveRibbon;
     private bool _showSvxyRecommendationRibbon;
     private TechnicalIndicatorSeries? _technicalIndicators;
+    private MarketSetupSeries? _marketSetupSeries;
+    private BreezeRuleEntry? _marketSetupRule;
     private bool _showEmaOverlays;
     private bool _showDateLabels = true;
+    private bool _showLeftPriceScaleLabels;
     private IReadOnlyList<(BreadthSeries Series, Color Color)> _overlayBreadthSeries = [];
     private string? _titleOverride;
     private Color _primaryBreadthColor = Color.FromRgb(25, 112, 174);
@@ -43,6 +47,8 @@ internal sealed class BreadthChart : Border
     private double _plotTop;
     private double _plotHeight;
     private double _horizontalSlots = 1;
+    private double? _plotLeftMarginOverride;
+    private double? _plotRightMarginOverride;
 
     public event Action<DateTime>? CursorDateChanged;
 
@@ -74,6 +80,21 @@ internal sealed class BreadthChart : Border
     {
         _viewportStart = start;
         _viewportEnd = end;
+        if (IsVisible)
+            RenderSeries();
+    }
+
+    public void SetHorizontalPlotMargins(double left, double right)
+    {
+        _plotLeftMarginOverride = Math.Max(0.0, left);
+        _plotRightMarginOverride = Math.Max(0.0, right);
+        if (IsVisible)
+            RenderSeries();
+    }
+
+    public void SetShowLeftPriceScaleLabels(bool show)
+    {
+        _showLeftPriceScaleLabels = show;
         if (IsVisible)
             RenderSeries();
     }
@@ -175,13 +196,23 @@ internal sealed class BreadthChart : Border
             RenderSeries();
     }
 
+    public void SetMarketSetupOverlay(MarketSetupSeries? series, BreezeRuleEntry? rule)
+    {
+        _marketSetupSeries = series;
+        _marketSetupRule = rule;
+        if (IsVisible)
+            RenderSeries();
+    }
+
     public void SetVixCurveStates(
         VixCurveStateSeries? states,
         bool showVixRibbon = true,
-        bool showSvxyRibbon = false)
+        bool showSvxyRibbon = false,
+        bool showLegacyVixRibbon = false)
     {
         _vixCurveStates = states;
         _showVixCurveRibbon = showVixRibbon;
+        _showLegacyVixCurveRibbon = showLegacyVixRibbon;
         _showSvxyRecommendationRibbon = showSvxyRibbon;
         if (IsVisible)
             RenderSeries();
@@ -283,10 +314,13 @@ internal sealed class BreadthChart : Border
         }
         bool showLeftOverlay = visibleLeftOverlayPoints.Count > 1;
 
-        double left = _priceOnly ? (showLeftOverlay ? 47 : 12) : showPrice ? 58 : 12;
+        double left = _plotLeftMarginOverride ??
+            (_priceOnly ? (showLeftOverlay ? 47 : 12) : showPrice ? 58 : 12);
         const double top = 34;
-        const double right = 46;
-        int ribbonRows = (_showVixCurveRibbon ? 1 : 0) + (_showSvxyRecommendationRibbon ? 1 : 0);
+        double right = _plotRightMarginOverride ?? 46;
+        int ribbonRows = (_showVixCurveRibbon ? 1 : 0) +
+                         (_showLegacyVixCurveRibbon ? 1 : 0) +
+                         (_showSvxyRecommendationRibbon ? 1 : 0);
         double bottom = (_showDateLabels ? 24 : 10) + (ribbonRows > 0 ? 2 + 14 * ribbonRows : 0);
         double width = Math.Max(1, ActualWidth - left - right);
         double height = Math.Max(1, ActualHeight - top - bottom);
@@ -457,6 +491,9 @@ internal sealed class BreadthChart : Border
                 }
             }
 
+            if (_priceOnly && _marketSetupSeries is not null && _marketSetupRule is not null)
+                DrawMarketSetupLifecycle(visiblePoints, BreadthX, top, height, width / horizontalSlots);
+
             if (_showPriceCandles)
             {
                 double bodyWidth = ChartDrawingMetrics.CandleBodyWidth(width / horizontalSlots);
@@ -609,12 +646,20 @@ internal sealed class BreadthChart : Border
             if (_priceOnly)
             {
                 double labelX = rightAxisX + 5;
-                AddText(priceMax.ToString("N0", CultureInfo.InvariantCulture), labelX, top - 7, 10, darkBrush, FontWeights.Normal);
-                AddText((priceMin + (priceMax - priceMin) * 2.0 / 3.0).ToString("N0", CultureInfo.InvariantCulture),
-                    labelX, top + height / 3.0 - 7, 10, darkBrush, FontWeights.Normal);
-                AddText((priceMin + (priceMax - priceMin) / 3.0).ToString("N0", CultureInfo.InvariantCulture),
-                    labelX, top + height * 2.0 / 3.0 - 7, 10, darkBrush, FontWeights.Normal);
-                AddText(priceMin.ToString("N0", CultureInfo.InvariantCulture), labelX, top + height - 12, 10, darkBrush, FontWeights.Normal);
+                string[] labels =
+                [
+                    priceMax.ToString("N0", CultureInfo.InvariantCulture),
+                    (priceMin + (priceMax - priceMin) * 2.0 / 3.0).ToString("N0", CultureInfo.InvariantCulture),
+                    (priceMin + (priceMax - priceMin) / 3.0).ToString("N0", CultureInfo.InvariantCulture),
+                    priceMin.ToString("N0", CultureInfo.InvariantCulture)
+                ];
+                double[] labelTops = [top - 7, top + height / 3.0 - 7, top + height * 2.0 / 3.0 - 7, top + height - 12];
+                for (int labelIndex = 0; labelIndex < labels.Length; labelIndex++)
+                {
+                    AddText(labels[labelIndex], labelX, labelTops[labelIndex], 10, darkBrush, FontWeights.Normal);
+                    if (_showLeftPriceScaleLabels)
+                        AddText(labels[labelIndex], 5, labelTops[labelIndex], 10, darkBrush, FontWeights.Normal);
+                }
             }
             else
             {
@@ -645,6 +690,73 @@ internal sealed class BreadthChart : Border
         DrawCursorLine();
     }
 
+    private void DrawMarketSetupLifecycle(
+        IReadOnlyList<BreadthPoint> visiblePoints,
+        Func<int, double> x,
+        double top,
+        double height,
+        double slotWidth)
+    {
+        if (_marketSetupSeries is null || _marketSetupRule is null)
+            return;
+
+        IReadOnlyDictionary<DateTime, MarketSetupPoint> byDate = _marketSetupSeries.ByDate;
+        bool eventRule = _marketSetupRule.Kind is "event" or "sequence";
+        bool rsiLowerRelease = string.Equals(_marketSetupRule.Id, "R03", StringComparison.Ordinal);
+        bool repeatedRelease = _marketSetupRule.Id == "U01";
+
+        for (int index = 0; index < visiblePoints.Count; index++)
+        {
+            DateTime date = visiblePoints[index].Date;
+            if (!byDate.TryGetValue(date, out MarketSetupPoint? point))
+                continue;
+            double value = point.Value(_marketSetupRule.Id);
+            if (!double.IsFinite(value))
+                continue;
+
+            bool waiting = (rsiLowerRelease && point.Value("R01") > 0.0 && value <= 0.0) ||
+                           (repeatedRelease && point.Value("U01.waiting") > 0.0);
+            bool active = !eventRule && Math.Abs(value) > 0.000001 &&
+                          (_marketSetupRule.Id != "T02" || value >= 1.0);
+            if (waiting || active)
+            {
+                Color color = waiting
+                    ? Color.FromArgb(54, 245, 196, 66)
+                    : value * _marketSetupRule.DisplayDirection > 0
+                        ? Color.FromArgb(42, 61, 166, 91)
+                        : Color.FromArgb(38, 196, 55, 55);
+                var band = new Rectangle
+                {
+                    Width = Math.Max(1.0, slotWidth),
+                    Height = height,
+                    Fill = new SolidColorBrush(color),
+                    IsHitTestVisible = false
+                };
+                Canvas.SetLeft(band, x(index) - slotWidth / 2.0);
+                Canvas.SetTop(band, top);
+                _canvas.Children.Add(band);
+            }
+
+            // Each positive bar is a dated event, including consecutive events.
+            bool firstExit = repeatedRelease && point.Value("U01.first_exit") > 0.0;
+            if ((eventRule && Math.Abs(value) > 0.000001) || firstExit)
+            {
+                _canvas.Children.Add(new Line
+                {
+                    X1 = x(index),
+                    X2 = x(index),
+                    Y1 = top,
+                    Y2 = top + height,
+                    Stroke = new SolidColorBrush(firstExit
+                        ? Color.FromArgb(150, 50, 112, 174)
+                        : Color.FromArgb(150, 196, 55, 55)),
+                    StrokeThickness = 1.4,
+                    IsHitTestVisible = false
+                });
+            }
+        }
+    }
+
     private void DrawConfiguredRibbons(
         IReadOnlyList<BreadthPoint> points,
         Func<int, double> xForIndex,
@@ -672,6 +784,32 @@ internal sealed class BreadthChart : Border
                 Canvas.SetTop(ribbon, top + 14 * ribbonRow);
                 _canvas.Children.Add(ribbon);
             }
+            AddText("New", Math.Max(2, ActualWidth - 42), top + 14 * ribbonRow - 2, 9,
+                new SolidColorBrush(Color.FromRgb(52, 61, 70)), FontWeights.SemiBold);
+            ribbonRow++;
+        }
+
+        if (_showLegacyVixCurveRibbon)
+        {
+            for (int index = 0; index < points.Count; index++)
+            {
+                VixCurveState state = statesByDate.TryGetValue(points[index].Date, out VixCurveStatePoint? point)
+                    ? point.LegacyState
+                    : VixCurveState.Unknown;
+                var ribbon = new Rectangle
+                {
+                    Width = Math.Max(1.0, slotWidth + 0.8),
+                    Height = 11,
+                    Fill = new SolidColorBrush(FuzzyStateChart.ColorForCurveState(state)),
+                    Opacity = state == VixCurveState.Unknown ? 0.40 : 0.94,
+                    IsHitTestVisible = false
+                };
+                Canvas.SetLeft(ribbon, xForIndex(index) - slotWidth / 2.0);
+                Canvas.SetTop(ribbon, top + 14 * ribbonRow);
+                _canvas.Children.Add(ribbon);
+            }
+            AddText("Old", Math.Max(2, ActualWidth - 42), top + 14 * ribbonRow - 2, 9,
+                new SolidColorBrush(Color.FromRgb(52, 61, 70)), FontWeights.SemiBold);
             ribbonRow++;
         }
 
@@ -695,6 +833,8 @@ internal sealed class BreadthChart : Border
                 Canvas.SetTop(svxyRibbon, top + 14 * ribbonRow);
                 _canvas.Children.Add(svxyRibbon);
             }
+            AddText("SVXY", Math.Max(2, ActualWidth - 42), top + 14 * ribbonRow - 2, 9,
+                new SolidColorBrush(Color.FromRgb(52, 61, 70)), FontWeights.SemiBold);
         }
     }
 

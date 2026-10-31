@@ -14,6 +14,9 @@ internal sealed class FuzzyStateChart : Border
     private PriceSeries? _priceSeries;
     private FuzzyMarketStateSeries? _states;
     private HoldConfidenceSeries? _holdConfidence;
+    private IReadOnlyDictionary<DateTime, HoldConfidencePoint> _rules1ByDate = new Dictionary<DateTime, HoldConfidencePoint>();
+    private IReadOnlyDictionary<DateTime, HoldConfidencePoint> _rules2ByDate = new Dictionary<DateTime, HoldConfidencePoint>();
+    private static readonly Color[] ScoreColors = ScorePalette.Colors.Select(hex => (Color)ColorConverter.ConvertFromString(hex)).ToArray();
     private VixCurveStateSeries? _contangoStates;
     private TechnicalIndicatorSeries? _technicalIndicators;
     private bool _showCandles;
@@ -93,6 +96,13 @@ internal sealed class FuzzyStateChart : Border
             RenderSeries();
     }
 
+    public void SetScoreComparison(HoldConfidenceSeries? rules1, HoldConfidenceSeries? rules2)
+    {
+        _rules1ByDate = rules1?.Points.ToDictionary(p => p.Date) ?? new();
+        _rules2ByDate = rules2?.Points.ToDictionary(p => p.Date) ?? new();
+        if (IsVisible) RenderSeries();
+    }
+
     public void SetShowCandles(bool showCandles)
     {
         _showCandles = showCandles;
@@ -140,7 +150,7 @@ internal sealed class FuzzyStateChart : Border
         _cursorLine = null;
         var stateByDate = _states.Points.ToDictionary(point => point.Date);
         var indicatorByDate = _technicalIndicators.Points.ToDictionary(point => point.Date);
-        var holdByDate = _holdConfidence?.Points.ToDictionary(point => point.Date) ?? [];
+        var holdByDate = _rules1ByDate.Count > 0 ? _rules1ByDate : _holdConfidence?.Points.ToDictionary(point => point.Date) ?? [];
         var contangoByDate = _contangoStates?.Points.ToDictionary(point => point.Date) ?? [];
         IReadOnlyList<PricePoint> prices = _priceSeries.Points
             .Where(point => stateByDate.ContainsKey(point.Date))
@@ -157,7 +167,7 @@ internal sealed class FuzzyStateChart : Border
             holdByDate.TryGetValue(point.Date, out HoldConfidencePoint? confidence)
                 ? confidence
                 : new HoldConfidencePoint(
-                    point.Date, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                    point.Date, double.NaN, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
                     "Hold confidence is unavailable.")).ToList();
         _renderedContangoStates = prices.Select(point =>
             contangoByDate.TryGetValue(point.Date, out VixCurveStatePoint? state)
@@ -167,10 +177,12 @@ internal sealed class FuzzyStateChart : Border
                     0.0, 0.0, 0.0, 0, 0, 0, 0.0, 0.0, 0.0, false,
                     SvxyRecommendation.Neutral, null)).ToList();
         const double left = 58;
-        const double top = 38;
+        bool compactLegend = ActualWidth < 720;
+        bool compactEma = ActualWidth < 470;
+        double top = compactLegend ? compactEma ? 88 : 70 : 38;
         const double right = 50;
         const double bottom = 30;
-        double paneGap = _showHoldConfidence ? 66 : 50;
+        double paneGap = _showHoldConfidence ? 82 : 50;
         double width = Math.Max(1, ActualWidth - left - right);
         double availableHeight = Math.Max(1, ActualHeight - top - bottom - paneGap);
         double rsiHeight = Math.Max(72, availableHeight * 0.24);
@@ -199,18 +211,20 @@ internal sealed class FuzzyStateChart : Border
 
         AddText("Fuzzy market-state map", 10, 6, 15,
             new SolidColorBrush(Color.FromRgb(37, 48, 61)), FontWeights.SemiBold);
-        AddText("EMA20", 190, 9, 11, ema20Brush, FontWeights.SemiBold);
-        AddText("EMA50", 242, 9, 11, ema50Brush, FontWeights.SemiBold);
-        const double ema100LegendX = 294;
-        const double ema200LegendX = 354;
-        const double emaLegendStep = ema200LegendX - ema100LegendX;
-        AddText("EMA100", ema100LegendX, 9, 11, ema100Brush, FontWeights.SemiBold);
-        AddText("EMA200", ema200LegendX, 9, 11, ema200Brush, FontWeights.SemiBold);
+        double emaStart = compactEma ? 10 : 190;
+        double emaY = compactEma ? 27 : 9;
+        AddText("EMA20", emaStart, emaY, 11, ema20Brush, FontWeights.SemiBold);
+        AddText("EMA50", emaStart + 52, emaY, 11, ema50Brush, FontWeights.SemiBold);
+        double ema100LegendX = emaStart + 104;
+        double ema200LegendX = emaStart + 164;
+        double emaLegendStep = ema200LegendX - ema100LegendX;
+        AddText("EMA100", ema100LegendX, emaY, 11, ema100Brush, FontWeights.SemiBold);
+        AddText("EMA200", ema200LegendX, emaY, 11, ema200Brush, FontWeights.SemiBold);
         if (_showHoldConfidence)
         {
             // Keep two EMA100-to-EMA200 intervals after EMA200, then place Hold.
             double holdLabelX = ema200LegendX + 2.0 * emaLegendStep;
-            AddHoldConfidenceLegend(holdLabelX + 34.0, 7);
+            AddHoldConfidenceLegend(compactLegend ? 60 : holdLabelX + 34.0, compactLegend ? compactEma ? 46 : 28 : 7);
         }
 
         for (int index = 0; index < _renderedStates.Count; index++)
@@ -261,10 +275,21 @@ internal sealed class FuzzyStateChart : Border
                 Canvas.SetLeft(holdRibbon, X(index) - slotWidth / 2);
                 Canvas.SetTop(holdRibbon, top + priceHeight + 21);
                 _canvas.Children.Add(holdRibbon);
+                double rules2Value = _rules2ByDate.TryGetValue(state.Date, out var rules2Point)
+                    ? rules2Point.Value : double.NaN;
+                var rules2Ribbon = new Rectangle
+                {
+                    Width = Math.Max(1.0, slotWidth + 0.8), Height = 14,
+                    Fill = new SolidColorBrush(ColorForHoldConfidence(rules2Value)),
+                    IsHitTestVisible = false
+                };
+                Canvas.SetLeft(rules2Ribbon, X(index) - slotWidth / 2);
+                Canvas.SetTop(rules2Ribbon, top + priceHeight + 37);
+                _canvas.Children.Add(rules2Ribbon);
             }
 
-            double contangoOffset = _showHoldConfidence ? 37 : 21;
-            double svxyOffset = _showHoldConfidence ? 53 : 37;
+            double contangoOffset = _showHoldConfidence ? 53 : 21;
+            double svxyOffset = _showHoldConfidence ? 69 : 37;
 
             VixCurveStatePoint curve = _renderedContangoStates[index];
             var contangoRibbon = new Rectangle
@@ -295,11 +320,15 @@ internal sealed class FuzzyStateChart : Border
         AddText("Phase", 8, top + priceHeight + 3, 9,
             new SolidColorBrush(Color.FromRgb(90, 92, 95)), FontWeights.Normal);
         if (_showHoldConfidence)
-            AddText("Оценка", 5, top + priceHeight + 19, 9,
+        {
+            AddText("Rules1", 5, top + priceHeight + 19, 9,
                 new SolidColorBrush(Color.FromRgb(90, 92, 95)), FontWeights.SemiBold);
-        AddText("Contango", 2, top + priceHeight + (_showHoldConfidence ? 35 : 19), 9,
+            AddText("Rules2", 5, top + priceHeight + 35, 9,
+                new SolidColorBrush(Color.FromRgb(90, 92, 95)), FontWeights.SemiBold);
+        }
+        AddText("Contango", 2, top + priceHeight + (_showHoldConfidence ? 51 : 19), 9,
             new SolidColorBrush(Color.FromRgb(90, 92, 95)), FontWeights.Normal);
-        AddText("SVXY", 8, top + priceHeight + (_showHoldConfidence ? 51 : 35), 9,
+        AddText("SVXY", 8, top + priceHeight + (_showHoldConfidence ? 67 : 35), 9,
             new SolidColorBrush(Color.FromRgb(90, 92, 95)), FontWeights.Normal);
 
         Brush gridBrush = new SolidColorBrush(Color.FromRgb(224, 216, 196));
@@ -435,9 +464,9 @@ internal sealed class FuzzyStateChart : Border
         string lastText =
             $"Last {last.Date:yyyy-MM-dd}: {FuzzyStatePalette.Label(last.DominantZone)} {last.Confidence:P0}" +
             (_showHoldConfidence
-                ? lastHold is null ? "; оценка н/д" : $"; оценка {lastHold.Value:F0}"
+                ? lastHold is null ? "; оценка н/д" : $"; {lastHold.Model} {(double.IsFinite(lastHold.Value) ? lastHold.Value.ToString("F1") : "н/д") }"
                 : string.Empty);
-        AddRightAlignedText(lastText, right + 3, 27, 11, axisBrush, FontWeights.Normal);
+        AddRightAlignedText(lastText, right + 3, compactLegend ? top - 20 : 27, 11, axisBrush, FontWeights.Normal);
 
         _plotLeft = left;
         _plotTop = top;
@@ -572,49 +601,33 @@ internal sealed class FuzzyStateChart : Border
 
     internal static Color ColorForHoldConfidence(double value)
     {
-        double clamped = Math.Clamp(value, 0.0, 100.0);
-        Color start;
-        Color end;
-        double t;
-        if (clamped <= 50.0)
-        {
-            start = Color.FromRgb(196, 55, 55);
-            end = Color.FromRgb(242, 201, 76);
-            t = clamped / 50.0;
-        }
-        else
-        {
-            start = Color.FromRgb(242, 201, 76);
-            end = Color.FromRgb(24, 128, 64);
-            t = (clamped - 50.0) / 50.0;
-        }
-
-        byte Blend(byte from, byte to) => (byte)Math.Round(from + (to - from) * t);
-        return Color.FromRgb(Blend(start.R, end.R), Blend(start.G, end.G), Blend(start.B, end.B));
+        int band = ScorePalette.Band(value);
+        return band < 0 ? Color.FromRgb(190, 190, 190) : ScoreColors[band];
     }
 
     private void AddHoldConfidenceLegend(double x, double y)
     {
         AddText("Оценка", x - 43, y - 2, 9,
             new SolidColorBrush(Color.FromRgb(90, 92, 95)), FontWeights.SemiBold);
-        const int segments = 20;
+        const int segments = 5;
         const double width = 140.0;
+        double[] boundaries = [0, 30, 45, 55, 70, 100];
         for (int index = 0; index < segments; index++)
         {
-            double value = 100.0 * index / (segments - 1);
+            double value = (boundaries[index] + boundaries[index + 1]) / 2;
             var sample = new Rectangle
             {
-                Width = width / segments + 0.5,
+                Width = width * (boundaries[index + 1] - boundaries[index]) / 100 + 0.5,
                 Height = 9,
                 Fill = new SolidColorBrush(ColorForHoldConfidence(value)),
                 IsHitTestVisible = false
             };
-            Canvas.SetLeft(sample, x + width * index / segments);
+            Canvas.SetLeft(sample, x + width * boundaries[index] / 100);
             Canvas.SetTop(sample, y);
             _canvas.Children.Add(sample);
         }
-        AddText("0", x, y + 9, 8, Brushes.DimGray, FontWeights.Normal);
-        AddText("50", x + width / 2 - 7, y + 9, 8, Brushes.DimGray, FontWeights.Normal);
-        AddText("100", x + width - 15, y + 9, 8, Brushes.DimGray, FontWeights.Normal);
+        string[] labels = ["0", "30", "45", "55", "70", "100"];
+        for (int i = 0; i < labels.Length; i++)
+            AddText(labels[i], x + width * boundaries[i] / 100 - (i == 5 ? 15 : 3), y + 9, 8, Brushes.DimGray, FontWeights.Normal);
     }
 }

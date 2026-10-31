@@ -24,6 +24,12 @@ internal sealed class AtrpChart : Border
     private double _plotHeight;
     private double _horizontalSlots = 1.0;
     private bool _showDateLabels = true;
+    private double _leftMargin = 58;
+    private double _rightMargin = 46;
+    private double? _referenceLevel;
+    private DateTime[]? _masterDates;
+    private DateTime[] _renderedDates = [];
+    private Dictionary<DateTime, TechnicalIndicatorPoint> _byDate = [];
 
     public event Action<DateTime>? CursorDateChanged;
 
@@ -35,7 +41,8 @@ internal sealed class AtrpChart : Border
         Margin = new Thickness(4);
         Padding = new Thickness(2);
         Child = _canvas;
-        SizeChanged += (_, _) => RenderSeries();
+        _canvas.ClipToBounds = true;
+        _canvas.SizeChanged += (_, _) => RenderSeries();
         IsVisibleChanged += (_, _) =>
         {
             if (IsVisible)
@@ -47,6 +54,7 @@ internal sealed class AtrpChart : Border
     public void SetSeries(TechnicalIndicatorSeries? series)
     {
         _series = series;
+        _byDate = series?.Points.ToDictionary(point => point.Date.Date) ?? [];
         if (IsVisible)
             RenderSeries();
     }
@@ -57,6 +65,26 @@ internal sealed class AtrpChart : Border
         _viewportEnd = end;
         if (IsVisible)
             RenderSeries();
+    }
+
+    public void SetMasterDates(IEnumerable<DateTime> dates)
+    {
+        _masterDates = dates.Select(date => date.Date).Distinct().OrderBy(date => date).ToArray();
+        if (IsVisible) RenderSeries();
+    }
+
+    public void SetHorizontalPlotMargins(double left, double right)
+    {
+        if (!double.IsFinite(left) || !double.IsFinite(right) || left < 0 || right < 0) return;
+        _leftMargin = left;
+        _rightMargin = right;
+        if (IsVisible) RenderSeries();
+    }
+
+    public void SetReferenceLevel(double? value)
+    {
+        _referenceLevel = value is double level && double.IsFinite(level) && level >= 0 ? level : null;
+        if (IsVisible) RenderSeries();
     }
 
     public void SetCursorDate(DateTime? date)
@@ -86,6 +114,8 @@ internal sealed class AtrpChart : Border
     {
         _series = null;
         _renderedPoints = [];
+        _renderedDates = [];
+        _byDate.Clear();
         _canvas.Children.Clear();
         AddText("ATRP(1), %", 10, 6, 12, Brushes.Black, FontWeights.SemiBold);
         AddText(message, 10, 31, 11, new SolidColorBrush(Color.FromRgb(95, 97, 100)), FontWeights.Normal);
@@ -95,27 +125,31 @@ internal sealed class AtrpChart : Border
 
     private void RenderSeries()
     {
-        if (_series is null || ActualWidth < 100 || ActualHeight < 70)
-            return;
-
         _canvas.Children.Clear();
         _cursorLine = null;
+        if (_series is null || _canvas.ActualWidth < 100 || _canvas.ActualHeight < 40)
+            return;
         _renderedPoints = _series.Points
             .Where(point => !_viewportStart.HasValue || point.Date >= _viewportStart.Value)
             .Where(point => !_viewportEnd.HasValue || point.Date <= _viewportEnd.Value)
             .ToList();
-        if (_renderedPoints.Count < 2)
+        _renderedDates = (_masterDates ?? _series.Points.Select(point => point.Date.Date).ToArray())
+            .Where(date => !_viewportStart.HasValue || date >= _viewportStart.Value)
+            .Where(date => !_viewportEnd.HasValue || date <= _viewportEnd.Value).ToArray();
+        if (_renderedDates.Length < 2)
             return;
 
-        const double left = 58;
+        double left = _leftMargin;
         const double top = 27;
-        const double right = 46;
+        double right = _rightMargin;
         double bottom = _showDateLabels ? 22 : 8;
-        double width = Math.Max(1.0, ActualWidth - left - right);
-        double height = Math.Max(1.0, ActualHeight - top - bottom);
+        double width = Math.Max(1.0, _canvas.ActualWidth - left - right);
+        double height = Math.Max(1.0, _canvas.ActualHeight - top - bottom);
         double rightAxisX = left + width;
-        double slots = Math.Max(1.0, _renderedPoints.Count - 1 + RightPaddingSlots);
-        double visibleMaximum = _renderedPoints.Max(point => point.Atrp1);
+        double slots = Math.Max(1.0, _renderedDates.Length - 1 + RightPaddingSlots);
+        double visibleMaximum = _renderedPoints.Where(point => double.IsFinite(point.Atrp1))
+            .Select(point => point.Atrp1).DefaultIfEmpty(0).Max();
+        if (_referenceLevel.HasValue) visibleMaximum = Math.Max(visibleMaximum, _referenceLevel.Value);
         double maximum = Math.Max(0.01, visibleMaximum * 1.05);
         double X(int index) => left + width * index / slots;
         double Y(double value) => top + height * (maximum - Math.Clamp(value, 0.0, maximum)) / maximum;
@@ -153,22 +187,34 @@ internal sealed class AtrpChart : Border
             IsHitTestVisible = false
         });
 
-        var line = new Polyline
+        if (_referenceLevel is double reference)
         {
-            Stroke = atrpBrush,
-            StrokeThickness = 1.55,
-            IsHitTestVisible = false
-        };
-        for (int index = 0; index < _renderedPoints.Count; index++)
-            line.Points.Add(new Point(X(index), Y(_renderedPoints[index].Atrp1)));
-        _canvas.Children.Add(line);
+            double y = Y(reference);
+            _canvas.Children.Add(new Line { X1 = left, X2 = rightAxisX, Y1 = y, Y2 = y,
+                Stroke = Brushes.DarkOrange, StrokeThickness = 1, StrokeDashArray = new DoubleCollection { 4, 3 },
+                IsHitTestVisible = false });
+            AddText($"Порог: {reference:0.##}%", Math.Max(left, rightAxisX - 95), 5, 10,
+                Brushes.DarkOrange, FontWeights.Normal);
+        }
+        Polyline? line = null;
+        for (int index = 0; index < _renderedDates.Length; index++)
+        {
+            if (!_byDate.TryGetValue(_renderedDates[index], out TechnicalIndicatorPoint? point) ||
+                !double.IsFinite(point.Atrp1)) { line = null; continue; }
+            if (line is null)
+            {
+                line = new Polyline { Stroke = atrpBrush, StrokeThickness = 1.55, IsHitTestVisible = false };
+                _canvas.Children.Add(line);
+            }
+            line.Points.Add(new Point(X(index), Y(point.Atrp1)));
+        }
 
         if (_showDateLabels)
         {
-            AddText(_renderedPoints[0].Date.ToString("yyyy-MM", CultureInfo.InvariantCulture),
+            AddText(_renderedDates[0].ToString("yyyy-MM", CultureInfo.InvariantCulture),
                 left, top + height + 2, 10, axisBrush, FontWeights.Normal);
-            double lastDataX = X(_renderedPoints.Count - 1);
-            AddText(_renderedPoints[^1].Date.ToString("yyyy-MM", CultureInfo.InvariantCulture),
+            double lastDataX = X(_renderedDates.Length - 1);
+            AddText(_renderedDates[^1].ToString("yyyy-MM", CultureInfo.InvariantCulture),
                 Math.Max(left, lastDataX - 46), top + height + 2, 10, axisBrush, FontWeights.Normal);
         }
 
@@ -182,11 +228,11 @@ internal sealed class AtrpChart : Border
 
     private void ChartMouseMove(object sender, MouseEventArgs e)
     {
-        if (_cursorPinned || _renderedPoints.Count == 0 || _plotWidth <= 0.0)
+        if (_cursorPinned || _renderedDates.Length == 0 || _plotWidth <= 0.0)
             return;
         double relative = Math.Clamp((e.GetPosition(_canvas).X - _plotLeft) / _plotWidth, 0.0, 1.0);
-        int index = Math.Clamp((int)Math.Round(relative * _horizontalSlots), 0, _renderedPoints.Count - 1);
-        CursorDateChanged?.Invoke(_renderedPoints[index].Date);
+        int index = Math.Clamp((int)Math.Round(relative * _horizontalSlots), 0, _renderedDates.Length - 1);
+        CursorDateChanged?.Invoke(_renderedDates[index]);
     }
 
     private void DrawCursorLine()
@@ -194,10 +240,10 @@ internal sealed class AtrpChart : Border
         if (_cursorLine is not null)
             _canvas.Children.Remove(_cursorLine);
         _cursorLine = null;
-        if (!_cursorDate.HasValue || _renderedPoints.Count == 0 || _plotWidth <= 0.0)
+        if (!_cursorDate.HasValue || _renderedDates.Length == 0 || _plotWidth <= 0.0)
             return;
 
-        int index = FindNearestIndex(_renderedPoints, _cursorDate.Value);
+        int index = FindNearestIndex(_renderedDates, _cursorDate.Value);
         double x = _plotLeft + _plotWidth * index / _horizontalSlots;
         _cursorLine = new Line
         {
@@ -214,20 +260,20 @@ internal sealed class AtrpChart : Border
         _canvas.Children.Add(_cursorLine);
     }
 
-    private static int FindNearestIndex(IReadOnlyList<TechnicalIndicatorPoint> points, DateTime date)
+    private static int FindNearestIndex(IReadOnlyList<DateTime> points, DateTime date)
     {
         int low = 0;
         int high = points.Count - 1;
         while (low <= high)
         {
             int middle = low + (high - low) / 2;
-            DateTime candidate = points[middle].Date;
+            DateTime candidate = points[middle];
             if (candidate == date) return middle;
             if (candidate < date) low = middle + 1; else high = middle - 1;
         }
         if (low <= 0) return 0;
         if (low >= points.Count) return points.Count - 1;
-        return Math.Abs((points[low - 1].Date - date).Ticks) <= Math.Abs((points[low].Date - date).Ticks)
+        return Math.Abs((points[low - 1] - date).Ticks) <= Math.Abs((points[low] - date).Ticks)
             ? low - 1 : low;
     }
 

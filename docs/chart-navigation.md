@@ -1,11 +1,47 @@
 # Breeze synchronized chart navigation
 
+## Market Breeze 0.11.0 — approved 29 October 2026
+
+Rules1 and Rules2 ribbons share the master dates and viewport. Both remain
+visible on Fuzzy map; the model selector changes the detailed explanation and
+the named single ribbon on Titanic/Zweig. Rules2 displays its own normalized
+0–100 range; trading uses its original raw thresholds and causal state. Missing
+scores are grey and preserve the previous target. Switching the model and pane
+collapse/restore must preserve dates, viewport and pinned cursor.
+
+Trading Ensemble titles now use 12-point normal text, with a left-hand collapse
+button (▼ expanded, ▶ collapsed). Each collapsed pane occupies one 26-pixel
+header. Remaining panes share the released height in their saved proportions.
+Expanded weights and four collapse flags persist independently. Dividers resize
+adjacent expanded panes and do not begin a horizontal pan. All four headers
+remain usable when every pane is collapsed. These values supersede the old
+14-point semibold title requirement below.
+
+Tab headers have equal compact widths and wrap without expanding to fill a
+whole row. The upper toolbar and the Fuzzy legend wrap when space is limited.
+For full operating details see [market-breeze-rules-switch.md](market-breeze-rules-switch.md).
+
 This document defines the project-specific configuration for the global `$synchronized-chart-navigation` skill. The reusable behavior belongs in the skill; values and component names specific to Breeze belong here.
+
+The accepted presentation values and documented exceptions are collected in
+[ui-standards.md](ui-standards.md). The latest skills/UI audit is
+[review-2026-10-25/skills-and-ui.md](review-2026-10-25/skills-and-ui.md).
 
 ## Current controls
 
 - Default visible range: 200 bars, aligned to the most recent observation.
 - Minimum visible range: 20 bars.
+- Holding either navigation button repeats after 350 ms, then every 100 ms;
+  each repeat uses the same 20-bar step and the existing history bounds.
+- Trading Ensemble Forecast accepts exact integer input (0–100), committed on
+  Enter or focus loss; Escape restores the current value. Its repeat buttons
+  use a 5-day step with the same timing. Calculation waits for 350 ms of quiet.
+- Selecting a Market Setup rule resets all plotted layers to that rule's needs.
+  Manual additions last until the next rule selection. Its cursor description
+  contains only the date and rule value; current series values stay in the footer.
+- Indicator and ATRP plots redraw on the inner Canvas size change, including
+  compact rows below the old 90/70-pixel outer-frame thresholds. Never retain
+  geometry from a previous larger pane or arrange the Canvas manually in tests.
 - Wheel and plus/minus increment: exactly 20 bars per user action. Keep this
   value in the shared `VisibleBarStep` constant; do not duplicate a literal in
   individual chart controls.
@@ -27,9 +63,11 @@ Every horizontal viewport change must be applied to:
 - All breadths Nasdaq-100 SMA(100);
 - the All breadths combined chart and its optional ATRP(1) lower panel;
 - Fuzzy map;
-- Trading Ensemble (SPY/EMA, ensemble percentages, package deciles, and the summed active-decile count);
+- Trading Ensemble (SPY/EMA, ensemble percentages, package deciles, and the selectable active-decile/active-ensemble count);
 - Titanic;
-- Zweig.
+- Sentiment (SPY price/EMA pane and the normalized indicator pane);
+- Zweig;
+- Market Setup (SPY/rule lifecycle pane and the normalized indicator pane).
 - Contango S&P panel (price-only SPY rendering; the VIX term-structure panel follows the shared cursor date but has its own days-to-expiration axis).
 - Contango SVXY and MyRSI panels.
 
@@ -58,12 +96,113 @@ upper two-thirds and MyRSI 14,8 / 10,8 the lower third of the right column.
 MyRSI labels and scale are shown only on the right.
 
 The participating controls are currently updated by `BreezeWindow.ApplyHistoryViewport`.
-The visible tab order is Fuzzy map, Trading Ensemble, All breadths, Contango, Titanic, then Zweig.
-Trading Ensemble calculates ZZ1, ZZ2, and ZZ3 directly from the existing
-`trading_package_Jordan_ZZ1` through `trading_package_Jordan_ZZ3` JBIN/INI
-packages in the selected working directory, using the same feature formulas,
-model classification, Bench ordering, and ten-decile grouping as GPU
-проторговка. It does not create or read a derived ensemble/decile cache.
+The visible tab order is Fuzzy map, Trading Ensemble, All breadths, Contango,
+Titanic, Zweig, Sentiment, then Market Setup.
+The Sentiment tab uses the same SPY price rendering as the other price panes and a
+separate indicator pane. Its current renderer auto-scales the visible selected
+values after clipping to `-1..+1`; clipping of out-of-range source values is an
+open review finding, not a calculation or export rule. Indicator and EMA checkboxes are view-only;
+they select already calculated data and must never request history, recalculate, or export.
+Only CNN Fear Greed is selected by default. The tab exports one combined sentiment
+CSV plus one `Date,Value` CSV per indicator during the main calculation export.
+Market Setup is the rightmost tab. Its left side contains a vertical indicator
+selector, the complete 141-entry research catalogue grouped by family,
+and a resizable description pane. The 86 executable detector names, formulas, definitions,
+lifecycle text, activation, weights, TorchSharp status, unresolved questions,
+and sources are read from the embedded `BreezeRules.json` catalog. The complete
+registry and preserved research records come from `BreezeEventCatalog.json`,
+generated from catalogue v7 and the accepted-model manifest. Its 77 selected /
+34 nonzero research components are distinguished from the DLL's 75 scoring /
+32 nonzero original scoring rules. Eleven additional EMA display states are
+enabled, cached, described and rendered without extending the frozen scoring
+vector. Their permanent numbers are 131–141; bearish bands use a separate
+display direction so boolean values remain 0/1. Research-only entries show definitions, saved outcomes and
+provenance; they have no fabricated dated value, runtime weight or price marker.
+The selected executable rule's dated values come from the same compiled detector used by the event-model
+smoke test; navigation and rule selection only render cached values. Event
+onsets are translucent red markers, persistent signed states are pale green/red
+bands, and R03 additionally shows its R01 waiting state in pale yellow. EMA and
+MyRSI selectors are enabled automatically when the selected detector requires
+them. The bottom value rows show the selected rule and only the checked
+indicators. Its vertical analysis/chart divider and horizontal SPY/indicator
+divider persist as normalized ratios. Two additional visible five-pixel brown
+dividers in eleven-pixel white gutters resize Indicators/Rules/Description
+independently and persist the three column shares. The Indicators column can
+shrink to 52px (checkboxes and color swatches, full names in tooltips); Rules
+can shrink to 110px (permanent number and code, such as `08 T08`). Wider
+columns restore their names. The description can collapse to 0px; the entire
+analysis area can shrink to 200px. Saved ratios must preserve those compact
+positions instead of clamping them back to the former 15%/28% limits.
+Market Setup keeps only MyRSI_rep(14,8) + AGC(77) and
+MyRSI_rep(10,8) + AGC(77); it does not expose the ensemble-only 14,7 variant.
+The selector order follows the ensemble inputs, with ARSI14 and the second
+MyRSI added: CNN Fear Greed, Risk Measure, Panic Euphoria, ARSI14, the two
+MyRSI series, Trend Score, Aroon Up40, Aroon Down48, DI-7/AGC, DI+14/AGC,
+Correlation Angle28/180, Correlation Trend35/AGC, Hurst120 with inverse Fisher,
+CMF80 with inverse Fisher, Decibel96 with inverse Fisher, Jocker, Market Breadth,
+Dumb Money and Smart Money. Jocker uses ZZ1/ZZ2 mode0, window65, EMA3; Market
+Breadth uses VWMA64 and EMA1 for SPY/XLV/XLU/XLE/XLP. DI and Correlation Trend
+use the ensemble's 0.991 decaying peak AGC; the two MyRSI use half-life77.
+The JSON catalog's `detector_descriptions_ru` contains all 75 readable Russian
+detectors. Descriptions use compact bullet headings and show dated evidence.
+Descriptions omit the redundant rule-number/type line and the separate
+"Breeze weights" heading. Instead the three weights appear near the top as
+`Soft`, `Standard`, `Hard`, matching the Phase Map profile names. Beside the
+Rules heading an unchecked-by-default `Активные` checkbox filters to rules
+with any nonzero Breeze profile weight, including negative weights. Empty
+families are omitted; selection is retained if still visible, otherwise the
+first visible rule is selected. Clearing the filter restores the full catalog.
+The filter uses only actual DLL weights; accepted research overlays without a
+runtime detector do not become active merely because they were accepted for research.
+Filtering is view-only and does not modify weights, scoring, dates or inputs.
+T02's compiled fraction is retained, but its green band requires exactly 1
+(all four EMA rising). The cursor reports the count and each daily EMA delta.
+U01 is an event sequence: actual qualifying second exits are red, their prior
+first exits blue, and renewed saturation between them yellow. First-event
+highlighting is retrospective context for a completed sequence; it does not
+change any causal detector or score. Navigation renders only precomputed data.
+Four unchecked-by-default breadth selectors follow EMA: S&P 500 SMA50, SMA100,
+SMA200, and Nasdaq-100 SMA100. They use the existing calculated breadth series
+and render in the lower Market Setup pane. Their shared percentage Y scale is
+on the right and auto-scales from all selected visible breadth values with 5%
+padding (at least 1 percentage point), bounded by 0..100%. Normalized sentiment
+indicators retain an independent left Y scale. With breadths alone the unused
+left axis is hidden; without breadths the existing indicator-only axes remain.
+Adding breadths must not alter indicator Y positions. Both groups use the
+same master date slots, including gaps, viewport and pinned cursor. Breadth
+date indexes are built once when data is assigned; selectors and navigation
+never load providers or calculate/export series. Selected breadth percentages
+also appear in the bottom cursor values.
+ATRP(1) is the final selector in that same lower block, immediately after
+Nasdaq-100 SMA100, rather than a normalized sentiment indicator. It is off by
+default and opens a separate synchronized percentage pane below the existing
+indicator/breadth pane. The pane uses the same master dates, including gaps,
+50px horizontal margins and two right-padding slots. Its visible splitter uses
+the standard 5px strip in an 11px white gutter; the indicator/ATRP ratio is saved
+as `MarketSetupIndicatorsRatio`. Selecting T03 enables all four breadths and
+ATRP alongside EMA, and the ATRP pane shows the existing 2% reference. These
+view actions never change calculations, scoring weights or CSV exports.
+Market Setup removes unused panes and their splitter gutters entirely. With
+EMA only, SPY fills the chart area. Indicators/breadths and ATRP can each be
+shown independently, and three panes appear only when both lower groups are
+selected. Saved top/bottom and indicator/ATRP ratios survive hiding and reopening.
+Selections distinguish manual choices from rule dependencies: T03-to-T01/T04
+removes automatically enabled breadths/ATRP, retaining manually chosen layers.
+Selecting the same rule again preserves manual suppression of its dependencies.
+After a layer/rule change, the layout is measured before one shared viewport
+refresh recalculates visible Y scales against the existing date interval.
+Trading Ensemble calculates nine independently selectable packages directly:
+the original TorchSharp4GPU ZZ1/ZZ2/ZZ3 (`trading_package_Jordan_ZZ1` through
+`trading_package_Jordan_ZZ3`), TorchSharp ZZ1/ZZ2 (`trading_package`, `trading_package_zz2`), Jordan ZZ1/ZZ2
+(`trading_package_J`, `trading_package_zz2_J`), and Encog ZZ1/ZZ2
+(`trading_package`, `trading_package_zz2`). TorchSharp/Jordan and Encog use
+three separate selectable root directories. The three original GPU selectors
+retain their checked defaults; the six added selectors are off by default.
+Checking the six added selectors replaces the former numeric `ALL 6` mode. The calculation uses
+the same feature formulas, per-model classification, Bench ordering, and
+ten-decile grouping as WealthLab проторговка. A broken model is skipped with a
+warning; a missing/broken package is disabled without stopping the other five.
+It does not create or read a derived ensemble/decile cache.
 The main `Calculate 12 years` pass loads SPY but does not run package inference.
 Inference starts once, asynchronously, when the Trading Ensemble tab is first
 opened after SPY is ready; returning to the tab does not rerun it. There is no
@@ -71,23 +210,26 @@ manual recalculate button. The compact read-only working-directory field opens
 a real, lazily populated tree of ready drives and their folders. Expanding a
 node enumerates only its immediate children; never recursively scan an entire
 drive merely to populate the selector.
-Navigation, package visibility, EMA visibility, and scoring-classification
-visibility are view-only and never rerun inference. Ensemble and decile panes
-always retain the green dashed 50% reference. The unchecked-by-default
-`Scoring classification` option applies only the accepted TorchSharp R03 rule:
-when either MyRSI 14,8 or MyRSI 10,8 exits upward from -1, the classification
-threshold jumps from 50 to 70 for five trading bars and then returns to 50 in
-one step. Those 70% intervals are red and dashed. Rejected or not-yet-enabled
-events do not affect this line. Raw MyRSI curves and vertical event marks are
-not drawn here. When the option is enabled, the active-decile panel counts
-deciles against that exact daily R03 threshold; otherwise it counts against 50.
-Its vertical range uses the exact visible finite minimum and maximum without
-padding; a constant series is centered without inventing false neighboring
-values, and the latest finite count is shown as `Last: N`. The missing future
-slot is not treated as a zero count.
+Navigation, package visibility, EMA visibility, and the active-series mode are
+view-only and never rerun inference. Ensemble and decile panes always retain
+the green dashed 50% reference. Scoring classification is disabled and has no
+toolbar control. The unchecked-by-default `Ensembles` option changes only the
+fourth pane: unchecked, it sums selected packages' deciles at or above 50 and
+uses the available decile count as the percentage denominator; checked, it
+counts selected packages whose Ensemble % is at or above 50 and uses all nine
+defined packages as the percentage denominator. The title switches between
+`Active Deciles` and `Active Ensembles`. Ensemble mode uses the fixed vertical
+range 0..9. Decile mode retains the exact visible finite range without padding;
+a constant series is centered without inventing false neighboring values. The
+latest finite value is shown as `Last: N (P.P%)`, with one decimal place. The
+missing future slot is not treated as a zero count.
 Trading-ensemble pane titles are drawn inside their panes in the same visual
-style as the Contango chart titles. Its white toolbar contains the working
-directory, S&P 500, ZZ1, ZZ2, ZZ3, EMA, and Scoring classification selectors.
+style as the Contango chart titles. Its white toolbar contains the three compact
+TorchSharp4GPU/TorchSharp/Encog directory selectors followed by their 3/4/2 package
+selectors, the unlabeled `− value +` Forecast control, and short `EMA` and `Ensembles`
+checkbox labels. The duplicate local S&P 500 selector, working-directory
+caption, and local green calculation status are intentionally absent; the global
+price selector and the window's top status line remain authoritative.
 The chart surface is white, and every one of its four panes is a separate ivory
 `#FFFCF4` card with a thin one-pixel `#CDC3AB` frame extending around the full
 pane, including its scale-label area. The multi-pane control itself has no
@@ -129,9 +271,10 @@ are the combined minimum and maximum, while the yellow center is the average
 0% scenario across the selected packages. A dedicated toolbar status reports
 Forecast progress and completion; results from a cancelled older generation
 must never replace a newer calculation.
-The same layout file stores all seven user-adjustable divider positions: Fuzzy,
-the three Trading Ensemble pane boundaries, All breadths/ATRP, and the vertical
-and horizontal Contango proportions. Values are normalized ratios rather than
+The same layout file stores every user-adjustable divider position: Fuzzy, the
+three Trading Ensemble pane boundaries, All breadths/ATRP, both Full-grid
+boundaries, the vertical and horizontal Contango proportions, Titanic, Zweig,
+Sentiment, and both Market Setup boundaries. Values are normalized ratios rather than
 pixels, are saved when dragging ends and again when the window unloads, and are
 written through a temporary file before atomic replacement.
 Fuzzy map reserves the left one-quarter column for a compact cursor-date market
@@ -184,8 +327,9 @@ depends on the Contango tab remaining selected.
 
 ## Cursor synchronization
 
-`BreadthChart`, `AtrpChart`, `FuzzyStateChart`, `TitanicChart`, `ZweigChart`, and
-`TradingEnsembleChart` publish cursor-date changes to the common
+`BreadthChart` (including the Market Setup price pane), `AtrpChart`,
+`FuzzyStateChart`, `TitanicChart`, `SentimentChart`,
+`ZweigChart`, and `TradingEnsembleChart` publish cursor-date changes to the common
 `BreezeWindow.UpdateCursorValues` path. The cursor date and bottom value rows must
 remain synchronized when moving between charts and tabs.
 
@@ -222,8 +366,10 @@ Horizontal ranges are shared. Vertical scales and left/right axes remain chart-s
 - `Breeze/AtrpChart.cs`: All breadths ATRP(1) viewport and cursor rendering.
 - `Breeze/FuzzyStateChart.cs`: Fuzzy viewport and cursor rendering.
 - `Breeze/TitanicChart.cs`: Titanic viewport and cursor rendering.
+- `Breeze/SentimentChart.cs`: normalized multi-indicator viewport and cursor rendering.
+- `Breeze/SentimentIndicators.cs`: Futures-default formulas and aligned sentiment data.
 - `Breeze/ZweigChart.cs`: Zweig viewport and cursor rendering.
-- `Breeze/TradingEnsembleChart.cs`: trading-ensemble panes, static 50% reference, and active-decile count.
+- `Breeze/TradingEnsembleChart.cs`: trading-ensemble panes, static 50% reference, and active-decile/active-ensemble count.
 - `Breeze/TradingEnsembleData.cs`: in-memory ZZ1/ZZ2/ZZ3 chart records.
 - `Breeze/TradingEnsembleInference.cs`: direct read-only JBIN/INI inference matching GPU проторговка.
 
@@ -270,10 +416,12 @@ Horizontal ranges are shared. Vertical scales and left/right axes remain chart-s
     the adjacent panes, and never pans the shared time viewport.
 18. The Trading Ensemble directory button opens a folder tree that can browse
     beyond the default path without a recursive whole-drive enumeration.
-19. With `Scoring classification` off, both threshold guides and active-decile
-    counts use 50. With it on, only R03 may replace the daily threshold with 70
-    for five bars; the same dates must be red-dashed in both percentage panes
-    and must drive the active-decile count. The green 50 guide remains visible.
+19. With `Ensembles` off, the fourth pane is `Active Deciles` and `Last` contains
+    the count plus its percentage of available selected-package deciles. With it
+    on, the pane is `Active Ensembles`, uses the fixed 0..9 scale, counts selected
+    package Ensemble % values at or above 50, and reports the percentage of all
+    nine defined packages. Toggling must not rerun inference or alter the shared
+    viewport. The green 50 guides remain visible in both percentage panes.
 20. Every Trading Ensemble pane matches the Contango axis treatment: a dark
     right-axis line, 10-point labels in the same color, and right padding before
     the last bar. Its S&P header contains both `S&P 500 (SPY)` and the latest
@@ -282,3 +430,22 @@ Horizontal ranges are shared. Vertical scales and left/right axes remain chart-s
     standard `minus / visible bars / plus / history slider / date range` group
     remains identical to every other tab. Selecting another tab restores the
     two cursor-value rows.
+22. Sentiment opens with only CNN Fear Greed selected. Its SPY and indicator
+    panes share the same dates and cursor as every other tab; changing any
+    Sentiment checkbox is view-only. The exported combined file and twenty
+    individual files contain the same precomputed values drawn on the chart.
+23. Market Setup is the final rightmost tab. Selecting any of its 75 JSON-backed
+    rules updates the description, lifecycle overlay, automatically required
+    EMA/MyRSI layers, and cursor value without recalculation or provider access.
+24. In All breadths `Full` mode, drag both the vertical and horizontal visible
+    splitters. The four panels must resize in both directions and preserve the
+    resulting proportions after reopening Breeze.
+25. Market Setup's internal column dividers resize without chart panning;
+    compact Russian explanations retain readable wrapped indicator labels.
+    T02 at 2026-03-12 reports one rising EMA out of four without an all-rising
+    green band. U01 shows the two exit dates and the intermediate saturation.
+26. Collapse Market Setup to checkbox-only indicators, code-only rules and a
+    hidden description; reopening must retain the compact column widths.
+    Select each of the four breadths after EMA and combine them with MyRSI:
+    percentages use the right axis, normalized indicators the left, with
+    unchanged indicator coordinates and date-aligned gaps and cursor.

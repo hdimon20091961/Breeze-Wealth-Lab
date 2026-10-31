@@ -2,12 +2,14 @@ using System.Text.Json;
 using BreezeHoldPosition.Strategies;
 using M = BreezeHoldPosition.Strategies.BreezeEventModelNew;
 
-var output = Path.GetFullPath(args.Length > 0 ? args[0] : "research/artifacts/event-model-new-validation");
+var output = Path.GetFullPath(args.Length > 0 ? args[0] : "tests/outputs/event-model");
 Directory.CreateDirectory(output);
 int checks = 0;
 void Check(bool valid, string name) { checks++; if (!valid) throw new Exception("FAILED: " + name); }
 void Equal(double a, double b, string name) => Check((double.IsNaN(a) && double.IsNaN(b)) || Math.Abs(a-b) <= 1e-10, name);
-var rows = M.Load(@"D:\fear_greed_close\Breeze", @"D:\fear_greed_close\vix_term_structure.csv");
+string dataDirectory = args.ElementAtOrDefault(1) ?? @"D:\fear_greed_close\Breeze";
+string curvePath = args.ElementAtOrDefault(2) ?? @"D:\fear_greed_close\vix_term_structure.csv";
+var rows = M.Load(dataDirectory, curvePath);
 M.Build(rows);
 var weights = M.Features.Select(f => f.Weight).ToArray();
 var researchWeights = M.Features.Select(f => M.ResearchWeight(f.Id)).ToArray();
@@ -29,7 +31,27 @@ Check(new[]{softWeights,standardWeights,strongWeights}.All(w=>M.Features.Select(
 int spxExpirationIndex=Array.FindIndex(M.Features,f=>f.Id=="U03");
 Check(spxExpirationIndex>=0&&new[]{softWeights,standardWeights,strongWeights}.All(w=>w[spxExpirationIndex]==0),"SPX expiration remains research-only with zero profile weight");
 Check(rows.Single(r=>r.Date==new DateTime(2025,4,17)).Get("U03")==1,"Good Friday SPX expiration adjusts to Thursday");
-Check(rows.Count(r=>r.Get("U03")==1)==144,"144 adjusted monthly SPX expirations in loaded history");
+// A rolling twelve-year export changes its endpoints; 144 is not a stable
+// invariant. Check every completed monthly expiry against the loaded calendar.
+var expectedExpirations = new HashSet<DateTime>();
+for (DateTime month = new(rows[0].Date.Year, rows[0].Date.Month, 1);
+     month <= rows[^1].Date; month = month.AddMonths(1))
+{
+    DateTime thirdFriday = month.AddDays(((int)DayOfWeek.Friday - (int)month.DayOfWeek + 7) % 7 + 14);
+    if (thirdFriday < rows[0].Date || thirdFriday > rows[^1].Date) continue;
+    DateTime expected = rows.Where(row => row.Date <= thirdFriday && row.Date >= month).Max(row => row.Date);
+    // Calendar features share the data-completeness guard with other features;
+    // they can be computed before the later 252-bar trading readiness gate.
+    if (double.IsFinite(rows.Single(row => row.Date == expected).Get("T01")))
+        expectedExpirations.Add(expected);
+}
+var actualExpirations = rows.Where(row => row.Get("U03") == 1).Select(row => row.Date).ToHashSet();
+Console.WriteLine($"Expiration diagnostic: expected {expectedExpirations.Count}, actual {actualExpirations.Count}; " +
+                  $"missing {string.Join(",", expectedExpirations.Except(actualExpirations).Select(date => date.ToString("yyyy-MM-dd")))}; " +
+                  $"extra {string.Join(",", actualExpirations.Except(expectedExpirations).Select(date => date.ToString("yyyy-MM-dd")))}");
+Check(actualExpirations.SetEquals(expectedExpirations),
+    "monthly SPX expirations match the available dated trading calendar");
+Console.WriteLine($"Input calendar: {rows[0].Date:yyyy-MM-dd}..{rows[^1].Date:yyyy-MM-dd}; monthly expirations {expectedExpirations.Count}.");
 double ProxyProfit(double[] profile)
 {
     double cash=3000; int held=0, next=0;
@@ -79,7 +101,7 @@ foreach (int i in Enumerable.Range(0,rows.Count).Where(i=>rows[i].Ready))
 // Append-future invariance: recompute from independently loaded prefixes.
 foreach (int length in new[] { 21, 30, 50, 100, 200, 250, 270, 650, 1250, rows.Count-30 })
 {
-    var prefix = M.Load(@"D:\fear_greed_close\Breeze", @"D:\fear_greed_close\vix_term_structure.csv").Take(length).ToList();
+    var prefix = M.Load(dataDirectory, curvePath).Take(length).ToList();
     M.Build(prefix);
     var ps = M.Score(prefix, weights, 50, 0.6);
     var fs = M.Score(rows,weights,50,0.6);

@@ -4,13 +4,92 @@
     xmlns:wpf="clr-namespace:WealthLab.WPF;assembly=WealthLab.WPF"
     xmlns:local="clr-namespace:BreezeVL"
     Background="{DynamicResource BlueBackground}">
+    <wpf:ChildWindow.Resources>
+        <Style x:Key="ScoreModelSelectorStyle" TargetType="RadioButton">
+            <Setter Property="Margin" Value="0,0,12,0"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="RadioButton">
+                        <StackPanel Orientation="Horizontal" Background="Transparent">
+                            <Border Width="15" Height="15" BorderBrush="#7C8894" BorderThickness="1" Background="White" VerticalAlignment="Center">
+                                <Path x:Name="CheckMark" Data="M 2,6 L 5,9 L 11,2" Stroke="#22623D" StrokeThickness="2"
+                                      Visibility="Hidden" Margin="1"/>
+                            </Border>
+                            <ContentPresenter Margin="5,0,0,0" VerticalAlignment="Center" RecognizesAccessKey="True"/>
+                        </StackPanel>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True"><Setter TargetName="CheckMark" Property="Visibility" Value="Visible"/></Trigger>
+                            <Trigger Property="IsEnabled" Value="False"><Setter Property="Opacity" Value="0.5"/></Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <DataTemplate x:Key="MarketSetupCompactToggleTemplate">
+            <Line X1="0" X2="8" Y1="6" Y2="6" Width="8" Height="12"
+                  Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=CheckBox}}"
+                  StrokeThickness="2.2">
+                <Line.Style>
+                    <Style TargetType="Line">
+                        <Setter Property="Opacity" Value="0.38"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsChecked, RelativeSource={RelativeSource AncestorType=CheckBox}}" Value="True">
+                                <Setter Property="Opacity" Value="1"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Line.Style>
+            </Line>
+        </DataTemplate>
+        <DataTemplate x:Key="SentimentIndicatorToggleTemplate">
+            <DockPanel VerticalAlignment="Center">
+                <Line X1="0" X2="9" Y1="6" Y2="6" Width="9" Height="12"
+                      DockPanel.Dock="Left"
+                      Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=CheckBox}}"
+                      StrokeThickness="2.2" VerticalAlignment="Center">
+                    <Line.Style>
+                        <Style TargetType="Line">
+                            <Setter Property="Opacity" Value="0.38"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsChecked, RelativeSource={RelativeSource AncestorType=CheckBox}}"
+                                             Value="True">
+                                    <Setter Property="Opacity" Value="1"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Line.Style>
+                </Line>
+                <TextBlock Text="{Binding}" TextWrapping="Wrap" Foreground="#202326" Margin="2,0,0,0" VerticalAlignment="Center">
+                    <TextBlock.Style>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="FontWeight" Value="Normal"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsChecked, RelativeSource={RelativeSource AncestorType=CheckBox}}"
+                                             Value="True">
+                                    <Setter Property="FontWeight" Value="SemiBold"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
+                </TextBlock>
+            </DockPanel>
+        </DataTemplate>
+        <Style x:Key="SentimentIndicatorToggleStyle" TargetType="CheckBox">
+            <Setter Property="ContentTemplate" Value="{StaticResource SentimentIndicatorToggleTemplate}"/>
+            <Setter Property="Margin" Value="0,0,4,0"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="ToolTipService.InitialShowDelay" Value="250"/>
+            <Setter Property="ToolTipService.ShowDuration" Value="30000"/>
+        </Style>
+    </wpf:ChildWindow.Resources>
     <DockPanel Background="{DynamicResource ContainerBackground}">
-        <Grid DockPanel.Dock="Top" Margin="8">
+        <Grid DockPanel.Dock="Top" Margin="8,6" ClipToBounds="True">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="180"/>
                 <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="180"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="Auto"/>
@@ -20,10 +99,12 @@
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
-            <TextBlock Text="S&amp;P DataSet:" VerticalAlignment="Center" Margin="0,0,6,0"/>
-            <ComboBox x:Name="SpDataSet" Grid.Column="1" Margin="0,0,12,0" DisplayMemberPath="QualifiedName"/>
-            <TextBlock Grid.Column="2" Text="Nasdaq-100 DataSet:" VerticalAlignment="Center" Margin="0,0,6,0"/>
-            <ComboBox x:Name="NasdaqDataSet" Grid.Column="3" Margin="0,0,12,0" DisplayMemberPath="QualifiedName"/>
+            <ComboBox x:Name="SpDataSet" Grid.Column="0" Visibility="Collapsed" DisplayMemberPath="QualifiedName"/>
+            <ComboBox x:Name="NasdaqDataSet" Grid.Column="1" Visibility="Collapsed" DisplayMemberPath="QualifiedName"/>
+            <RadioButton x:Name="Rules1Selector" Grid.Column="2" Content="Rules1" IsChecked="True"
+                         Style="{StaticResource ScoreModelSelectorStyle}" Checked="ScoreModelChanged"/>
+            <RadioButton x:Name="Rules2Selector" Grid.Column="3" Content="Rules2"
+                         Style="{StaticResource ScoreModelSelectorStyle}" Checked="ScoreModelChanged"/>
             <Button x:Name="RefreshButton" Grid.Column="4" Content="Recalculate" MinWidth="108" Padding="14,4"
                     Background="#BFE8C5" Foreground="#173B20" FontWeight="SemiBold" Click="RefreshClick"/>
             <CheckBox x:Name="ShowSp500Price" Grid.Column="5" Margin="12,0,0,0" VerticalAlignment="Center"
@@ -40,7 +121,7 @@
                       Checked="ShowFuzzyZonesChanged" Unchecked="ShowFuzzyZonesChanged"/>
             <Button Grid.Column="10" Margin="12,0,0,0" Padding="9,3" Content="? Help" Click="HelpClick"/>
             <TextBlock x:Name="StatusText" Grid.Column="11" Margin="12,0,0,0" VerticalAlignment="Center"
-                       TextTrimming="CharacterEllipsis"
+                       MinWidth="0" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"
                        ToolTipService.InitialShowDelay="350" ToolTipService.ShowDuration="60000"/>
         </Grid>
         <DockPanel>
@@ -60,11 +141,11 @@
                            Text="EMA and MyRSI_rep + AGC values will appear here"
                            TextWrapping="NoWrap" Margin="0,1,12,0"/>
                 <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
-                    <Button Content="−" Width="26" Height="22" Margin="0,0,2,0"
+                    <RepeatButton Content="−" Delay="350" Interval="100" Width="26" Height="22" Margin="0,0,2,0"
                             ToolTip="Show 20 fewer bars" Click="DecreaseVisibleBarsClick"/>
                     <TextBlock x:Name="VisibleBarsText" Text="200 bars" Width="60"
                                TextAlignment="Center" VerticalAlignment="Center"/>
-                    <Button Content="+" Width="26" Height="22" Margin="2,0,6,0"
+                    <RepeatButton Content="+" Delay="350" Interval="100" Width="26" Height="22" Margin="2,0,6,0"
                             ToolTip="Show 20 more bars" Click="IncreaseVisibleBarsClick"/>
                     <Slider x:Name="HistorySlider" Width="280" Minimum="0" Maximum="0"
                             VerticalAlignment="Center" IsMoveToPointEnabled="True"
@@ -78,11 +159,19 @@
                         PreviewMouseMove="ChartsMouseMove"
                         PreviewMouseLeftButtonUp="ChartsMouseLeftButtonUp"
                         Margin="4,0,4,0" SelectedIndex="0">
+                <TabControl.Template>
+                    <ControlTemplate TargetType="TabControl">
+                        <DockPanel>
+                            <WrapPanel DockPanel.Dock="Top" IsItemsHost="True" KeyboardNavigation.TabIndex="1"/>
+                            <ContentPresenter x:Name="PART_SelectedContentHost" ContentSource="SelectedContent"/>
+                        </DockPanel>
+                    </ControlTemplate>
+                </TabControl.Template>
                 <TabItem x:Name="OverviewTab">
                     <TabItem.Header>
-                        <TextBlock Text="All breadths" Width="160" TextAlignment="Center"/>
+                        <TextBlock Text="All breadths" Width="112" TextAlignment="Center"/>
                     </TabItem.Header>
-                    <Grid Background="#FFFCF4">
+                    <Grid Background="White">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="*"/>
@@ -116,12 +205,26 @@
                                       Checked="OverviewIndicatorChanged" Unchecked="OverviewIndicatorChanged"/>
                         </StackPanel>
                         <Grid x:Name="OverviewFullGrid" Grid.Row="1">
-                            <Grid.RowDefinitions><RowDefinition/><RowDefinition/></Grid.RowDefinitions>
-                            <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition/></Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition x:Name="OverviewFullTopRow" Height="*" MinHeight="90"/>
+                                <RowDefinition Height="11"/>
+                                <RowDefinition x:Name="OverviewFullBottomRow" Height="*" MinHeight="90"/>
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition x:Name="OverviewFullLeftColumn" Width="*" MinWidth="180"/>
+                                <ColumnDefinition Width="11"/>
+                                <ColumnDefinition x:Name="OverviewFullRightColumn" Width="*" MinWidth="180"/>
+                            </Grid.ColumnDefinitions>
                             <local:BreadthChart x:Name="Sp50Chart"/>
-                            <local:BreadthChart x:Name="Sp100Chart" Grid.Column="1"/>
-                            <local:BreadthChart x:Name="Sp200Chart" Grid.Row="1"/>
-                            <local:BreadthChart x:Name="Nasdaq100Chart" Grid.Row="1" Grid.Column="1"/>
+                            <local:BreadthChart x:Name="Sp100Chart" Grid.Column="2"/>
+                            <local:BreadthChart x:Name="Sp200Chart" Grid.Row="2"/>
+                            <local:BreadthChart x:Name="Nasdaq100Chart" Grid.Row="2" Grid.Column="2"/>
+                            <GridSplitter x:Name="OverviewFullHorizontalSplitter" Grid.Row="1" Grid.ColumnSpan="3"
+                                          Height="5" HorizontalAlignment="Stretch" VerticalAlignment="Center"
+                                          Background="#D7CFBB" DragCompleted="LayoutSplitterDragCompleted"/>
+                            <GridSplitter x:Name="OverviewFullVerticalSplitter" Grid.Column="1" Grid.RowSpan="3"
+                                          Width="5" HorizontalAlignment="Center" VerticalAlignment="Stretch"
+                                          Background="#D7CFBB" DragCompleted="LayoutSplitterDragCompleted"/>
                         </Grid>
                         <Grid x:Name="OverviewIndividualGrid" Grid.Row="1" Visibility="Collapsed">
                             <Grid.RowDefinitions>
@@ -139,7 +242,7 @@
                 </TabItem>
                 <TabItem x:Name="TitanicTab">
                     <TabItem.Header>
-                        <TextBlock Text="Titanic" Width="160" TextAlignment="Center"/>
+                        <TextBlock Text="Titanic" Width="112" TextAlignment="Center"/>
                     </TabItem.Header>
                     <DockPanel Background="White">
                         <StackPanel DockPanel.Dock="Top" Background="White" Orientation="Horizontal" HorizontalAlignment="Center" Margin="6,4,6,0">
@@ -165,9 +268,90 @@
                         <local:TitanicChart x:Name="TitanicChart"/>
                     </DockPanel>
                 </TabItem>
+                <TabItem x:Name="SentimentTab">
+                    <TabItem.Header>
+                        <TextBlock Text="Sentiment" Width="112" TextAlignment="Center"/>
+                    </TabItem.Header>
+                    <Grid Background="White">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        <Border Grid.Row="0" Background="White" BorderBrush="#D7CFBB"
+                                BorderThickness="0,0,0,1" Padding="8,4,8,4">
+                            <WrapPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                <CheckBox x:Name="SentimentCnnFearGreed" Content="CNN Fear Greed" IsChecked="True"
+                                          Foreground="#235C9E" Style="{StaticResource SentimentIndicatorToggleStyle}"
+                                          ToolTip="CNN Fear Greed — normalized to −1…+1"
+                                          Checked="SentimentOptionsChanged" Unchecked="SentimentOptionsChanged"/>
+                                <CheckBox x:Name="SentimentRiskMeasure" Content="Risk Measure" IsChecked="False"
+                                          Foreground="#C43636" Style="{StaticResource SentimentIndicatorToggleStyle}"
+                                          ToolTip="Risk Measure — normalized to −1…+1"
+                                          Checked="SentimentOptionsChanged" Unchecked="SentimentOptionsChanged"/>
+                                <CheckBox x:Name="SentimentPanicEuphoria" Content="Panic Euphoria" IsChecked="False"
+                                          Foreground="#7E4BAE" Style="{StaticResource SentimentIndicatorToggleStyle}"
+                                          ToolTip="Panic Euphoria — normalized to −1…+1"
+                                          Checked="SentimentOptionsChanged" Unchecked="SentimentOptionsChanged"/>
+                                <CheckBox x:Name="SentimentArsi" Content="ARSI" IsChecked="False"
+                                          Foreground="#17897E" Style="{StaticResource SentimentIndicatorToggleStyle}"
+                                          ToolTip="ARSI(Close, 14) — normalized as (ARSI − 50) / 50"
+                                          Checked="SentimentOptionsChanged" Unchecked="SentimentOptionsChanged"/>
+                                <CheckBox x:Name="SentimentMyRsi" Content="MyRSI 14,8" IsChecked="False"
+                                          Foreground="#2D4E70" Style="{StaticResource SentimentIndicatorToggleStyle}"
+                                          Checked="SentimentOptionsChanged" Unchecked="SentimentOptionsChanged"/>
+                                <CheckBox x:Name="SentimentTrendScore" Content="Trend Score" IsChecked="False"
+                                          Foreground="#D67E16" Style="{StaticResource SentimentIndicatorToggleStyle}"
+                                          ToolTip="Trend Score"
+                                          Checked="SentimentOptionsChanged" Unchecked="SentimentOptionsChanged"/>
+                                <CheckBox x:Name="SentimentHurst" Content="Hurst" IsChecked="False"
+                                          Foreground="#626A74" Style="{StaticResource SentimentIndicatorToggleStyle}"
+                                          ToolTip="Hurst"
+                                          Checked="SentimentOptionsChanged" Unchecked="SentimentOptionsChanged"/>
+                                <CheckBox x:Name="SentimentCmf" Content="CMF" IsChecked="False"
+                                          Foreground="#228B45" Style="{StaticResource SentimentIndicatorToggleStyle}"
+                                          ToolTip="CMF — Chaikin Money Flow"
+                                          Checked="SentimentOptionsChanged" Unchecked="SentimentOptionsChanged"/>
+                                <CheckBox x:Name="SentimentDecibel" Content="Decibel" IsChecked="False"
+                                          Foreground="#B3428A" Style="{StaticResource SentimentIndicatorToggleStyle}"
+                                          ToolTip="Decibel"
+                                          Checked="SentimentOptionsChanged" Unchecked="SentimentOptionsChanged"/>
+                                <CheckBox x:Name="SentimentJocker" Content="Jocker" IsChecked="False"
+                                          Foreground="#7A582C" Style="{StaticResource SentimentIndicatorToggleStyle}"
+                                          ToolTip="Jocker — ZZ1: EMA 3, High/Low 65, directional mode"
+                                          Checked="SentimentOptionsChanged" Unchecked="SentimentOptionsChanged"/>
+                                <CheckBox x:Name="SentimentMarketBreadth" Content="Market Breadth" IsChecked="False"
+                                          Foreground="#2B7B92" Style="{StaticResource SentimentIndicatorToggleStyle}"
+                                          ToolTip="Market Breadth"
+                                          Checked="SentimentOptionsChanged" Unchecked="SentimentOptionsChanged"/>
+                                <CheckBox x:Name="SentimentDumbMoney" Content="Dumb Money" IsChecked="False"
+                                          Foreground="#C2661C" Style="{StaticResource SentimentIndicatorToggleStyle}"
+                                          ToolTip="Dumb Money — normalized from 0…1 to −1…+1"
+                                          Checked="SentimentOptionsChanged" Unchecked="SentimentOptionsChanged"/>
+                                <CheckBox x:Name="SentimentSmartMoney" Content="Smart Money" IsChecked="False"
+                                          Foreground="#1B7E41" Style="{StaticResource SentimentIndicatorToggleStyle}"
+                                          ToolTip="Smart Money — normalized from 0…1 to −1…+1"
+                                          Checked="SentimentOptionsChanged" Unchecked="SentimentOptionsChanged"/>
+                                <CheckBox x:Name="SentimentEma" Content="EMA 20/50/100/200" IsChecked="False"
+                                          Foreground="#4B4E52"
+                                          Checked="SentimentOptionsChanged" Unchecked="SentimentOptionsChanged"/>
+                            </WrapPanel>
+                        </Border>
+                        <Grid Grid.Row="1">
+                            <Grid.RowDefinitions>
+                                <RowDefinition x:Name="SentimentTopRow" Height="2*" MinHeight="110"/>
+                                <RowDefinition Height="11"/>
+                                <RowDefinition x:Name="SentimentBottomRow" Height="*" MinHeight="90"/>
+                            </Grid.RowDefinitions>
+                            <local:BreadthChart x:Name="SentimentSpChart" Grid.Row="0"/>
+                            <GridSplitter x:Name="SentimentSplitter" Grid.Row="1" Height="5" HorizontalAlignment="Stretch" VerticalAlignment="Center"
+                                          Background="#D7CFBB" DragCompleted="LayoutSplitterDragCompleted"/>
+                            <local:SentimentChart x:Name="SentimentIndicatorChart" Grid.Row="2"/>
+                        </Grid>
+                    </Grid>
+                </TabItem>
                 <TabItem x:Name="FuzzyTab">
                     <TabItem.Header>
-                        <TextBlock Text="Fuzzy map" Width="160" TextAlignment="Center"/>
+                        <TextBlock Text="Fuzzy map" Width="112" TextAlignment="Center"/>
                     </TabItem.Header>
                     <Grid Background="White">
                         <Grid.RowDefinitions>
@@ -179,7 +363,7 @@
                             <ColumnDefinition Width="5"/>
                             <ColumnDefinition x:Name="FuzzyChartColumn" Width="3*" MinWidth="320"/>
                         </Grid.ColumnDefinitions>
-                        <StackPanel Grid.Row="0" Grid.ColumnSpan="3" Background="White" Orientation="Horizontal" HorizontalAlignment="Center" Margin="6,4,6,0">
+                        <WrapPanel Grid.Row="0" Grid.ColumnSpan="3" Background="White" HorizontalAlignment="Stretch" Margin="6,4,6,0">
                                 <TextBlock Text="Phase:" VerticalAlignment="Center" FontWeight="SemiBold"/>
                                 <Border Width="14" Height="14" Background="#188040" Margin="8,0,3,0"/>
                                 <TextBlock Text="Strong buy" VerticalAlignment="Center"/>
@@ -209,10 +393,10 @@
                                 <TextBlock Text="Buy / hold" VerticalAlignment="Center"/>
                                 <Border Width="14" Height="14" Background="#D3EEF8" Margin="8,0,3,0"/>
                                 <TextBlock Text="Extended hold" VerticalAlignment="Center"/>
-                                <CheckBox x:Name="FuzzyShowHold" Content="Оценка" IsChecked="True"
+                                <CheckBox x:Name="FuzzyShowHold" Content="Оценки" IsChecked="True"
                                           Margin="18,0,0,0" VerticalAlignment="Center"
                                           Checked="HoldVisibilityChanged" Unchecked="HoldVisibilityChanged"/>
-                        </StackPanel>
+                        </WrapPanel>
                         <Border x:Name="FuzzyAnalysisPanel" Grid.Row="1" Grid.Column="0" Margin="5,4,2,4" Padding="12,10"
                                 Background="#F6F9FC" BorderBrush="#C7D3DF" BorderThickness="1"
                                 CornerRadius="4">
@@ -304,7 +488,7 @@
                 </TabItem>
                 <TabItem x:Name="TradingEnsemblesTab">
                     <TabItem.Header>
-                        <TextBlock Text="Trading Ensemble" Width="160" TextAlignment="Center"/>
+                        <TextBlock Text="Trading Ensemble" Width="112" TextAlignment="Center"/>
                     </TabItem.Header>
                     <Grid Background="White">
                         <Grid.RowDefinitions>
@@ -313,58 +497,118 @@
                         </Grid.RowDefinitions>
                         <Border Grid.Row="0" Background="White" BorderBrush="#D7CFBB" BorderThickness="0,0,0,1" Padding="10,5,8,5">
                           <WrapPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center">
-                            <TextBlock Text="Рабочая директория:" VerticalAlignment="Center" Margin="0,0,6,0"/>
-                            <Grid Width="180" Height="24" Margin="0,0,18,0">
-                                <TextBox x:Name="TradingEnsembleDirectory" Text="D:\TorchSharp4GPU" IsReadOnly="True"
+                            <Grid Width="136" Height="24" Margin="0,0,8,0" ToolTip="Корневая директория прежних ансамблей TorchSharp4GPU">
+                                <TextBox x:Name="TradingGpuDirectory" Text="D:\TorchSharp4GPU" IsReadOnly="True"
                                          Padding="4,2,28,2" VerticalContentAlignment="Center"/>
-                                <Button x:Name="TradingDirectoryButton" Content="▼" Width="25" Height="22"
-                                        HorizontalAlignment="Right" VerticalAlignment="Center"
-                                        ToolTip="Выбрать рабочую директорию"
-                                        Click="OpenTradingDirectoryTreeClick"/>
-                                <Popup x:Name="TradingDirectoryPopup" Placement="Bottom"
-                                       PlacementTarget="{Binding ElementName=TradingEnsembleDirectory}"
-                                       StaysOpen="False" AllowsTransparency="True">
+                                <Button Content="▼" Width="25" Height="22" HorizontalAlignment="Right" VerticalAlignment="Center"
+                                        ToolTip="Выбрать директорию TorchSharp4GPU" Click="OpenTradingGpuDirectoryTreeClick"/>
+                                <Popup x:Name="TradingGpuDirectoryPopup" Placement="Bottom"
+                                       PlacementTarget="{Binding ElementName=TradingGpuDirectory}" StaysOpen="False" AllowsTransparency="True">
                                     <Border Width="430" Height="420" Background="White" BorderBrush="#8A8170"
                                             BorderThickness="1" CornerRadius="2" Padding="8">
                                         <DockPanel>
-                                            <TextBlock DockPanel.Dock="Top" Text="Выберите рабочую директорию"
+                                            <TextBlock DockPanel.Dock="Top" Text="Выберите директорию TorchSharp4GPU"
                                                        FontWeight="SemiBold" Margin="2,0,2,7"/>
                                             <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal"
                                                         HorizontalAlignment="Right" Margin="0,8,0,0">
                                                 <Button Content="Выбрать" Width="88" Height="25" Margin="0,0,7,0"
-                                                        Click="SelectTradingDirectoryClick"/>
+                                                        Click="SelectTradingGpuDirectoryClick"/>
                                                 <Button Content="Закрыть" Width="78" Height="25"
-                                                        Click="CloseTradingDirectoryTreeClick"/>
+                                                        Click="CloseTradingGpuDirectoryTreeClick"/>
                                             </StackPanel>
                                             <Border BorderBrush="#D7CFBB" BorderThickness="1" Background="White">
-                                                <TreeView x:Name="TradingDirectoryTree"
-                                                          MouseDoubleClick="TradingDirectoryTreeMouseDoubleClick"/>
+                                                <TreeView x:Name="TradingGpuDirectoryTree"
+                                                          MouseDoubleClick="TradingGpuDirectoryTreeMouseDoubleClick"/>
                                             </Border>
                                         </DockPanel>
                                     </Border>
                                 </Popup>
                             </Grid>
-                            <CheckBox x:Name="TradingShowSp500" Content="S&amp;P 500" IsChecked="True" Margin="0,0,16,0"
+                            <CheckBox x:Name="TradingShowGpuZz1" Content="ZZ1" IsChecked="True" Margin="0,0,8,0"
                                       VerticalAlignment="Center" Checked="TradingEnsembleOptionsChanged" Unchecked="TradingEnsembleOptionsChanged"/>
-                            <CheckBox x:Name="TradingShowZz1" Content="ZZ1" IsChecked="True" Margin="0,0,14,0"
+                            <CheckBox x:Name="TradingShowGpuZz2" Content="ZZ2" IsChecked="True" Margin="0,0,8,0"
                                       VerticalAlignment="Center" Checked="TradingEnsembleOptionsChanged" Unchecked="TradingEnsembleOptionsChanged"/>
-                            <CheckBox x:Name="TradingShowZz2" Content="ZZ2" IsChecked="True" Margin="0,0,14,0"
+                            <CheckBox x:Name="TradingShowGpuZz3" Content="ZZ3" IsChecked="True" Margin="0,0,12,0"
                                       VerticalAlignment="Center" Checked="TradingEnsembleOptionsChanged" Unchecked="TradingEnsembleOptionsChanged"/>
-                            <CheckBox x:Name="TradingShowZz3" Content="ZZ3" IsChecked="True" Margin="0,0,18,0"
+                            <Grid Width="136" Height="24" Margin="0,0,8,0" ToolTip="Корневая директория ансамблей TorchSharp">
+                                <TextBox x:Name="TradingTorchDirectory" Text="D:\TorchSharp" IsReadOnly="True"
+                                         Padding="4,2,28,2" VerticalContentAlignment="Center"/>
+                                <Button Content="▼" Width="25" Height="22" HorizontalAlignment="Right" VerticalAlignment="Center"
+                                        ToolTip="Выбрать директорию TorchSharp" Click="OpenTradingTorchDirectoryTreeClick"/>
+                                <Popup x:Name="TradingTorchDirectoryPopup" Placement="Bottom"
+                                       PlacementTarget="{Binding ElementName=TradingTorchDirectory}" StaysOpen="False" AllowsTransparency="True">
+                                    <Border Width="430" Height="420" Background="White" BorderBrush="#8A8170"
+                                            BorderThickness="1" CornerRadius="2" Padding="8">
+                                        <DockPanel>
+                                            <TextBlock DockPanel.Dock="Top" Text="Выберите директорию TorchSharp"
+                                                       FontWeight="SemiBold" Margin="2,0,2,7"/>
+                                            <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal"
+                                                        HorizontalAlignment="Right" Margin="0,8,0,0">
+                                                <Button Content="Выбрать" Width="88" Height="25" Margin="0,0,7,0"
+                                                        Click="SelectTradingTorchDirectoryClick"/>
+                                                <Button Content="Закрыть" Width="78" Height="25"
+                                                        Click="CloseTradingTorchDirectoryTreeClick"/>
+                                            </StackPanel>
+                                            <Border BorderBrush="#D7CFBB" BorderThickness="1" Background="White">
+                                                <TreeView x:Name="TradingTorchDirectoryTree"
+                                                          MouseDoubleClick="TradingTorchDirectoryTreeMouseDoubleClick"/>
+                                            </Border>
+                                        </DockPanel>
+                                    </Border>
+                                </Popup>
+                            </Grid>
+                            <CheckBox x:Name="TradingShowTorchZz1" Content="ZZ1" IsChecked="False" Margin="0,0,8,0"
                                       VerticalAlignment="Center" Checked="TradingEnsembleOptionsChanged" Unchecked="TradingEnsembleOptionsChanged"/>
-                            <TextBlock Text="Forecast" VerticalAlignment="Center" Margin="0,0,5,0"/>
-                            <Button Content="−" Width="23" Height="22" Padding="0" Click="DecreaseTradingForecastClick"/>
+                            <CheckBox x:Name="TradingShowTorchZz2" Content="ZZ2" IsChecked="False" Margin="0,0,8,0"
+                                      VerticalAlignment="Center" Checked="TradingEnsembleOptionsChanged" Unchecked="TradingEnsembleOptionsChanged"/>
+                            <CheckBox x:Name="TradingShowTorchZz1Jordan" Content="ZZ1__J" IsChecked="False" Margin="0,0,8,0"
+                                      VerticalAlignment="Center" Checked="TradingEnsembleOptionsChanged" Unchecked="TradingEnsembleOptionsChanged"/>
+                            <CheckBox x:Name="TradingShowTorchZz2Jordan" Content="ZZ2__J" IsChecked="False" Margin="0,0,12,0"
+                                      VerticalAlignment="Center" Checked="TradingEnsembleOptionsChanged" Unchecked="TradingEnsembleOptionsChanged"/>
+                            <Grid Width="136" Height="24" Margin="0,0,8,0" ToolTip="Корневая директория ансамблей Encog">
+                                <TextBox x:Name="TradingEncogDirectory" Text="D:\model_ensemble_Encog" IsReadOnly="True"
+                                         Padding="4,2,28,2" VerticalContentAlignment="Center"/>
+                                <Button Content="▼" Width="25" Height="22" HorizontalAlignment="Right" VerticalAlignment="Center"
+                                        ToolTip="Выбрать директорию Encog" Click="OpenTradingEncogDirectoryTreeClick"/>
+                                <Popup x:Name="TradingEncogDirectoryPopup" Placement="Bottom"
+                                       PlacementTarget="{Binding ElementName=TradingEncogDirectory}" StaysOpen="False" AllowsTransparency="True">
+                                    <Border Width="430" Height="420" Background="White" BorderBrush="#8A8170"
+                                            BorderThickness="1" CornerRadius="2" Padding="8">
+                                        <DockPanel>
+                                            <TextBlock DockPanel.Dock="Top" Text="Выберите директорию Encog"
+                                                       FontWeight="SemiBold" Margin="2,0,2,7"/>
+                                            <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal"
+                                                        HorizontalAlignment="Right" Margin="0,8,0,0">
+                                                <Button Content="Выбрать" Width="88" Height="25" Margin="0,0,7,0"
+                                                        Click="SelectTradingEncogDirectoryClick"/>
+                                                <Button Content="Закрыть" Width="78" Height="25"
+                                                        Click="CloseTradingEncogDirectoryTreeClick"/>
+                                            </StackPanel>
+                                            <Border BorderBrush="#D7CFBB" BorderThickness="1" Background="White">
+                                                <TreeView x:Name="TradingEncogDirectoryTree"
+                                                          MouseDoubleClick="TradingEncogDirectoryTreeMouseDoubleClick"/>
+                                            </Border>
+                                        </DockPanel>
+                                    </Border>
+                                </Popup>
+                            </Grid>
+                            <CheckBox x:Name="TradingShowEncogZz1" Content="ZZ1" IsChecked="False" Margin="0,0,8,0"
+                                      VerticalAlignment="Center" Checked="TradingEnsembleOptionsChanged" Unchecked="TradingEnsembleOptionsChanged"/>
+                            <CheckBox x:Name="TradingShowEncogZz2" Content="ZZ2" IsChecked="False" Margin="0,0,12,0"
+                                      VerticalAlignment="Center" Checked="TradingEnsembleOptionsChanged" Unchecked="TradingEnsembleOptionsChanged"/>
+                            <RepeatButton Content="−" Delay="350" Interval="100" Width="23" Height="22" Padding="0"
+                                          Click="DecreaseTradingForecastClick"/>
                             <TextBox x:Name="TradingForecastValue" Text="10" Width="34" Height="22" Margin="3,0"
-                                     IsReadOnly="True" TextAlignment="Center" VerticalContentAlignment="Center"/>
-                            <Button Content="+" Width="23" Height="22" Padding="0" Margin="0,0,10,0"
-                                    Click="IncreaseTradingForecastClick"/>
-                            <TextBlock x:Name="TradingCalculationStatus" Text="Forecast: ожидание данных"
-                                       MinWidth="190" Margin="0,0,18,0" VerticalAlignment="Center"
-                                       FontWeight="SemiBold" Foreground="#B56700" TextTrimming="CharacterEllipsis"/>
-                            <CheckBox x:Name="TradingShowEma" Content="EMA 20/50/100/200" IsChecked="False"
-                                      VerticalAlignment="Center" Checked="TradingEnsembleOptionsChanged" Unchecked="TradingEnsembleOptionsChanged"/>
-                            <CheckBox x:Name="TradingShowScoring" Content="Scoring classification" IsChecked="False"
-                                      Margin="28,0,0,0" VerticalAlignment="Center"
+                                     LostKeyboardFocus="TradingForecastLostFocus" PreviewKeyDown="TradingForecastKeyDown"
+                                     ToolTip="Прогноз: 0–100 дней. Enter — применить, Esc — отменить. Шаг кнопок: 5."
+                                     TextAlignment="Center" VerticalContentAlignment="Center"/>
+                            <RepeatButton Content="+" Delay="350" Interval="100" Width="23" Height="22" Padding="0" Margin="0,0,12,0"
+                                          Click="IncreaseTradingForecastClick"/>
+                            <CheckBox x:Name="TradingShowEma" Content="EMA" IsChecked="False" Margin="0,0,12,0"
+                                      ToolTip="EMA 20/50/100/200" VerticalAlignment="Center"
+                                      Checked="TradingEnsembleOptionsChanged" Unchecked="TradingEnsembleOptionsChanged"/>
+                            <CheckBox x:Name="TradingShowActiveEnsembles" Content="Ensembles" IsChecked="False"
+                                      ToolTip="Нижняя панель: количество активных ансамблей вместо активных децилей" VerticalAlignment="Center"
                                       Checked="TradingEnsembleOptionsChanged" Unchecked="TradingEnsembleOptionsChanged"/>
                           </WrapPanel>
                         </Border>
@@ -373,7 +617,7 @@
                 </TabItem>
                 <TabItem x:Name="ZweigTab">
                     <TabItem.Header>
-                        <TextBlock Text="Zweig" Width="160" TextAlignment="Center"/>
+                        <TextBlock Text="Zweig" Width="112" TextAlignment="Center"/>
                     </TabItem.Header>
                     <DockPanel Background="White">
                         <StackPanel DockPanel.Dock="Top" Background="White" Orientation="Horizontal" HorizontalAlignment="Center" Margin="6,4,6,0">
@@ -392,7 +636,7 @@
                 </TabItem>
                 <TabItem x:Name="ContangoTab">
                     <TabItem.Header>
-                        <TextBlock Text="Contango" Width="160" TextAlignment="Center"/>
+                        <TextBlock Text="Contango" Width="112" TextAlignment="Center"/>
                     </TabItem.Header>
                     <Grid Background="White">
                         <Grid.RowDefinitions>
@@ -462,6 +706,153 @@
                             <TextBlock x:Name="ContangoWaitText" Text="Wait…  Loading Contango" FontSize="14"
                                        FontWeight="SemiBold" Foreground="#594A16"/>
                         </Border>
+                    </Grid>
+                </TabItem>
+                <TabItem x:Name="MarketSetupTab">
+                    <TabItem.Header>
+                        <TextBlock Text="Market Setup" Width="112" TextAlignment="Center"/>
+                    </TabItem.Header>
+                    <Grid Background="White">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition x:Name="MarketSetupAnalysisColumn" Width="5*" MinWidth="200"/>
+                            <ColumnDefinition Width="5"/>
+                            <ColumnDefinition x:Name="MarketSetupChartColumn" Width="7*" MinWidth="420"/>
+                        </Grid.ColumnDefinitions>
+
+                        <Grid Grid.Column="0" Background="White" Margin="4" x:Name="MarketSetupAnalysisGrid" ClipToBounds="True">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition x:Name="MarketSetupIndicatorsColumn" Width="1.2*" MinWidth="52"/>
+                                <ColumnDefinition Width="11"/>
+                                <ColumnDefinition x:Name="MarketSetupRulesColumn" Width="1.3*" MinWidth="110"/>
+                                <ColumnDefinition Width="11"/>
+                                <ColumnDefinition x:Name="MarketSetupDescriptionColumn" Width="1.5*" MinWidth="0"/>
+                            </Grid.ColumnDefinitions>
+
+                            <Border x:Name="MarketSetupIndicatorsPanel" Grid.Column="0" Background="White" BorderBrush="#D7CFBB" BorderThickness="1" Padding="3,8,2,8"
+                                    ClipToBounds="True" SizeChanged="MarketSetupColumnSizeChanged">
+                                <DockPanel>
+                                    <TextBlock x:Name="MarketSetupIndicatorsTitle" DockPanel.Dock="Top" Text="Индикаторы" FontSize="14" FontWeight="SemiBold"
+                                               Foreground="#25303D" Margin="0,0,0,7"/>
+                                    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                                        <StackPanel x:Name="MarketSetupIndicatorSelectors">
+                                            <CheckBox x:Name="MarketSetupCnnFearGreed" Content="CNN Fear Greed" IsChecked="True" Foreground="#235C9E"
+                                                      Style="{StaticResource SentimentIndicatorToggleStyle}" Checked="MarketSetupOptionsChanged" Unchecked="MarketSetupOptionsChanged"/>
+                                            <CheckBox x:Name="MarketSetupRiskMeasure" Content="Risk Measure" Foreground="#C43636"
+                                                      Style="{StaticResource SentimentIndicatorToggleStyle}" Checked="MarketSetupOptionsChanged" Unchecked="MarketSetupOptionsChanged"/>
+                                            <CheckBox x:Name="MarketSetupPanicEuphoria" Content="Panic Euphoria" Foreground="#7E4BAE"
+                                                      Style="{StaticResource SentimentIndicatorToggleStyle}" Checked="MarketSetupOptionsChanged" Unchecked="MarketSetupOptionsChanged"/>
+                                            <CheckBox x:Name="MarketSetupArsi" Content="ARSI 14" Foreground="#17897E"
+                                                      Style="{StaticResource SentimentIndicatorToggleStyle}" Checked="MarketSetupOptionsChanged" Unchecked="MarketSetupOptionsChanged"/>
+                                            <CheckBox x:Name="MarketSetupMyRsi" Content="MyRSI_rep 14,8 + AGC(77)" Foreground="#2D4E70" ToolTip="MyRSI_rep: период 14, сглаживание 8; AGC с периодом полураспада 77. Нижнее насыщение ≤ −0,999; верхнее ≥ +0,999."
+                                                      Style="{StaticResource SentimentIndicatorToggleStyle}" Checked="MarketSetupOptionsChanged" Unchecked="MarketSetupOptionsChanged"/>
+                                            <CheckBox x:Name="MarketSetupMyRsiFast" Content="MyRSI_rep 10,8 + AGC(77)" Foreground="#C65818" ToolTip="MyRSI_rep: период 10, сглаживание 8; AGC с периодом полураспада 77. Нижнее насыщение ≤ −0,999; верхнее ≥ +0,999."
+                                                      Style="{StaticResource SentimentIndicatorToggleStyle}" Checked="MarketSetupOptionsChanged" Unchecked="MarketSetupOptionsChanged"/>
+                                            <CheckBox x:Name="MarketSetupTrendScore" Content="Trend Score" Foreground="#D67E16"
+                                                      Style="{StaticResource SentimentIndicatorToggleStyle}" Checked="MarketSetupOptionsChanged" Unchecked="MarketSetupOptionsChanged"/>
+                                            <StackPanel x:Name="MarketSetupEnsembleIndicators"/>
+                                            <CheckBox x:Name="MarketSetupHurst" Content="Hurst" Foreground="#626A74"
+                                                      Style="{StaticResource SentimentIndicatorToggleStyle}" Checked="MarketSetupOptionsChanged" Unchecked="MarketSetupOptionsChanged"/>
+                                            <CheckBox x:Name="MarketSetupCmf" Content="CMF" Foreground="#228B45"
+                                                      Style="{StaticResource SentimentIndicatorToggleStyle}" Checked="MarketSetupOptionsChanged" Unchecked="MarketSetupOptionsChanged"/>
+                                            <CheckBox x:Name="MarketSetupDecibel" Content="Decibel" Foreground="#B3428A"
+                                                      Style="{StaticResource SentimentIndicatorToggleStyle}" Checked="MarketSetupOptionsChanged" Unchecked="MarketSetupOptionsChanged"/>
+                                            <CheckBox x:Name="MarketSetupJocker" Content="Jocker" Foreground="#7A582C" ToolTip="Параметры ZZ1/ZZ2: суммы новых максимумов и минимумов Nasdaq за 65 баров; (максимумы − минимумы) / (максимумы + минимумы); EMA(3)."
+                                                      Style="{StaticResource SentimentIndicatorToggleStyle}" Checked="MarketSetupOptionsChanged" Unchecked="MarketSetupOptionsChanged"/>
+                                            <CheckBox x:Name="MarketSetupMarketBreadth" Content="Market Breadth" Foreground="#2B7B92" ToolTip="Параметры ZZ1/ZZ2: доля SPY, XLV, XLU, XLE и XLP выше VWMA(64); EMA(1); 0,01 × (значение − 50)."
+                                                      Style="{StaticResource SentimentIndicatorToggleStyle}" Checked="MarketSetupOptionsChanged" Unchecked="MarketSetupOptionsChanged"/>
+                                            <CheckBox x:Name="MarketSetupDumbMoney" Content="Dumb Money" Foreground="#C2661C"
+                                                      Style="{StaticResource SentimentIndicatorToggleStyle}" Checked="MarketSetupOptionsChanged" Unchecked="MarketSetupOptionsChanged"/>
+                                            <CheckBox x:Name="MarketSetupSmartMoney" Content="Smart Money" Foreground="#1B7E41"
+                                                      Style="{StaticResource SentimentIndicatorToggleStyle}" Checked="MarketSetupOptionsChanged" Unchecked="MarketSetupOptionsChanged"/>
+                                            <Separator Margin="0,6"/>
+                                            <CheckBox x:Name="MarketSetupEma" Content="EMA 20/50/100/200"
+                                                      Checked="MarketSetupOptionsChanged" Unchecked="MarketSetupOptionsChanged"/>
+                                            <CheckBox x:Name="MarketSetupSp50" Content="S&amp;P 500 SMA50" IsChecked="False" Foreground="#1976D2"
+                                                      ToolTip="Широта S&amp;P 500: доля компонентов выше SMA(50), проценты, правая ось нижнего графика."
+                                                      Style="{StaticResource SentimentIndicatorToggleStyle}" Checked="MarketSetupOptionsChanged" Unchecked="MarketSetupOptionsChanged"/>
+                                            <CheckBox x:Name="MarketSetupSp100" Content="S&amp;P 500 SMA100" IsChecked="False" Foreground="#2E7D32"
+                                                      ToolTip="Широта S&amp;P 500: доля компонентов выше SMA(100), проценты, правая ось нижнего графика."
+                                                      Style="{StaticResource SentimentIndicatorToggleStyle}" Checked="MarketSetupOptionsChanged" Unchecked="MarketSetupOptionsChanged"/>
+                                            <CheckBox x:Name="MarketSetupSp200" Content="S&amp;P 500 SMA200" IsChecked="False" Foreground="#8E44AD"
+                                                      ToolTip="Широта S&amp;P 500: доля компонентов выше SMA(200), проценты, правая ось нижнего графика."
+                                                      Style="{StaticResource SentimentIndicatorToggleStyle}" Checked="MarketSetupOptionsChanged" Unchecked="MarketSetupOptionsChanged"/>
+                                            <CheckBox x:Name="MarketSetupNasdaq100" Content="Nasdaq-100 SMA100" IsChecked="False" Foreground="#E67E22"
+                                                      ToolTip="Широта Nasdaq-100: доля компонентов выше SMA(100), проценты, правая ось нижнего графика."
+                                                      Style="{StaticResource SentimentIndicatorToggleStyle}" Checked="MarketSetupOptionsChanged" Unchecked="MarketSetupOptionsChanged"/>
+                                            <CheckBox x:Name="MarketSetupAtrp" Content="ATRP(1)" IsChecked="False" Foreground="#6750A4"
+                                                      ToolTip="Однодневный истинный диапазон в процентах Close. Отдельная синхронная панель."
+                                                      Style="{StaticResource SentimentIndicatorToggleStyle}" Checked="MarketSetupOptionsChanged" Unchecked="MarketSetupOptionsChanged"/>
+                                        </StackPanel>
+                                    </ScrollViewer>
+                                </DockPanel>
+                            </Border>
+
+                            <GridSplitter x:Name="MarketSetupIndicatorsSplitter" Grid.Column="1" Width="5"
+                                          HorizontalAlignment="Center" VerticalAlignment="Stretch" ResizeDirection="Columns"
+                                          ResizeBehavior="PreviousAndNext" Background="#D7CFBB" DragCompleted="LayoutSplitterDragCompleted"/>
+                            <Border x:Name="MarketSetupRulesPanel" Grid.Column="2" Background="White" BorderBrush="#D7CFBB" BorderThickness="1" Padding="2"
+                                    ClipToBounds="True" SizeChanged="MarketSetupColumnSizeChanged">
+                                <DockPanel>
+                                    <StackPanel DockPanel.Dock="Top" Margin="3,3,3,6">
+                                      <WrapPanel>
+                                        <TextBlock Text="Правила" FontSize="14" FontWeight="SemiBold"
+                                                   Foreground="#25303D" Margin="0,0,8,0"/>
+                                        <CheckBox x:Name="MarketSetupActiveRules" Content="Активные" IsChecked="False"
+                                                  VerticalAlignment="Center"
+                                                  ToolTip="Показывать правила с ненулевым весом хотя бы в одном профиле Breeze: Soft, Standard или Hard."
+                                                  Checked="MarketSetupActiveRulesChanged" Unchecked="MarketSetupActiveRulesChanged"/>
+                                      </WrapPanel>
+                                      <TextBlock x:Name="MarketSetupCatalogSummary" FontSize="10" TextWrapping="Wrap"
+                                                 Foreground="#626970" Margin="0,3,0,0"/>
+                                    </StackPanel>
+                                    <TreeView x:Name="MarketSetupRuleTree" Background="White"
+                                              ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                              SelectedItemChanged="MarketSetupRuleSelected"/>
+                                </DockPanel>
+                            </Border>
+
+                            <GridSplitter x:Name="MarketSetupRulesSplitter" Grid.Column="3" Width="5"
+                                          HorizontalAlignment="Center" VerticalAlignment="Stretch" ResizeDirection="Columns"
+                                          ResizeBehavior="PreviousAndNext" Background="#D7CFBB" DragCompleted="LayoutSplitterDragCompleted"/>
+                            <Border Grid.Column="4" Background="#F6F9FC" BorderBrush="#C7D3DF" BorderThickness="1" Padding="8" ClipToBounds="True">
+                                <DockPanel>
+                                    <TextBlock x:Name="MarketSetupRuleTitle" DockPanel.Dock="Top" Text="Market setup"
+                                               FontSize="15" FontWeight="SemiBold" Foreground="#25303D" Margin="0,0,0,7"/>
+                                    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                                        <TextBlock x:Name="MarketSetupRuleDescription" Text="Выберите правило в дереве."
+                                                   TextWrapping="Wrap" FontSize="12.5" LineHeight="16" Foreground="#303840"/>
+                                    </ScrollViewer>
+                                </DockPanel>
+                            </Border>
+                        </Grid>
+
+                        <GridSplitter x:Name="MarketSetupVerticalSplitter" Grid.Column="1" Width="5"
+                                      HorizontalAlignment="Stretch" ResizeDirection="Columns" ResizeBehavior="PreviousAndNext"
+                                      Background="#D7CFBB" DragCompleted="LayoutSplitterDragCompleted"/>
+
+                        <Grid x:Name="MarketSetupChartGrid" Grid.Column="2" Background="White">
+                            <Grid.RowDefinitions>
+                                <RowDefinition x:Name="MarketSetupTopRow" Height="2*" MinHeight="110"/>
+                                <RowDefinition Height="11"/>
+                                <RowDefinition x:Name="MarketSetupBottomRow" Height="*" MinHeight="90"/>
+                            </Grid.RowDefinitions>
+                            <local:BreadthChart x:Name="MarketSetupSpChart" Grid.Row="0"/>
+                            <GridSplitter x:Name="MarketSetupHorizontalSplitter" Grid.Row="1" Height="5"
+                                          HorizontalAlignment="Stretch" VerticalAlignment="Center" Background="#D7CFBB"
+                                          DragCompleted="LayoutSplitterDragCompleted"/>
+                            <Grid x:Name="MarketSetupLowerGrid" Grid.Row="2" Background="White">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition x:Name="MarketSetupIndicatorRow" Height="*" MinHeight="90"/>
+                                    <RowDefinition x:Name="MarketSetupAtrpSplitterRow" Height="0"/>
+                                    <RowDefinition x:Name="MarketSetupAtrpRow" Height="0"/>
+                                </Grid.RowDefinitions>
+                                <local:SentimentChart x:Name="MarketSetupIndicatorChart" Grid.Row="0"/>
+                                <GridSplitter x:Name="MarketSetupAtrpSplitter" Grid.Row="1" Height="5" Visibility="Collapsed"
+                                              HorizontalAlignment="Stretch" VerticalAlignment="Center" Background="#D7CFBB"
+                                              DragCompleted="LayoutSplitterDragCompleted"/>
+                                <local:AtrpChart x:Name="MarketSetupAtrpChart" Grid.Row="2" Visibility="Collapsed"/>
+                            </Grid>
+                        </Grid>
                     </Grid>
                 </TabItem>
             </TabControl>

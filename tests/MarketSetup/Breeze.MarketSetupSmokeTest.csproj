@@ -1,0 +1,34 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <DefineConstants>$(DefineConstants);EVENT_MODEL_TEST;RULES2_ENGINE_ONLY</DefineConstants>
+    <WealthLabInstallDir>C:\Program Files\Quantacula, LLC\WealthLab 8</WealthLabInstallDir>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../../Breeze/SentimentIndicators.cs" Link="SentimentIndicators.cs" />
+    <Compile Include="../../Breeze/SentimentChart.cs" Link="SentimentChart.cs" />
+    <Compile Include="../../Breeze/AtrpChart.cs" Link="AtrpChart.cs" />
+    <Compile Include="../../Breeze/ChartCursorStyle.cs" Link="ChartCursorStyle.cs" />
+    <Compile Include="../../Breeze/MarketSetupData.cs" Link="MarketSetupData.cs" />
+    <Compile Include="../../Rules2ResearchStrategy.cs" Link="Rules2Engine.cs" />
+    <Compile Include="../../Breeze/Rules2HoldConfidence.cs" Link="Rules2HoldConfidence.cs" />
+    <Compile Include="../../Breeze/Rules2MarketCatalog.cs" Link="Rules2MarketCatalog.cs" />
+    <Compile Include="../../Breeze/ScoringModels.cs" Link="ScoringModels.cs" />
+    <Compile Include="../../Breeze/EmaAdditionalStates.cs" Link="EmaAdditionalStates.cs" />
+    <Compile Include="../../Breeze/MarketSetupViewState.cs" Link="MarketSetupViewState.cs" />
+    <Compile Include="../../Breeze/MarketSetupDescription.cs" Link="MarketSetupDescription.cs" />
+    <Compile Include="../../Breeze/BreezeRuleCatalog.cs" Link="BreezeRuleCatalog.cs" />
+    <Compile Include="../../Breeze/BreezeMarketCatalog.cs" Link="BreezeMarketCatalog.cs" />
+    <Compile Include="../../Breeze.Strategies/BreezeHoldPositionStrategy_new.cs" Link="EventModel.cs" />
+    <EmbeddedResource Include="../../Breeze/BreezeRules.json" Link="BreezeRules.json" />
+    <EmbeddedResource Include="../../Breeze/BreezeEventCatalog.json" Link="BreezeEventCatalog.json" />
+    <Reference Include="WealthLab.Core"><HintPath>$(WealthLabInstallDir)/WealthLab.Core.dll</HintPath></Reference>
+    <Reference Include="WealthLab.TASC"><HintPath>$(WealthLabInstallDir)/WealthLab.TASC.dll</HintPath></Reference>
+    <Reference Include="WealthLab.AdvancedSmoothers"><HintPath>$(WealthLabInstallDir)/WealthLab.AdvancedSmoothers.dll</HintPath></Reference>
+    <Reference Include="Indicators.JohnEhlers_8Wealth"><HintPath>$(WealthLabInstallDir)/Indicators.JohnEhlers_8Wealth.dll</HintPath></Reference>
+  </ItemGroup>
+</Project>

@@ -43,13 +43,17 @@ internal static class TitanicSyndromeCalculator
         PriceSeries nasdaqNewHighs,
         PriceSeries nasdaqNewLows,
         BreadthSeries nasdaqBreadth50,
+        IReadOnlySet<DateTime> spyTradingDates,
         DateTime visibleStart,
         DateTime visibleEnd)
     {
         var highsByDate = nasdaqNewHighs.Points.ToDictionary(point => point.Date);
         var lowsByDate = nasdaqNewLows.Points.ToDictionary(point => point.Date);
         var breadthByDate = nasdaqBreadth50.Points.ToDictionary(point => point.Date);
-        IReadOnlyList<PricePoint> qqqPoints = qqq.Points.OrderBy(point => point.Date).ToList();
+        IReadOnlyList<PricePoint> qqqPoints = qqq.Points
+            .Where(point => spyTradingDates.Contains(point.Date.Date))
+            .OrderBy(point => point.Date)
+            .ToList();
         var annualHigh = new double[qqqPoints.Count];
         var maximumCandidates = new LinkedList<int>();
         for (int index = 0; index < qqqPoints.Count; index++)

@@ -11,4 +11,7 @@ public static class ModelPositionSizing
         double clamped = Math.Clamp(holdValue, 0.0, 100.0);
         return clamped >= FixedLevel ? 10 : 0;
     }
+
+    internal static int TargetContracts(HoldConfidencePoint point) =>
+        point.TargetPosition >= 0 ? point.TargetPosition : TargetContracts(point.Value);
 }

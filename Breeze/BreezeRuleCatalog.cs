@@ -19,8 +19,10 @@ internal sealed record BreezeRuleEntry(
     string Id,
     string NameRu,
     string NameCode,
+    string Family,
     string Kind,
     string ImplementedFormula,
+    string ImplementedFormulaRu,
     double SoftWeight,
     double StandardWeight,
     double HardWeight,
@@ -35,7 +37,12 @@ internal sealed record BreezeRuleEntry(
     string Meaning,
     string ProposedDefinition,
     string Lifecycle,
-    string Unresolved);
+    string Unresolved)
+{
+    public bool IsActiveInBreeze => SoftWeight != 0.0 || StandardWeight != 0.0 || HardWeight != 0.0;
+    public int DisplayDirection { get; init; } = 1;
+    public EmaStateParameters? Parameters { get; init; }
+}
 
 internal sealed record BreezeRuleSet(
     string SchemaVersion,
@@ -44,8 +51,10 @@ internal sealed record BreezeRuleSet(
     string Source,
     IReadOnlyList<BreezeRuleEntry> Rules)
 {
+    public IReadOnlyList<BreezeRuleEntry> AdditionalStates { get; init; } = [];
+    public IReadOnlyList<BreezeRuleEntry> AllRules => Rules.Concat(AdditionalStates).ToArray();
     public BreezeRuleEntry ById(string id) =>
-        Rules.First(rule => string.Equals(rule.Id, id, StringComparison.Ordinal));
+        AllRules.First(rule => string.Equals(rule.Id, id, StringComparison.Ordinal));
 
     public double[] BreezeWeights(int profile)
     {
@@ -101,9 +110,13 @@ internal static class BreezeRuleCatalog
             string catalogVersion = RequiredString(root, "catalog_version");
             string status = RequiredString(root, "status");
             var rules = new List<BreezeRuleEntry>();
-            foreach (JsonElement item in root.GetProperty("rules").EnumerateArray())
+            JsonElement[] coreItems = root.GetProperty("rules").EnumerateArray().ToArray();
+            var allItems = coreItems.Concat(root.TryGetProperty("additional_states", out JsonElement extras)
+                ? extras.EnumerateArray().ToArray() : Array.Empty<JsonElement>());
+            foreach (JsonElement item in allItems)
             {
                 JsonElement names = item.GetProperty("names");
+                JsonElement classification = item.GetProperty("classification");
                 JsonElement detector = item.GetProperty("detector");
                 JsonElement breezeWeights = item.GetProperty("breeze").GetProperty("weights");
                 JsonElement torch = item.GetProperty("torchsharp");
@@ -115,8 +128,13 @@ internal static class BreezeRuleCatalog
                     RequiredString(item, "id"),
                     RequiredString(names, "ru"),
                     RequiredString(names, "code"),
-                    RequiredString(item.GetProperty("classification"), "kind"),
+                    RequiredString(classification, "family"),
+                    RequiredString(classification, "kind"),
                     RequiredString(detector, "implemented_formula"),
+                    root.TryGetProperty("detector_descriptions_ru", out JsonElement russianDetectors) &&
+                    russianDetectors.TryGetProperty(RequiredString(item, "id"), out JsonElement russianDetector)
+                        ? russianDetector.GetString() ?? string.Empty
+                        : RequiredString(documentation, "proposed_definition"),
                     breezeWeights.GetProperty("soft").GetDouble(),
                     breezeWeights.GetProperty("standard").GetDouble(),
                     breezeWeights.GetProperty("hard").GetDouble(),
@@ -138,11 +156,38 @@ internal static class BreezeRuleCatalog
                     RequiredString(documentation, "meaning"),
                     RequiredString(documentation, "proposed_definition"),
                     RequiredString(documentation, "lifecycle"),
-                    RequiredString(documentation, "unresolved")));
+                    RequiredString(documentation, "unresolved"))
+                {
+                    DisplayDirection = detector.TryGetProperty("display_direction", out JsonElement direction) ? direction.GetInt32() : 1,
+                    Parameters = detector.TryGetProperty("parameters", out JsonElement parameters)
+                        ? new EmaStateParameters(parameters.GetProperty("atrp_max_percent").GetDouble(),
+                            parameters.GetProperty("breadth_thresholds").EnumerateArray().Select(v=>v.GetDouble()).ToArray(),
+                            parameters.GetProperty("confirmation_bars").GetInt32()) : null
+                });
             }
 
-            Validate(rules, source);
-            return new BreezeRuleSet(schemaVersion, catalogVersion, status, source, rules);
+            BreezeRuleEntry[] core=rules.Take(coreItems.Length).ToArray();
+            BreezeRuleEntry[] additional=rules.Skip(coreItems.Length).ToArray();
+            Validate(core, source);
+            if(additional.Length!=EmaAdditionalStates.Definitions.Length ||
+               rules.Select(r=>r.Number).Distinct().Count()!=rules.Count || rules.Select(r=>r.Id).Distinct().Count()!=rules.Count)
+                throw new InvalidDataException("Additional state count or identity mismatch.");
+            for(int i=0;i<additional.Length;i++)
+            {
+                BreezeRuleEntry r=additional[i]; EmaStateDefinition spec=EmaAdditionalStates.Definitions[i];
+                if(r.Id!=spec.Id || r.Number!=spec.Number || r.ImplementedFormula!=spec.Formula ||
+                   r.DisplayDirection!=spec.Direction || r.IsActiveInBreeze || r.TorchEnabled || r.TorchWeightThresholdPp!=0)
+                    throw new InvalidDataException($"Additional state contract mismatch: {r.Id}");
+                if(r.Id.StartsWith("T03",StringComparison.Ordinal))
+                {
+                    EmaStateParameters p=r.Parameters ?? throw new InvalidDataException("Missing EMA state parameters.");
+                    if(!new[]{1.0,1.5,2.0}.Contains(p.AtrpMaxPercent) || !new[]{1,3,5,10}.Contains(p.ConfirmationBars) ||
+                       p.Breadths.Length!=4 || p.Breadths.Where((v,k)=>!double.IsFinite(v) || v%5!=0 ||
+                           v<(k==2 ? 40 : 30) || v>(k==2 ? 60 : 80)).Any())
+                        throw new InvalidDataException($"EMA state parameters out of approved range: {r.Id}");
+                }
+            }
+            return new BreezeRuleSet(schemaVersion, catalogVersion, status, source, core) { AdditionalStates=additional };
         }
     }
 
@@ -165,6 +210,8 @@ internal static class BreezeRuleCatalog
                     $"{source}: rule {rule.Number} is {rule.Id}, but the compiled detector at the same position is {M.Features[index].Id}.");
             if (string.IsNullOrWhiteSpace(rule.ImplementedFormula))
                 throw new InvalidDataException($"{source}: {rule.Id} has no implemented formula.");
+            if (!string.Equals(rule.ImplementedFormula, M.Features[index].Rule, StringComparison.Ordinal))
+                throw new InvalidDataException($"{source}: {rule.Id} formula text does not match the compiled detector contract.");
             double[] numbers =
             [
                 rule.SoftWeight, rule.StandardWeight, rule.HardWeight,

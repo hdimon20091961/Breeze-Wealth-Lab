@@ -7,11 +7,11 @@ namespace BreezeVL;
 
 public sealed class BreezeClientExtension : WL8ClientExtensionBase
 {
-    public override string Name => "Breeze Wealth-Lab";
+    public override string Name => "Market Breeze";
 
     public override List<MenuItem> GetMenuItems() =>
     [
-        CreateExtensionMenuItem("Breeze Wealth-Lab — Market Breadth", null!, OpenWindow)
+        CreateExtensionMenuItem("Market Breeze", null!, OpenWindow)
     ];
 
     public override ChildWindow? GetChildWindow(string token) =>
@@ -22,7 +22,7 @@ public sealed class BreezeClientExtension : WL8ClientExtensionBase
     private ChildWindow CreateWindow()
     {
         var window = new BreezeWindow();
-        MyClientHost.ShowExtensionChildWindow(window, "Breeze Wealth-Lab — Market Breadth", null!);
+        MyClientHost.ShowExtensionChildWindow(window, "Market Breeze", null!);
         return window;
     }
 }

@@ -1,6 +1,7 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
+using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
@@ -37,8 +38,8 @@ public partial class BreezeWindow : ChildWindow
         PriceSeries Sp500Price,
         PriceSeries? SvxyPrice,
         FuzzyMarketStateSeries FuzzyStates,
-        HoldConfidenceSeries HoldConfidence,
         TechnicalIndicatorSeries TechnicalIndicators,
+        SentimentSeries Sentiment,
         TitanicSeries Titanic,
         ZweigSeries ZweigStrong,
         ZweigSeries ZweigWorking);
@@ -61,6 +62,10 @@ public partial class BreezeWindow : ChildWindow
     {
         InitializeComponent();
         LoadPersistentLayout();
+        Rules2Selector.IsChecked = _layoutState.SelectedScoreModel == "Rules2";
+        Rules1Selector.IsChecked = Rules2Selector.IsChecked != true;
+        _scoreSelectionReady = true;
+        UpdateMarketSetupAtrpLayout();
         OrderTabsByAnalysisPriority();
         Loaded += OnLoaded;
         OverviewCombinedChart.SetAutoScaleBreadth(true);
@@ -71,27 +76,68 @@ public partial class BreezeWindow : ChildWindow
         ContangoSpChart.SetTitle("S&P 500 (SPY)");
         ContangoSvxyChart.SetPriceOnly(true);
         ContangoSvxyChart.SetTitle("SVXY");
+        SentimentSpChart.SetAutoScaleBreadth(true);
+        SentimentSpChart.SetPriceOnly(true);
+        SentimentSpChart.SetTitle("S&P 500 (SPY)");
+        SentimentSpChart.SetShowDateLabels(false);
+        SentimentSpChart.SetHorizontalPlotMargins(50, 50);
+        SentimentSpChart.SetShowLeftPriceScaleLabels(true);
+        MarketSetupSpChart.SetAutoScaleBreadth(true);
+        MarketSetupSpChart.SetPriceOnly(true);
+        MarketSetupSpChart.SetTitle("S&P 500 (SPY) — выбранное правило");
+        MarketSetupSpChart.SetShowDateLabels(false);
+        MarketSetupSpChart.SetHorizontalPlotMargins(50, 50);
+        MarketSetupSpChart.SetShowLeftPriceScaleLabels(true);
         foreach (BreadthChart chart in AllCharts)
             chart.CursorDateChanged += UpdateCursorValues;
+        SentimentSpChart.CursorDateChanged += UpdateCursorValues;
+        SentimentIndicatorChart.CursorDateChanged += UpdateCursorValues;
+        MarketSetupSpChart.CursorDateChanged += UpdateCursorValues;
+        MarketSetupIndicatorChart.CursorDateChanged += UpdateCursorValues;
+        MarketSetupAtrpChart.CursorDateChanged += UpdateCursorValues;
+        MarketSetupAtrpChart.SetShowDateLabels(false);
+        MarketSetupAtrpChart.SetHorizontalPlotMargins(50, 50);
         OverviewAtrpChart.CursorDateChanged += UpdateCursorValues;
         ContangoMyRsiChart.CursorDateChanged += UpdateCursorValues;
         FuzzyChart.CursorDateChanged += UpdateCursorValues;
         TitanicChart.CursorDateChanged += UpdateCursorValues;
         ZweigChart.CursorDateChanged += UpdateCursorValues;
         TradingEnsembleChart.CursorDateChanged += UpdateCursorValues;
+        TradingEnsembleChart.PaneLayoutChanged += () =>
+        {
+            CaptureTradingLayout();
+            _layoutState.TradingCollapsed = TradingEnsembleChart.GetCollapsedPanes();
+            SavePersistentLayout();
+        };
         TitanicChart.PersistentDaysChanged += TitanicPersistentDaysChanged;
         BreadthTabs.SelectionChanged += BreadthTabsSelectionChanged;
         BreadthTabs.LostMouseCapture += (_, _) =>
         {
             _isPanning = false;
-            bool saveLayout = _isTradingPaneResizing;
+            bool saveTradingLayout = _isTradingPaneResizing;
+            bool saveTwoPaneLayout = _activeTwoPaneResizeChart is not null;
+            if (ReferenceEquals(_activeTwoPaneResizeChart, TitanicChart))
+            {
+                TitanicChart.EndPaneResize();
+                _layoutState.TitanicTopRatio = TitanicChart.GetPaneRatio();
+            }
+            else if (ReferenceEquals(_activeTwoPaneResizeChart, ZweigChart))
+            {
+                ZweigChart.EndPaneResize();
+                _layoutState.ZweigTopRatio = ZweigChart.GetPaneRatio();
+            }
+            _activeTwoPaneResizeChart = null;
+            if (saveTwoPaneLayout)
+            {
+                Mouse.OverrideCursor = _previousOverrideCursor;
+                _previousOverrideCursor = null;
+            }
             _isTradingPaneResizing = false;
             TradingEnsembleChart.EndPaneResize();
-            if (saveLayout)
-            {
+            if (saveTradingLayout)
                 CaptureTradingLayout();
+            if (saveTradingLayout || saveTwoPaneLayout)
                 SavePersistentLayout();
-            }
             SetHorizontalDragCursor(false);
         };
         Unloaded += (_, _) =>
@@ -101,14 +147,19 @@ public partial class BreezeWindow : ChildWindow
             _calculationCts?.Cancel();
             _contangoLoadCts?.Cancel();
             _tradingEnsembleCts?.Cancel();
+            _tradingForecastTimer?.Stop();
         };
         SetPlaceholders();
         UpdateOverviewBreadthMode();
+        ApplySentimentOptions();
+        PopulateMarketSetupIndicatorSelectors();
+        PopulateMarketSetupRuleTree();
+        ApplyMarketSetupOptions();
     }
 
     private void OrderTabsByAnalysisPriority()
     {
-        TabItem[] orderedTabs = [FuzzyTab, TradingEnsemblesTab, OverviewTab, ContangoTab, TitanicTab, ZweigTab];
+        TabItem[] orderedTabs = [FuzzyTab, TradingEnsemblesTab, OverviewTab, ContangoTab, TitanicTab, ZweigTab, SentimentTab, MarketSetupTab];
         foreach (TabItem tab in orderedTabs)
             BreadthTabs.Items.Remove(tab);
         foreach (TabItem tab in orderedTabs)
@@ -132,7 +183,10 @@ public partial class BreezeWindow : ChildWindow
                    $"{_layoutState.TradingDecileBoundary.ToString("0.####", CultureInfo.InvariantCulture)}|" +
                    $"{_layoutState.OverviewCombinedRatio.ToString("0.####", CultureInfo.InvariantCulture)}|" +
                    $"{_layoutState.ContangoLeftRatio.ToString("0.####", CultureInfo.InvariantCulture)}|" +
-                   _layoutState.ContangoTopRatio.ToString("0.####", CultureInfo.InvariantCulture);
+                   $"{_layoutState.ContangoTopRatio.ToString("0.####", CultureInfo.InvariantCulture)}|" +
+                   $"{_layoutState.TitanicTopRatio.ToString("0.####", CultureInfo.InvariantCulture)}|" +
+                   $"{_layoutState.ZweigTopRatio.ToString("0.####", CultureInfo.InvariantCulture)}|" +
+                   _layoutState.SentimentTopRatio.ToString("0.####", CultureInfo.InvariantCulture);
         }
         set => _workspaceSelection = value ?? string.Empty;
     }
@@ -150,7 +204,17 @@ public partial class BreezeWindow : ChildWindow
     private PriceSeries? _vixPriceSeries;
     private FuzzyMarketStateSeries? _fuzzyStates;
     private HoldConfidenceSeries? _holdConfidence;
+    private HoldConfidenceSeries? _rules1Confidence;
+    private HoldConfidenceSeries? _rules2Confidence;
+    private bool _scoreSelectionReady;
     private TechnicalIndicatorSeries? _technicalIndicators;
+    private SentimentSeries? _sentimentSeries;
+    private MarketSetupSeries? _marketSetupSeries;
+    private BreezeRuleEntry? _selectedMarketSetupRule;
+    private BreezeMarketEntry? _selectedMarketSetupEntry;
+    private readonly Dictionary<string, string> _selectedMarketSetupIds = new(StringComparer.Ordinal);
+    private readonly Dictionary<SentimentIndicator, CheckBox> _marketSetupExtraSelectors = new();
+    private DataSet? _sentimentDataSet;
     private TitanicSeries? _titanicSeries;
     private ZweigSeries? _zweigSeries;
     private ZweigSeries? _zweigStrongSeries;
@@ -162,7 +226,10 @@ public partial class BreezeWindow : ChildWindow
     private int _tradingEnsembleCalculationGeneration;
     private bool _initialCalculationStarted;
     private int _tradingForecastDays = 10;
-    private bool _tradingDirectoryTreeInitialized;
+    private DispatcherTimer? _tradingForecastTimer;
+    private bool _tradingGpuDirectoryTreeInitialized;
+    private bool _tradingTorchDirectoryTreeInitialized;
+    private bool _tradingEncogDirectoryTreeInitialized;
     private static readonly object DirectoryTreePlaceholder = new();
     private int _visibleBarCount = DefaultVisibleBarCount;
     private DateTime? _cursorDate;
@@ -171,6 +238,7 @@ public partial class BreezeWindow : ChildWindow
     private Cursor? _previousOverrideCursor;
     private bool _isPanning;
     private bool _isTradingPaneResizing;
+    private FrameworkElement? _activeTwoPaneResizeChart;
     private bool _persistentLayoutLoaded;
     private BreezeLayoutState _layoutState = new();
     private Point _panStartPoint;
@@ -182,6 +250,8 @@ public partial class BreezeWindow : ChildWindow
     private bool _viewportUpdateScheduled;
     private int _titanicExportGeneration;
     private int _holdConfidenceExportGeneration;
+    private string _modelStatusMessage = "Оценки моделей ещё не рассчитаны.";
+    private BreadthProgressLevel _modelStatusLevel = BreadthProgressLevel.Waiting;
     private bool _isCalculationInProgress;
     private VixTermStructureStore? _vixTermStore;
     private VixCurveStateSeries? _contangoStates;
@@ -191,9 +261,15 @@ public partial class BreezeWindow : ChildWindow
     private bool _contangoInitializationStarted;
     private bool _updatingOverviewSelection;
     private bool _overviewAtrpLayoutVisible;
+    private bool _settingMarketSetupDependencies;
+    private readonly MarketSetupSelectionState _marketSetupSelection = new();
+    private MarketSetupPaneLayout? _marketSetupPaneLayout;
+    private bool _marketSetupRefreshScheduled;
     private GridLength _overviewCombinedHeight = new(2.0, GridUnitType.Star);
     private GridLength _overviewAtrpHeight = new(1.0, GridUnitType.Star);
     private MarketResearchSummary? _marketResearch;
+
+    private string CurrentScoreModel => Rules2Selector?.IsChecked == true ? "Rules2" : "Rules1";
 
     private BreadthChart[] AllCharts =>
     [
@@ -215,11 +291,38 @@ public partial class BreezeWindow : ChildWindow
             state.TradingPriceBoundary,
             state.TradingEnsembleBoundary,
             state.TradingDecileBoundary);
+        TradingEnsembleChart.SetCollapsedPanes(state.TradingCollapsed);
         ApplyOverviewRatio(state.OverviewCombinedRatio);
+        ApplyStarRatio(OverviewFullLeftColumn, OverviewFullRightColumn,
+            state.OverviewFullLeftRatio, 0.20, 0.80);
+        ApplyStarRatio(OverviewFullTopRow, OverviewFullBottomRow,
+            state.OverviewFullTopRatio, 0.20, 0.80);
         ApplyStarRatio(ContangoLeftColumn, ContangoRightColumn,
             state.ContangoLeftRatio, 0.20, 0.80);
         ApplyStarRatio(ContangoTopRow, ContangoBottomRow,
             state.ContangoTopRatio, 0.20, 0.85);
+        TitanicChart.SetPaneRatio(state.TitanicTopRatio);
+        ZweigChart.SetPaneRatio(state.ZweigTopRatio);
+        ApplyStarRatio(SentimentTopRow, SentimentBottomRow,
+            state.SentimentTopRatio, 0.20, 0.85);
+        ApplyStarRatio(MarketSetupAnalysisColumn, MarketSetupChartColumn,
+            state.MarketSetupAnalysisRatio, 0.005, 0.90);
+        ApplyStarRatio(MarketSetupTopRow, MarketSetupBottomRow,
+            state.MarketSetupTopRatio, 0.20, 0.85);
+        double indicatorsShare = double.IsFinite(state.MarketSetupIndicatorsShare)
+            ? Math.Clamp(state.MarketSetupIndicatorsShare, 0.001, 0.999) : 0.30;
+        double rulesShare = double.IsFinite(state.MarketSetupRulesShare)
+            ? Math.Clamp(state.MarketSetupRulesShare, 0.001, 0.999) : 0.325;
+        if (indicatorsShare + rulesShare > 1.0)
+        {
+            double totalShare = indicatorsShare + rulesShare;
+            indicatorsShare /= totalShare;
+            rulesShare /= totalShare;
+        }
+        MarketSetupIndicatorsColumn.Width = new GridLength(indicatorsShare, GridUnitType.Star);
+        MarketSetupRulesColumn.Width = new GridLength(rulesShare, GridUnitType.Star);
+        MarketSetupDescriptionColumn.Width = new GridLength(
+            Math.Max(0.0, 1.0 - indicatorsShare - rulesShare), GridUnitType.Star);
     }
 
     private void SavePersistentLayout()
@@ -245,6 +348,14 @@ public partial class BreezeWindow : ChildWindow
             ApplyOverviewRatio(ratio);
             _layoutState.OverviewCombinedRatio = ratio;
         }
+        else if (ReferenceEquals(sender, OverviewFullVerticalSplitter))
+            _layoutState.OverviewFullLeftRatio = Ratio(
+                OverviewFullLeftColumn.ActualWidth, OverviewFullRightColumn.ActualWidth,
+                _layoutState.OverviewFullLeftRatio);
+        else if (ReferenceEquals(sender, OverviewFullHorizontalSplitter))
+            _layoutState.OverviewFullTopRatio = Ratio(
+                OverviewFullTopRow.ActualHeight, OverviewFullBottomRow.ActualHeight,
+                _layoutState.OverviewFullTopRatio);
         else if (ReferenceEquals(sender, FuzzyHorizontalSplitter))
             _layoutState.FuzzyAnalysisRatio = Ratio(
                 FuzzyAnalysisColumn.ActualWidth, FuzzyChartColumn.ActualWidth,
@@ -258,6 +369,36 @@ public partial class BreezeWindow : ChildWindow
             _layoutState.ContangoTopRatio = Ratio(
                 ContangoTopRow.ActualHeight, ContangoBottomRow.ActualHeight,
                 _layoutState.ContangoTopRatio);
+        else if (ReferenceEquals(sender, SentimentSplitter))
+            _layoutState.SentimentTopRatio = Ratio(
+                SentimentTopRow.ActualHeight, SentimentBottomRow.ActualHeight,
+                _layoutState.SentimentTopRatio);
+        else if (ReferenceEquals(sender, MarketSetupVerticalSplitter))
+            _layoutState.MarketSetupAnalysisRatio = Ratio(
+                MarketSetupAnalysisColumn.ActualWidth, MarketSetupChartColumn.ActualWidth,
+                _layoutState.MarketSetupAnalysisRatio);
+        else if (ReferenceEquals(sender, MarketSetupIndicatorsSplitter) ||
+                 ReferenceEquals(sender, MarketSetupRulesSplitter))
+        {
+            double total = MarketSetupIndicatorsColumn.ActualWidth + MarketSetupRulesColumn.ActualWidth +
+                           MarketSetupDescriptionColumn.ActualWidth;
+            if (total > 1.0)
+            {
+                _layoutState.MarketSetupIndicatorsShare = MarketSetupIndicatorsColumn.ActualWidth / total;
+                _layoutState.MarketSetupRulesShare = MarketSetupRulesColumn.ActualWidth / total;
+            }
+        }
+        else if (ReferenceEquals(sender, MarketSetupHorizontalSplitter))
+            _layoutState.MarketSetupTopRatio = Ratio(
+                MarketSetupTopRow.ActualHeight, MarketSetupBottomRow.ActualHeight,
+                _layoutState.MarketSetupTopRatio);
+        else if (ReferenceEquals(sender, MarketSetupAtrpSplitter))
+        {
+            _layoutState.MarketSetupIndicatorsRatio = Ratio(
+                MarketSetupIndicatorRow.ActualHeight, MarketSetupAtrpRow.ActualHeight,
+                _layoutState.MarketSetupIndicatorsRatio);
+            UpdateMarketSetupAtrpLayout();
+        }
         SavePersistentLayout();
     }
 
@@ -285,7 +426,7 @@ public partial class BreezeWindow : ChildWindow
     private static void ApplyStarRatio(ColumnDefinition first, ColumnDefinition second,
         double ratio, double minimum, double maximum)
     {
-        ratio = Math.Clamp(ratio, minimum, maximum);
+        ratio = double.IsFinite(ratio) ? Math.Clamp(ratio, minimum, maximum) : Math.Clamp(0.5, minimum, maximum);
         first.Width = new GridLength(ratio, GridUnitType.Star);
         second.Width = new GridLength(1.0 - ratio, GridUnitType.Star);
     }
@@ -293,7 +434,7 @@ public partial class BreezeWindow : ChildWindow
     private static void ApplyStarRatio(RowDefinition first, RowDefinition second,
         double ratio, double minimum, double maximum)
     {
-        ratio = Math.Clamp(ratio, minimum, maximum);
+        ratio = double.IsFinite(ratio) ? Math.Clamp(ratio, minimum, maximum) : Math.Clamp(2.0 / 3.0, minimum, maximum);
         first.Height = new GridLength(ratio, GridUnitType.Star);
         second.Height = new GridLength(1.0 - ratio, GridUnitType.Star);
     }
@@ -308,18 +449,11 @@ public partial class BreezeWindow : ChildWindow
 
     private void OnLoaded(object sender, RoutedEventArgs e)
     {
-        List<DataSet> dataSets = WLHost.Instance.DataSets
-            .Where(item => !item.IsHidden)
-            .OrderBy(item => item.QualifiedName)
-            .ToList();
-        SpDataSet.ItemsSource = dataSets;
-        NasdaqDataSet.ItemsSource = dataSets;
+        ResolveDefaultDataSets();
 
         string[] saved = _workspaceSelection.Split('|');
-        SpDataSet.SelectedItem = FindDataSet(dataSets, saved.ElementAtOrDefault(0), "S&P 500");
-        NasdaqDataSet.SelectedItem = FindDataSet(dataSets, saved.ElementAtOrDefault(1), "NASDAQ 100", "Nasdaq 100", "Nasdaq-100");
         UseWorkingZweig.IsChecked = string.Equals(saved.ElementAtOrDefault(2), "Working", StringComparison.OrdinalIgnoreCase);
-        PositionProfile.SelectedIndex = int.TryParse(saved.ElementAtOrDefault(3), out int savedProfile)
+        PositionProfile.SelectedIndex = _persistentLayoutLoaded ? Math.Clamp(_layoutState.ScoreProfile, 0, 2) : int.TryParse(saved.ElementAtOrDefault(3), out int savedProfile)
             ? Math.Clamp(savedProfile, 0, 2)
             : 1;
         if (!_persistentLayoutLoaded && double.TryParse(saved.ElementAtOrDefault(4), NumberStyles.Float,
@@ -359,8 +493,28 @@ public partial class BreezeWindow : ChildWindow
             _layoutState.ContangoTopRatio = savedContangoTopRatio;
             ApplyStarRatio(ContangoTopRow, ContangoBottomRow, savedContangoTopRatio, 0.20, 0.85);
         }
+        if (!_persistentLayoutLoaded &&
+            double.TryParse(saved.ElementAtOrDefault(11), NumberStyles.Float, CultureInfo.InvariantCulture, out double savedTitanicRatio))
+        {
+            _layoutState.TitanicTopRatio = savedTitanicRatio;
+            TitanicChart.SetPaneRatio(savedTitanicRatio);
+        }
+        if (!_persistentLayoutLoaded &&
+            double.TryParse(saved.ElementAtOrDefault(12), NumberStyles.Float, CultureInfo.InvariantCulture, out double savedZweigRatio))
+        {
+            _layoutState.ZweigTopRatio = savedZweigRatio;
+            ZweigChart.SetPaneRatio(savedZweigRatio);
+        }
+        if (!_persistentLayoutLoaded &&
+            double.TryParse(saved.ElementAtOrDefault(13), NumberStyles.Float, CultureInfo.InvariantCulture, out double savedSentimentRatio))
+        {
+            _layoutState.SentimentTopRatio = savedSentimentRatio;
+            ApplyStarRatio(SentimentTopRow, SentimentBottomRow, savedSentimentRatio, 0.20, 0.85);
+        }
         UpdateZweigModeText();
-        TradingEnsembleDirectory.Text = @"D:\TorchSharp4GPU";
+        TradingGpuDirectory.Text = @"D:\TorchSharp4GPU";
+        TradingTorchDirectory.Text = @"D:\TorchSharp";
+        TradingEncogDirectory.Text = @"D:\model_ensemble_Encog";
         SetStatus("Ожидайте — запускается первоначальный расчёт данных …", BreadthProgressLevel.Waiting);
         if (!_initialCalculationStarted)
         {
@@ -376,13 +530,35 @@ public partial class BreezeWindow : ChildWindow
             }));
     }
 
+    private void ResolveDefaultDataSets()
+    {
+        List<DataSet> dataSets = WLHost.Instance.DataSets
+            .Where(item => !item.IsHidden)
+            .OrderBy(item => item.QualifiedName)
+            .ToList();
+        SpDataSet.ItemsSource = dataSets;
+        NasdaqDataSet.ItemsSource = dataSets;
+        SpDataSet.SelectedItem = DefaultDataSets.FindIndex(dataSets, "S&P 500");
+        NasdaqDataSet.SelectedItem = DefaultDataSets.FindIndex(dataSets, "NASDAQ 100");
+        _sentimentDataSet = FindDataSet(dataSets, null, "setiment", "sentiment");
+    }
+
     private async void RefreshClick(object sender, RoutedEventArgs e)
     {
+        // Providers can finish registering DataSets after the window's Loaded event.
+        ResolveDefaultDataSets();
         if (SpDataSet.SelectedItem is not DataSet sp || NasdaqDataSet.SelectedItem is not DataSet nasdaq)
         {
-            SetStatus("Select both DataSets.", BreadthProgressLevel.Error);
+            SetStatus("Не найдены обязательные источники S&P 500:WealthData и NASDAQ 100:WealthData.", BreadthProgressLevel.Error);
             return;
         }
+        if (_sentimentDataSet is not DataSet sentimentDataSet)
+        {
+            SetStatus("Sentiment DataSet 'setiment'/'sentiment' was not found.", BreadthProgressLevel.Error);
+            return;
+        }
+
+        ResetContangoForRecalculation();
 
         _calculationCts?.Cancel();
         _calculationCts?.Dispose();
@@ -399,6 +575,10 @@ public partial class BreezeWindow : ChildWindow
             DateTime end = DateTime.Today;
             DateTime start = end.AddYears(-12);
             DateTime technicalWarmupStart = start.AddYears(-3);
+            DateTime spyHistoryStart = VixTermStructureStore.FindFirstSourceDate(VixTermDataDirectory)
+                ?.AddDays(-7) ?? technicalWarmupStart;
+            if (spyHistoryStart > technicalWarmupStart)
+                spyHistoryStart = technicalWarmupStart;
             BreadthCalculationResult spResult = await Task.Run(() =>
                 BreadthCalculator.Calculate(sp, [200, 100, 50], start, end, progress, cancellationToken),
                 cancellationToken);
@@ -410,7 +590,7 @@ public partial class BreezeWindow : ChildWindow
             SetStatus("S&P 500 breadth ready. Loading SPY and NYSE Zweig histories …");
 
             Task<BarHistory> spyTask = Task.Run(() =>
-                BreadthCalculator.LoadRawHistory(sp, "SPY", technicalWarmupStart, end), cancellationToken);
+                BreadthCalculator.LoadRawHistory(sp, "SPY", spyHistoryStart, end), cancellationToken);
             Task<PriceSeries> advancingTask = Task.Run(() =>
                 BreadthCalculator.LoadPriceSeries(sp, "$NYSE_ADVN", technicalWarmupStart, end, "NYSE Advancing"),
                 cancellationToken);
@@ -424,22 +604,26 @@ public partial class BreezeWindow : ChildWindow
                     return BreadthCalculator.LoadPriceSeries(
                         sp, "SVXY", technicalWarmupStart, end, "SVXY");
                 }
-                catch
+                catch (Exception ex)
                 {
+                    WLHost.Instance.AddLogItem("Breeze", $"SVXY history unavailable: {ex.Message}", WLColor.Orange, ex, this);
                     return null;
                 }
             }, cancellationToken);
             await Task.WhenAll(spyTask, advancingTask, decliningTask);
             BarHistory sp500Bars = await spyTask;
             PriceSeries sp500Price = BreadthCalculator.ToPriceSeries(sp500Bars, "S&P 500 (SPY)");
+            HashSet<DateTime> spyTradingDates = sp500Price.Points
+                .Select(point => point.Date.Date)
+                .ToHashSet();
             PriceSeries? svxyPrice = await svxyTask;
             PriceSeries advancingSeries = await advancingTask;
             PriceSeries decliningSeries = await decliningTask;
             TechnicalIndicatorSeries technicalIndicators = TechnicalIndicatorCalculator.Calculate(sp500Price);
             ZweigSeries zweigStrongSeries = ZweigBreadthCalculator.Calculate(
-                advancingSeries, decliningSeries, ZweigMode.Strong, start, end);
+                advancingSeries, decliningSeries, spyTradingDates, ZweigMode.Strong, start, end);
             ZweigSeries zweigWorkingSeries = ZweigBreadthCalculator.Calculate(
-                advancingSeries, decliningSeries, ZweigMode.Working, start, end);
+                advancingSeries, decliningSeries, spyTradingDates, ZweigMode.Working, start, end);
 
             SetStatus("S&P 500, SPY and Zweig ready. Loading Nasdaq-100 …");
 
@@ -457,15 +641,54 @@ public partial class BreezeWindow : ChildWindow
             Task<PriceSeries> qqqTask = Task.Run(() =>
                 BreadthCalculator.LoadPriceSeries(nasdaq, "QQQ", technicalWarmupStart, end, "Nasdaq 100 (QQQ)"),
                 cancellationToken);
-            Task<PriceSeries> newHighsTask = Task.Run(() =>
-                BreadthCalculator.LoadPriceSeries(nasdaq, "$NASDAQ_NEWHI", technicalWarmupStart, end, "Nasdaq New Highs"),
+            Task<BarHistory> newHighsTask = Task.Run(() =>
+                BreadthCalculator.LoadRawHistory(nasdaq, "$NASDAQ_NEWHI", technicalWarmupStart, end),
                 cancellationToken);
-            Task<PriceSeries> newLowsTask = Task.Run(() =>
-                BreadthCalculator.LoadPriceSeries(nasdaq, "$NASDAQ_NEWLO", technicalWarmupStart, end, "Nasdaq New Lows"),
+            Task<BarHistory> newLowsTask = Task.Run(() =>
+                BreadthCalculator.LoadRawHistory(nasdaq, "$NASDAQ_NEWLO", technicalWarmupStart, end),
                 cancellationToken);
             await Task.WhenAll(qqqTask, newHighsTask, newLowsTask);
+            BarHistory nasdaqNewHighs = await newHighsTask;
+            BarHistory nasdaqNewLows = await newLowsTask;
             TitanicSeries titanicSeries = TitanicSyndromeCalculator.Calculate(
-                await qqqTask, await newHighsTask, await newLowsTask, nasdaq50Series, start, end);
+                await qqqTask,
+                BreadthCalculator.ToPriceSeries(nasdaqNewHighs, "Nasdaq New Highs"),
+                BreadthCalculator.ToPriceSeries(nasdaqNewLows, "Nasdaq New Lows"),
+                nasdaq50Series, spyTradingDates, start, end);
+
+            SetStatus("Titanic ready. Loading Sentiment histories and calculating indicators …");
+            Task<BarHistory> cnnFearGreedTask = Task.Run(() => BreadthCalculator.LoadRawHistory(
+                sentimentDataSet, SentimentCalculator.CnnFearGreedSymbol, technicalWarmupStart, end), cancellationToken);
+            Task<BarHistory> riskMeasureTask = Task.Run(() => BreadthCalculator.LoadRawHistory(
+                sentimentDataSet, SentimentCalculator.RiskMeasureSymbol, technicalWarmupStart, end), cancellationToken);
+            Task<BarHistory> panicEuphoriaTask = Task.Run(() => BreadthCalculator.LoadRawHistory(
+                sentimentDataSet, SentimentCalculator.PanicEuphoriaSymbol, technicalWarmupStart, end), cancellationToken);
+            Task<BarHistory> dumbMoneyTask = Task.Run(() => BreadthCalculator.LoadRawHistory(
+                sentimentDataSet, SentimentCalculator.DumbMoneySymbol, technicalWarmupStart, end), cancellationToken);
+            Task<BarHistory> smartMoneyTask = Task.Run(() => BreadthCalculator.LoadRawHistory(
+                sentimentDataSet, SentimentCalculator.SmartMoneySymbol, technicalWarmupStart, end), cancellationToken);
+            Task<BarHistory>[] sectorTasks = new[] { "XLV", "XLU", "XLE", "XLP" }
+                .Select(symbol => Task.Run(() => BreadthCalculator.LoadRawHistory(
+                    sp, symbol, technicalWarmupStart, end), cancellationToken))
+                .ToArray();
+            await Task.WhenAll(new Task[]
+            {
+                cnnFearGreedTask, riskMeasureTask, panicEuphoriaTask, dumbMoneyTask, smartMoneyTask
+            }.Concat(sectorTasks));
+            var marketBreadthHistories = new List<BarHistory> { sp500Bars };
+            marketBreadthHistories.AddRange(sectorTasks.Select(task => task.Result));
+            SentimentSeries sentimentSeries = await Task.Run(() => SentimentCalculator.Calculate(
+                sp500Bars,
+                cnnFearGreedTask.Result,
+                riskMeasureTask.Result,
+                panicEuphoriaTask.Result,
+                dumbMoneyTask.Result,
+                smartMoneyTask.Result,
+                nasdaqNewHighs,
+                nasdaqNewLows,
+                marketBreadthHistories,
+                start,
+                end), cancellationToken);
 
             cancellationToken.ThrowIfCancellationRequested();
             _sp200Series = sp200Series;
@@ -477,6 +700,7 @@ public partial class BreezeWindow : ChildWindow
             _sp500Bars = sp500Bars;
             _svxyPriceSeries = svxyPrice;
             _technicalIndicators = technicalIndicators;
+            _sentimentSeries = sentimentSeries;
             _marketResearch = marketResearch;
             _zweigStrongSeries = zweigStrongSeries;
             _zweigWorkingSeries = zweigWorkingSeries;
@@ -484,6 +708,19 @@ public partial class BreezeWindow : ChildWindow
             _titanicSeries = titanicSeries;
 
             Sp200Chart.SetSeries(sp200Series);
+            SentimentSpChart.SetSeries(sp200Series);
+            SentimentSpChart.SetTechnicalIndicators(technicalIndicators);
+            SentimentSpChart.SetShowEmaOverlays(SentimentEma.IsChecked == true);
+            SentimentIndicatorChart.SetSeries(sentimentSeries);
+            ApplySentimentOptions();
+            MarketSetupSpChart.SetSeries(sp200Series);
+            MarketSetupSpChart.SetTechnicalIndicators(technicalIndicators);
+            MarketSetupSpChart.SetShowEmaOverlays(MarketSetupEma.IsChecked == true);
+            MarketSetupIndicatorChart.SetSeries(sentimentSeries);
+            MarketSetupIndicatorChart.SetBreadthSeries(sp50Series, sp100Series, sp200Series, nasdaq100Series);
+            MarketSetupAtrpChart.SetSeries(technicalIndicators);
+            MarketSetupAtrpChart.SetMasterDates(sp200Series.Points.Select(point => point.Date));
+            ApplyMarketSetupOptions();
             ContangoSpChart.SetSeries(sp200Series);
             ContangoSpChart.SetTechnicalIndicators(technicalIndicators);
             ContangoSpChart.SetShowEmaOverlays(ContangoEma.IsChecked == true);
@@ -511,14 +748,16 @@ public partial class BreezeWindow : ChildWindow
 
             var exportSnapshot = new ExportSnapshot(
                 sp50Series, sp100Series, sp200Series, nasdaq100Series, sp500Price, svxyPrice,
-                fuzzyStates, _holdConfidence!, technicalIndicators, titanicSeries,
+                fuzzyStates, technicalIndicators, sentimentSeries, titanicSeries,
                 zweigStrongSeries, zweigWorkingSeries);
             string exportMessage = await Task.Run(
                 () => ExportBreadthSeries(exportSnapshot, start, end), cancellationToken);
+            RefreshMarketSetupData();
+            RefreshHoldConfidence();
             int providerErrors = spResult.FailedHistoryCount + nasdaqResult.FailedHistoryCount;
             string historySummary =
                 $"Histories used: S&P {spResult.LoadedHistoryCount}, Nasdaq {nasdaqResult.LoadedHistoryCount}.";
-            SetStatus(
+            SetModelAwareStatus(
                 $"Ready: {start:yyyy-MM-dd} — {end:yyyy-MM-dd}. {historySummary} {exportMessage}",
                 providerErrors > 0 ? BreadthProgressLevel.Waiting : BreadthProgressLevel.Normal);
         }
@@ -531,7 +770,7 @@ public partial class BreezeWindow : ChildWindow
             _calculationCts?.Cancel();
             SetStatus($"CALCULATION FAILED: {ex.Message}", BreadthProgressLevel.Error);
             WLHost.Instance.AddLogItem(
-                "Breeze Wealth-Lab",
+                "Market Breeze",
                 $"Market breadth calculation failed: {ex}",
                 WLColor.Red,
                 ex,
@@ -590,17 +829,18 @@ public partial class BreezeWindow : ChildWindow
 
     private void SetTradingCalculationStatus(string message,
         BreadthProgressLevel level = BreadthProgressLevel.Normal)
+        => SetStatus(message, level);
+
+    private void SetModelAwareStatus(string message, BreadthProgressLevel level = BreadthProgressLevel.Normal)
     {
-        if (TradingCalculationStatus is null)
-            return;
-        TradingCalculationStatus.Text = message;
-        TradingCalculationStatus.ToolTip = message;
-        TradingCalculationStatus.Foreground = level switch
-        {
-            BreadthProgressLevel.Waiting => new SolidColorBrush(Color.FromRgb(181, 103, 0)),
-            BreadthProgressLevel.Error => Brushes.Red,
-            _ => new SolidColorBrush(Color.FromRgb(20, 112, 68))
-        };
+        BreadthProgressLevel combined = level == BreadthProgressLevel.Error || _modelStatusLevel == BreadthProgressLevel.Error
+            ? BreadthProgressLevel.Error
+            : level == BreadthProgressLevel.Waiting || _modelStatusLevel == BreadthProgressLevel.Waiting
+                ? BreadthProgressLevel.Waiting
+                : BreadthProgressLevel.Normal;
+        SetStatus(string.IsNullOrWhiteSpace(_modelStatusMessage)
+            ? message
+            : $"{message} {_modelStatusMessage}", combined);
     }
 
     private void ConfigureHistorySlider(BreadthSeries master)
@@ -662,6 +902,25 @@ public partial class BreezeWindow : ChildWindow
             return;
         }
 
+        if (IsDescendantOf(source, TitanicChart) && TitanicChart.TryBeginPaneResize(e.GetPosition(TitanicChart)))
+        {
+            _activeTwoPaneResizeChart = TitanicChart;
+            _previousOverrideCursor = Mouse.OverrideCursor;
+            Mouse.OverrideCursor = Cursors.SizeNS;
+            BreadthTabs.CaptureMouse();
+            e.Handled = true;
+            return;
+        }
+        if (IsDescendantOf(source, ZweigChart) && ZweigChart.TryBeginPaneResize(e.GetPosition(ZweigChart)))
+        {
+            _activeTwoPaneResizeChart = ZweigChart;
+            _previousOverrideCursor = Mouse.OverrideCursor;
+            Mouse.OverrideCursor = Cursors.SizeNS;
+            BreadthTabs.CaptureMouse();
+            e.Handled = true;
+            return;
+        }
+
         FrameworkElement? chart = FindChartElement(source);
         if (chart is null || _viewportMaster is null || _viewportMaster.Points.Count == 0)
             return;
@@ -691,6 +950,19 @@ public partial class BreezeWindow : ChildWindow
 
     private void ChartsMouseMove(object sender, MouseEventArgs e)
     {
+        if (_activeTwoPaneResizeChart is not null)
+        {
+            if (e.LeftButton == MouseButtonState.Pressed && BreadthTabs.IsMouseCaptured)
+            {
+                if (ReferenceEquals(_activeTwoPaneResizeChart, TitanicChart))
+                    TitanicChart.ResizePane(e.GetPosition(TitanicChart));
+                else if (ReferenceEquals(_activeTwoPaneResizeChart, ZweigChart))
+                    ZweigChart.ResizePane(e.GetPosition(ZweigChart));
+                e.Handled = true;
+                return;
+            }
+            FinishTwoPaneResize();
+        }
         if (_isTradingPaneResizing)
         {
             if (e.LeftButton == MouseButtonState.Pressed && BreadthTabs.IsMouseCaptured)
@@ -732,6 +1004,12 @@ public partial class BreezeWindow : ChildWindow
 
     private void ChartsMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
     {
+        if (_activeTwoPaneResizeChart is not null)
+        {
+            FinishTwoPaneResize();
+            e.Handled = true;
+            return;
+        }
         if (_isTradingPaneResizing)
         {
             _isTradingPaneResizing = false;
@@ -750,6 +1028,26 @@ public partial class BreezeWindow : ChildWindow
         SetHorizontalDragCursor(false);
         if (wasPanning)
             e.Handled = true;
+    }
+
+    private void FinishTwoPaneResize()
+    {
+        if (ReferenceEquals(_activeTwoPaneResizeChart, TitanicChart))
+        {
+            TitanicChart.EndPaneResize();
+            _layoutState.TitanicTopRatio = TitanicChart.GetPaneRatio();
+        }
+        else if (ReferenceEquals(_activeTwoPaneResizeChart, ZweigChart))
+        {
+            ZweigChart.EndPaneResize();
+            _layoutState.ZweigTopRatio = ZweigChart.GetPaneRatio();
+        }
+        _activeTwoPaneResizeChart = null;
+        Mouse.OverrideCursor = _previousOverrideCursor;
+        _previousOverrideCursor = null;
+        SavePersistentLayout();
+        if (BreadthTabs.IsMouseCaptured)
+            BreadthTabs.ReleaseMouseCapture();
     }
 
     private void BreadthTabsSelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -790,6 +1088,15 @@ public partial class BreezeWindow : ChildWindow
             {
                 TitanicChart.Refresh();
             }
+            else if (ReferenceEquals(selectedTab, SentimentTab))
+            {
+                SentimentSpChart.Refresh();
+                SentimentIndicatorChart.Refresh();
+            }
+            else if (ReferenceEquals(selectedTab, MarketSetupTab))
+            {
+                ScheduleMarketSetupRefresh();
+            }
             else if (ReferenceEquals(selectedTab, TradingEnsemblesTab))
             {
                 TradingEnsembleChart.Refresh();
@@ -810,6 +1117,8 @@ public partial class BreezeWindow : ChildWindow
         CursorValuesText.Visibility = detailVisibility;
         CursorIndicatorsText.Visibility = detailVisibility;
         VisibleBarsText.Visibility = Visibility.Visible;
+        if (_cursorDate.HasValue && !tradingEnsemble)
+            ApplyCursorValues(_cursorDate.Value);
     }
 
     private void RequestContangoInitialization()
@@ -838,6 +1147,23 @@ public partial class BreezeWindow : ChildWindow
         _ = EnsureContangoLoadedAsync();
     }
 
+    private void ResetContangoForRecalculation()
+    {
+        _contangoLoadCts?.Cancel();
+        _contangoLoadCts?.Dispose();
+        _contangoLoadCts = null;
+        _vixTermLoadTask = null;
+        _vixTermExportTask = null;
+        _vixTermStore = null;
+        _contangoStates = null;
+        _vixPriceSeries = null;
+        _contangoInitializationStarted = false;
+        FuzzyChart?.SetContangoStates(null);
+        ContangoSpChart?.SetVixCurveStates(null, showVixRibbon: false);
+        ContangoSvxyChart?.SetVixCurveStates(null, showVixRibbon: true, showSvxyRibbon: true,
+            showLegacyVixRibbon: true);
+    }
+
     private async Task EnsureContangoLoadedAsync()
     {
         if (_vixTermStore is not null)
@@ -845,11 +1171,14 @@ public partial class BreezeWindow : ChildWindow
             if (_contangoStates is null)
             {
                 CancellationToken token = _contangoLoadCts?.Token ?? CancellationToken.None;
-                _contangoStates = await Task.Run(() => _vixTermStore.BuildStateSeries(token), token);
+                IReadOnlyDictionary<DateTime, VixMarketStressContext> stressContexts = BuildContangoStressContexts();
+                _contangoStates = await Task.Run(
+                    () => _vixTermStore.BuildStateSeries(token, stressContexts), token);
                 FuzzyChart.SetContangoStates(_contangoStates);
                 RefreshHoldConfidence();
                 ContangoSpChart.SetVixCurveStates(_contangoStates, showVixRibbon: false);
-                ContangoSvxyChart.SetVixCurveStates(_contangoStates, showVixRibbon: true, showSvxyRibbon: true);
+                ContangoSvxyChart.SetVixCurveStates(_contangoStates, showVixRibbon: true,
+                    showSvxyRibbon: true, showLegacyVixRibbon: true);
                 if (_cursorDate.HasValue)
                     ApplyCursorValues(_cursorDate.Value);
             }
@@ -870,6 +1199,9 @@ public partial class BreezeWindow : ChildWindow
         try
         {
             _vixTermStore = await _vixTermLoadTask;
+            PriceSeries spTradingCalendar = _sp500PriceSeries
+                ?? throw new InvalidOperationException("SPY bars are unavailable for the Contango trading calendar.");
+            _vixTermStore.SetTradingCalendar(spTradingCalendar.Points.Select(point => point.Date));
             string? vixWarning = null;
             if (SpDataSet.SelectedItem is DataSet spDataSet)
             {
@@ -897,16 +1229,20 @@ public partial class BreezeWindow : ChildWindow
                 }
             }
             CancellationToken stateToken = _contangoLoadCts?.Token ?? CancellationToken.None;
-            _contangoStates = await Task.Run(() => _vixTermStore.BuildStateSeries(stateToken), stateToken);
+            IReadOnlyDictionary<DateTime, VixMarketStressContext> stressContexts = BuildContangoStressContexts();
+            _contangoStates = await Task.Run(
+                () => _vixTermStore.BuildStateSeries(stateToken, stressContexts), stateToken);
             FuzzyChart.SetContangoStates(_contangoStates);
             RefreshHoldConfidence();
             ContangoSpChart.SetVixCurveStates(_contangoStates, showVixRibbon: false);
-            ContangoSvxyChart.SetVixCurveStates(_contangoStates, showVixRibbon: true, showSvxyRibbon: true);
+            ContangoSvxyChart.SetVixCurveStates(_contangoStates, showVixRibbon: true,
+                showSvxyRibbon: true, showLegacyVixRibbon: true);
             if (_cursorDate.HasValue)
                 ApplyCursorValues(_cursorDate.Value);
             UpdateContangoSnapshot();
-            SetStatus($"Contango ready: {_vixTermStore.Count:N0} VIX term files, " +
-                      $"{_vixTermStore.FirstDate:yyyy-MM-dd} — {_vixTermStore.LastDate:yyyy-MM-dd}.{vixWarning}");
+            SetModelAwareStatus($"Contango ready: {_vixTermStore.TradingDateCount:N0} SPY trading dates; " +
+                       $"excluded {_vixTermStore.ExcludedNonTradingDateCount:N0} non-trading VIX files; " +
+                       $"{_vixTermStore.FirstDate:yyyy-MM-dd} — {_vixTermStore.LastDate:yyyy-MM-dd}.{vixWarning}");
             _ = EnsureContangoExportAsync();
         }
         catch (OperationCanceledException)
@@ -929,7 +1265,7 @@ public partial class BreezeWindow : ChildWindow
 
     private async Task EnsureContangoExportAsync()
     {
-        if (_vixTermStore is null || _vixTermExportTask is not null)
+        if (_vixTermStore is null || !RefreshCyclePolicy.CanStartExport(_vixTermExportTask))
             return;
 
         CancellationToken token = _contangoLoadCts?.Token ?? CancellationToken.None;
@@ -937,27 +1273,35 @@ public partial class BreezeWindow : ChildWindow
         TitanicSeries? titanicSeries = _titanicSeries;
         ZweigSeries? zweigSeries = _zweigSeries;
         VixCurveStateSeries? curveStates = _contangoStates;
-        HoldConfidenceSeries? holdConfidence = _holdConfidence;
-        _vixTermExportTask = Task.Run(() =>
+        HoldConfidenceSeries? holdConfidence = _rules1Confidence;
+        Task<string> exportTask = Task.Run(() =>
         {
             string wideResult = _vixTermStore.ExportWideCsv(VixTermExportPath, token);
-            string stateResult = _vixTermStore.ExportStateCsv(VixCurveStateExportPath, token);
+            string stateResult = curveStates is null
+                ? "contango state export pending main calculation"
+                : _vixTermStore.ExportStateCsv(VixCurveStateExportPath, curveStates, token);
+            string rules2Result = curveStates is null
+                ? "Rules2 VIX export pending main calculation"
+                : Rules2VixExport.Export(
+                    VixTermDataDirectory, Rules2HoldConfidenceCalculator.CurvePath, curveStates, token);
             string componentResult = fuzzyStates is not null && holdConfidence is not null &&
                                      titanicSeries is not null && zweigSeries is not null && curveStates is not null
                 ? WritePhaseModelComponentsCsv(
                     PhaseModelComponentsExportPath, fuzzyStates, holdConfidence,
                     titanicSeries, zweigSeries, curveStates)
                 : "phase components pending main calculation";
-            return $"{wideResult}; {stateResult}; {componentResult}";
+            return $"{wideResult}; {stateResult}; {rules2Result}; {componentResult}";
         }, token);
+        _vixTermExportTask = exportTask;
         try
         {
-            string result = await _vixTermExportTask;
+            string result = await exportTask;
             // The shared research model reads the just-promoted snapshots.
             // Recalculate now so the DLL and standalone strategy use the same
             // current dates, not the previous wide VIX export.
             RefreshHoldConfidence();
-            SetStatus($"Contango ready. {result}.");
+            RefreshMarketSetupData();
+            SetModelAwareStatus($"Contango ready. {result}.");
         }
         catch (OperationCanceledException)
         {
@@ -965,9 +1309,34 @@ public partial class BreezeWindow : ChildWindow
         }
         catch (Exception ex)
         {
-            _vixTermExportTask = null;
             SetStatus($"CONTANGO EXPORT FAILED: {ex.Message}", BreadthProgressLevel.Error);
         }
+        finally
+        {
+            if (ReferenceEquals(_vixTermExportTask, exportTask))
+                _vixTermExportTask = null;
+        }
+    }
+
+    private IReadOnlyDictionary<DateTime, VixMarketStressContext> BuildContangoStressContexts()
+    {
+        if (_fuzzyStates is null || _technicalIndicators is null)
+            return new Dictionary<DateTime, VixMarketStressContext>();
+
+        var technicalByDate = _technicalIndicators.Points.ToDictionary(point => point.Date);
+        FuzzyMarketStatePoint[] prices = _fuzzyStates.Points.OrderBy(point => point.Date).ToArray();
+        var result = new Dictionary<DateTime, VixMarketStressContext>();
+        for (int index = 1; index < prices.Length; index++)
+        {
+            FuzzyMarketStatePoint current = prices[index];
+            FuzzyMarketStatePoint previous = prices[index - 1];
+            if (previous.SpyClose <= 0 || !technicalByDate.TryGetValue(current.Date, out TechnicalIndicatorPoint? technical))
+                continue;
+            result[current.Date] = new VixMarketStressContext(
+                100.0 * (current.SpyClose / previous.SpyClose - 1.0),
+                technical.Atrp1);
+        }
+        return result;
     }
 
     private void UpdateContangoSnapshot()
@@ -980,7 +1349,7 @@ public partial class BreezeWindow : ChildWindow
             ?? _vixTermStore.LastDate;
         try
         {
-            ContangoChart.SetSnapshot(_vixTermStore.GetNearest(date));
+            ContangoChart.SetSnapshot(_vixTermStore.GetExact(date));
         }
         catch (Exception ex)
         {
@@ -998,6 +1367,310 @@ public partial class BreezeWindow : ChildWindow
     {
         if (ContangoSpChart is not null)
             ContangoSpChart.SetShowEmaOverlays(ContangoEma?.IsChecked == true);
+    }
+
+    private void SentimentOptionsChanged(object sender, RoutedEventArgs e) => ApplySentimentOptions();
+
+    private void ApplySentimentOptions()
+    {
+        if (SentimentIndicatorChart is null || SentimentSpChart is null)
+            return;
+
+        var selected = new List<SentimentIndicator>();
+        if (SentimentCnnFearGreed?.IsChecked == true) selected.Add(SentimentIndicator.CnnFearGreed);
+        if (SentimentRiskMeasure?.IsChecked == true) selected.Add(SentimentIndicator.RiskMeasure);
+        if (SentimentPanicEuphoria?.IsChecked == true) selected.Add(SentimentIndicator.PanicEuphoria);
+        if (SentimentArsi?.IsChecked == true) selected.Add(SentimentIndicator.Arsi);
+        if (SentimentMyRsi?.IsChecked == true) selected.Add(SentimentIndicator.MyRsi);
+        if (SentimentTrendScore?.IsChecked == true) selected.Add(SentimentIndicator.TrendScore);
+        if (SentimentHurst?.IsChecked == true) selected.Add(SentimentIndicator.Hurst);
+        if (SentimentCmf?.IsChecked == true) selected.Add(SentimentIndicator.Cmf);
+        if (SentimentDecibel?.IsChecked == true) selected.Add(SentimentIndicator.Decibel);
+        if (SentimentJocker?.IsChecked == true) selected.Add(SentimentIndicator.Jocker);
+        if (SentimentMarketBreadth?.IsChecked == true) selected.Add(SentimentIndicator.MarketBreadth);
+        if (SentimentDumbMoney?.IsChecked == true) selected.Add(SentimentIndicator.DumbMoney);
+        if (SentimentSmartMoney?.IsChecked == true) selected.Add(SentimentIndicator.SmartMoney);
+        SentimentIndicatorChart.SetSelectedIndicators(selected);
+        SentimentSpChart.SetShowEmaOverlays(SentimentEma?.IsChecked == true);
+    }
+
+    private void PopulateMarketSetupRuleTree()
+    {
+        if (MarketSetupRuleTree is null)
+            return;
+
+        string model = CurrentScoreModel;
+        _selectedMarketSetupIds.TryGetValue(model, out string? selectedId);
+        HashSet<string> expandedFamilies = MarketSetupRuleTree.Items.OfType<TreeViewItem>()
+            .Where(item => item.IsExpanded && item.Tag is string)
+            .Select(item => (string)item.Tag).ToHashSet(StringComparer.Ordinal);
+        bool activeOnly = MarketSetupActiveRules?.IsChecked == true;
+        MarketSetupRuleTree.Items.Clear();
+        BreezeMarketEntry? firstRule = null;
+        TreeViewItem? firstRuleItem = null;
+        TreeViewItem? selectedRuleItem = null;
+        BreezeMarketCatalogSet catalog = model == "Rules2" ? Rules2MarketCatalog.Current : BreezeMarketCatalog.Current;
+        MarketSetupCatalogSummary.Text = $"{model}: всего {catalog.Entries.Count}; расчётных {catalog.RuntimeCount}; активных {catalog.RuntimeActive}";
+        MarketSetupCatalogSummary.ToolTip = model == "Rules2"
+            ? "Точные факторы замороженной Rules2. Активные — факторы с ненулевым весом; профили меняют пороги, но не веса."
+            : $"Общий каталог {catalog.Version}: {catalog.Entries.Count} записей. " +
+              $"Расчётных детекторов {catalog.RuntimeCount}; исходных весовых признаков {BreezeRuleCatalog.Current.Rules.Count}. " +
+              $"Принятая исследовательская модель: {catalog.AcceptedSelected} правил, {catalog.AcceptedNonzero} с ненулевыми весами. " +
+              "Фильтр «Активные» относится к трём профилям установленного Breeze, а не к исследовательским весам.";
+        foreach (IGrouping<string, BreezeMarketEntry> family in catalog.Entries
+                     .Where(rule => !activeOnly || rule.IsActiveInBreeze)
+                     .GroupBy(rule => rule.Family))
+        {
+            var familyItem = new TreeViewItem
+            {
+                Header = MarketSetupFamilyName(family.Key),
+                Tag = family.Key,
+                ToolTip = MarketSetupFamilyName(family.Key),
+                IsExpanded = activeOnly || expandedFamilies.Contains(family.Key) ||
+                             string.Equals(family.Key, "T", StringComparison.Ordinal)
+            };
+            foreach (BreezeMarketEntry rule in family)
+            {
+                var ruleItem = new TreeViewItem
+                {
+                    Header = $"{rule.Number:00}  {rule.Id} — {rule.NameRu}",
+                    Tag = rule,
+                    ToolTip = rule.NameRu
+                };
+                familyItem.Items.Add(ruleItem);
+                if (string.Equals(rule.Id, selectedId, StringComparison.Ordinal))
+                {
+                    selectedRuleItem = ruleItem;
+                    familyItem.IsExpanded = true;
+                }
+                if (firstRule is null)
+                {
+                    firstRule = rule;
+                    firstRuleItem = ruleItem;
+                }
+            }
+            MarketSetupRuleTree.Items.Add(familyItem);
+        }
+
+        TreeViewItem? selection = selectedRuleItem ?? firstRuleItem;
+        if (selection?.Tag is BreezeMarketEntry selectedRule)
+        {
+            selection.IsSelected = true;
+            selection.BringIntoView();
+            SelectMarketSetupRule(selectedRule);
+        }
+        else
+        {
+            _selectedMarketSetupRule = null;
+            _selectedMarketSetupEntry = null;
+            MarketSetupRuleTitle.Text = "Нет активных правил";
+            MarketSetupRuleDescription.Text = "Ни одно правило не имеет ненулевого веса в профилях Soft, Standard или Hard.";
+            MarketSetupSpChart.SetMarketSetupOverlay(_marketSetupSeries, null);
+        }
+        UpdateMarketSetupCompactColumns();
+    }
+
+    private void MarketSetupActiveRulesChanged(object sender, RoutedEventArgs e) => PopulateMarketSetupRuleTree();
+
+    private void MarketSetupColumnSizeChanged(object sender, SizeChangedEventArgs e) => UpdateMarketSetupCompactColumns();
+
+    private void UpdateMarketSetupCompactColumns()
+    {
+        if (MarketSetupIndicatorSelectors is null || MarketSetupRuleTree is null ||
+            MarketSetupIndicatorsTitle is null)
+            return;
+        bool compactIndicators = MarketSetupIndicatorsColumn.ActualWidth < 100;
+        DataTemplate template = (DataTemplate)FindResource(compactIndicators
+            ? "MarketSetupCompactToggleTemplate" : "SentimentIndicatorToggleTemplate");
+        foreach (CheckBox selector in MarketSetupIndicatorSelectors.Children.OfType<CheckBox>()
+                     .Concat(_marketSetupExtraSelectors.Values))
+        {
+            selector.ContentTemplate = template;
+            selector.ToolTip ??= selector.Content?.ToString();
+        }
+        MarketSetupIndicatorsTitle.Text = compactIndicators ? "И" : "Индикаторы";
+        MarketSetupIndicatorsTitle.ToolTip = "Индикаторы";
+        bool compactRules = MarketSetupRulesColumn.ActualWidth < 175;
+        MarketSetupRuleTree.FontSize = compactRules ? 11 : 12;
+        foreach (TreeViewItem family in MarketSetupRuleTree.Items.OfType<TreeViewItem>())
+        {
+            if (family.Tag is string code)
+                family.Header = compactRules ? code : MarketSetupFamilyName(code);
+            foreach (TreeViewItem item in family.Items.OfType<TreeViewItem>())
+                if (item.Tag is BreezeMarketEntry rule)
+                    item.Header = compactRules ? $"{rule.Number:00} {rule.Id}"
+                        : $"{rule.Number:00}  {rule.Id} — {rule.NameRu}";
+        }
+    }
+
+    private static string MarketSetupFamilyName(string family) => family switch
+    {
+        "T" => "T — Тренд / EMA",
+        "E" => "E — События EMA",
+        "R" => "R — MyRSI",
+        "B" => "B — Широта рынка",
+        "P" => "P — Движение цены",
+        "V" => "V — Кривая VIX",
+        "Z" => "Z — Zweig",
+        "I" => "I — Titanic",
+        "C" => "C — Составные условия",
+        "U" => "U — Исследовательские условия",
+        "X" => "X — Гипотезы исполнения",
+        "S1" => "S1 — Конструкции Sentiment 1",
+        "VB" => "VB — Уточнения широт",
+        "PH" => "PH — Подхваты с памятью",
+        "PX" => "PX — Уточнения исполнения",
+        "EN" => "EN — Добавки ансамбля",
+        "ST" => "ST — События сентимента",
+        "H" => "H — События и состояния Rules2",
+        "F" => "F — Непрерывные факторы Rules2",
+        "EMA" => "EMA — Контекст порядка средних Rules2",
+        _ => family
+    };
+
+    private void MarketSetupRuleSelected(object sender, RoutedPropertyChangedEventArgs<object> e)
+    {
+        if (e.NewValue is TreeViewItem { Tag: BreezeMarketEntry rule })
+            SelectMarketSetupRule(rule);
+    }
+
+    private void SelectMarketSetupRule(BreezeMarketEntry rule)
+    {
+        _selectedMarketSetupEntry = rule;
+        _selectedMarketSetupRule = rule.RuntimeRule;
+        _selectedMarketSetupIds[CurrentScoreModel] = rule.Id;
+        MarketSetupRuleTitle.Text = $"{rule.Id} — {rule.NameRu}";
+        MarketSetupRuleDescription.Text = DescribeMarketSetupEntry(rule);
+        MarketSetupSpChart.SetMarketSetupOverlay(_marketSetupSeries, rule.RuntimeRule);
+
+        _marketSetupSelection.SelectRule(rule.Id, rule.RuntimeRule?.ImplementedFormula ?? rule.Definition);
+        _settingMarketSetupDependencies = true;
+        try
+        {
+            foreach (CheckBox selector in MarketSetupSelectors())
+                selector.IsChecked = _marketSetupSelection.IsSelected(selector.Name);
+        }
+        finally { _settingMarketSetupDependencies = false; }
+        MarketSetupAtrpChart.SetReferenceLevel(rule.Id.StartsWith("T03", StringComparison.Ordinal)
+            ? rule.RuntimeRule?.Parameters?.AtrpMaxPercent ?? 2.0 : null);
+        ApplyMarketSetupOptions();
+        if (_cursorDate.HasValue)
+            ApplyCursorValues(_cursorDate.Value);
+    }
+
+    private static string BuildMarketSetupRuleDescription(BreezeRuleEntry rule) => MarketSetupDescription.Build(rule);
+
+    private static string DescribeMarketSetupEntry(BreezeMarketEntry rule) =>
+        rule.Kind == "rules2" ? Rules2MarketCatalog.Describe(rule) : BreezeMarketCatalog.Describe(rule);
+
+    private void MarketSetupOptionsChanged(object sender, RoutedEventArgs e)
+    {
+        if (_settingMarketSetupDependencies) return;
+        if (sender is CheckBox selector && !string.IsNullOrEmpty(selector.Name))
+            _marketSetupSelection.SetManual(selector.Name, selector.IsChecked == true);
+        ApplyMarketSetupOptions();
+    }
+
+    private IEnumerable<CheckBox> MarketSetupSelectors() =>
+        MarketSetupIndicatorSelectors.Children.OfType<CheckBox>().Concat(_marketSetupExtraSelectors.Values);
+
+    private void PopulateMarketSetupIndicatorSelectors()
+    {
+        SentimentIndicator[] additional =
+        [
+            SentimentIndicator.AroonUp, SentimentIndicator.AroonDown,
+            SentimentIndicator.DiMinus, SentimentIndicator.DiPlus,
+            SentimentIndicator.CorrelationAngle, SentimentIndicator.CorrelationTrend
+        ];
+        foreach (SentimentIndicator indicator in additional)
+        {
+            var selector = new CheckBox
+            {
+                Name = "MarketSetup" + indicator,
+                Content = SentimentIndicatorCatalog.DisplayName(indicator),
+                Foreground = new SolidColorBrush(SentimentChart.ColorFor(indicator)),
+                Style = (Style)FindResource("SentimentIndicatorToggleStyle"),
+                ToolTip = SentimentIndicatorCatalog.DisplayName(indicator)
+            };
+            selector.Checked += MarketSetupOptionsChanged;
+            selector.Unchecked += MarketSetupOptionsChanged;
+            _marketSetupExtraSelectors.Add(indicator, selector);
+            MarketSetupEnsembleIndicators.Children.Add(selector);
+        }
+        foreach (CheckBox selector in MarketSetupSelectors())
+            _marketSetupSelection.SetManual(selector.Name, selector.IsChecked == true);
+    }
+
+    private void ApplyMarketSetupOptions()
+    {
+        if (_settingMarketSetupDependencies || MarketSetupIndicatorChart is null || MarketSetupSpChart is null)
+            return;
+
+        var selected = new List<SentimentIndicator>();
+        if (MarketSetupCnnFearGreed?.IsChecked == true) selected.Add(SentimentIndicator.CnnFearGreed);
+        if (MarketSetupRiskMeasure?.IsChecked == true) selected.Add(SentimentIndicator.RiskMeasure);
+        if (MarketSetupPanicEuphoria?.IsChecked == true) selected.Add(SentimentIndicator.PanicEuphoria);
+        if (MarketSetupArsi?.IsChecked == true) selected.Add(SentimentIndicator.Arsi);
+        if (MarketSetupMyRsi?.IsChecked == true) selected.Add(SentimentIndicator.MyRsi);
+        if (MarketSetupMyRsiFast?.IsChecked == true) selected.Add(SentimentIndicator.MyRsiFast);
+        if (MarketSetupTrendScore?.IsChecked == true) selected.Add(SentimentIndicator.TrendScore);
+        foreach ((SentimentIndicator indicator, CheckBox selector) in _marketSetupExtraSelectors)
+            if (selector.IsChecked == true) selected.Add(indicator);
+        if (MarketSetupHurst?.IsChecked == true) selected.Add(SentimentIndicator.Hurst);
+        if (MarketSetupCmf?.IsChecked == true) selected.Add(SentimentIndicator.Cmf);
+        if (MarketSetupDecibel?.IsChecked == true) selected.Add(SentimentIndicator.Decibel);
+        if (MarketSetupJocker?.IsChecked == true) selected.Add(SentimentIndicator.Jocker);
+        if (MarketSetupMarketBreadth?.IsChecked == true) selected.Add(SentimentIndicator.MarketBreadth);
+        if (MarketSetupDumbMoney?.IsChecked == true) selected.Add(SentimentIndicator.DumbMoney);
+        if (MarketSetupSmartMoney?.IsChecked == true) selected.Add(SentimentIndicator.SmartMoney);
+        var breadths = new List<SentimentBreadth>();
+        if (MarketSetupSp50?.IsChecked == true) breadths.Add(SentimentBreadth.Sp50);
+        if (MarketSetupSp100?.IsChecked == true) breadths.Add(SentimentBreadth.Sp100);
+        if (MarketSetupSp200?.IsChecked == true) breadths.Add(SentimentBreadth.Sp200);
+        if (MarketSetupNasdaq100?.IsChecked == true) breadths.Add(SentimentBreadth.Nasdaq100);
+        MarketSetupIndicatorChart.SetSelection(selected, breadths);
+        MarketSetupSpChart.SetShowEmaOverlays(MarketSetupEma?.IsChecked == true);
+        UpdateMarketSetupAtrpLayout();
+        ScheduleMarketSetupRefresh();
+        if (_cursorDate.HasValue && ReferenceEquals(BreadthTabs.SelectedItem, MarketSetupTab))
+            ApplyCursorValues(_cursorDate.Value);
+    }
+
+    private void UpdateMarketSetupAtrpLayout()
+    {
+        if (MarketSetupAtrpChart is null || MarketSetupAtrpRow is null || MarketSetupIndicatorRow is null)
+            return;
+        bool showIndicator = MarketSetupSelectors().Any(selector => selector.IsChecked == true &&
+            !ReferenceEquals(selector, MarketSetupEma) && !ReferenceEquals(selector, MarketSetupAtrp));
+        _marketSetupPaneLayout ??= new MarketSetupPaneLayout(MarketSetupChartGrid, MarketSetupLowerGrid,
+            MarketSetupHorizontalSplitter, MarketSetupIndicatorChart, MarketSetupAtrpSplitter, MarketSetupAtrpChart);
+        _marketSetupPaneLayout.Apply(showIndicator, MarketSetupAtrp?.IsChecked == true,
+            _layoutState.MarketSetupTopRatio, _layoutState.MarketSetupIndicatorsRatio);
+    }
+
+    private void ScheduleMarketSetupRefresh()
+    {
+        _marketSetupRefreshScheduled = true;
+        ScheduleHistoryViewport();
+    }
+
+    private void RefreshMarketSetupData()
+    {
+        string model = CurrentScoreModel;
+        if (MarketSetupDataLoader.TryLoad(model, out MarketSetupSeries series, out string error))
+        {
+            _marketSetupSeries = series;
+            MarketSetupSpChart.SetMarketSetupOverlay(series, _selectedMarketSetupRule);
+        }
+        else
+        {
+            _marketSetupSeries = MarketSetupSeries.Empty;
+            if (MarketSetupRuleDescription is not null && _selectedMarketSetupRule is not null)
+                MarketSetupRuleDescription.Text = (_selectedMarketSetupEntry is null
+                    ? BuildMarketSetupRuleDescription(_selectedMarketSetupRule)
+                    : DescribeMarketSetupEntry(_selectedMarketSetupEntry)) +
+                    $"\n• Доступность\n{model} недоступна: {error}";
+        }
     }
 
     private void ContangoShowVixChanged(object sender, RoutedEventArgs e)
@@ -1157,7 +1830,7 @@ public partial class BreezeWindow : ChildWindow
             return;
         if (_sp500Bars is null)
         {
-            TradingEnsembleChart.SetMessage("Дождитесь завершения общего расчёта. Расчёт ZZ1, ZZ2 и ZZ3 начнётся при открытой вкладке.");
+            TradingEnsembleChart.SetMessage("Дождитесь завершения общего расчёта. Расчёт девяти ансамблей начнётся при открытой вкладке.");
             SetTradingCalculationStatus("Ожидайте — подготовка данных…", BreadthProgressLevel.Waiting);
             return;
         }
@@ -1168,7 +1841,9 @@ public partial class BreezeWindow : ChildWindow
         _tradingEnsembleCts?.Dispose();
         _tradingEnsembleCts = new CancellationTokenSource();
         CancellationToken cancellationToken = _tradingEnsembleCts.Token;
-        string directory = TradingEnsembleDirectory.Text?.Trim() ?? @"D:\TorchSharp4GPU";
+        string gpuDirectory = TradingGpuDirectory.Text?.Trim() ?? @"D:\TorchSharp4GPU";
+        string torchDirectory = TradingTorchDirectory.Text?.Trim() ?? @"D:\TorchSharp";
+        string encogDirectory = TradingEncogDirectory.Text?.Trim() ?? @"D:\model_ensemble_Encog";
         var progress = new Progress<BreadthProgress>(update =>
         {
             if (generation != _tradingEnsembleCalculationGeneration)
@@ -1176,7 +1851,9 @@ public partial class BreezeWindow : ChildWindow
             SetStatus(update.Message, update.Level);
             SetTradingCalculationStatus(update.Message, update.Level);
         });
-        TradingEnsembleChart.SetMessage("Расчёт ZZ1, ZZ2 и ZZ3 из готовых JBIN/INI-пакетов …");
+        _tradingEnsembles = new Dictionary<string, TradingEnsembleSeries>(StringComparer.OrdinalIgnoreCase);
+        TradingEnsembleChart.SetData(_tradingEnsembles, _sp500PriceSeries, _technicalIndicators);
+        TradingEnsembleChart.SetMessage("Расчёт ансамблей TorchSharp4GPU, TorchSharp, Jordan и Encog …");
         SetTradingCalculationStatus(
             _tradingForecastDays == 0
                 ? "Ожидайте — расчёт ансамблей…"
@@ -1184,20 +1861,24 @@ public partial class BreezeWindow : ChildWindow
             BreadthProgressLevel.Waiting);
         try
         {
-            IReadOnlyDictionary<string, TradingEnsembleSeries> result = await Task.Run(() =>
+            TradingEnsembleCalculationResult result = await Task.Run(() =>
                 TradingEnsembleInference.Calculate(
-                    _sp500Bars, directory, _tradingForecastDays, progress, cancellationToken),
+                    _sp500Bars, gpuDirectory, torchDirectory, encogDirectory, _tradingForecastDays, progress, cancellationToken),
                 cancellationToken);
             if (generation != _tradingEnsembleCalculationGeneration || cancellationToken.IsCancellationRequested)
                 return;
-            _tradingEnsembles = result;
+            _tradingEnsembles = result.Series;
             TradingEnsembleChart.SetData(_tradingEnsembles, _sp500PriceSeries, _technicalIndicators);
+            ApplyTradingPackageAvailability(result.Statuses);
             ApplyTradingEnsembleOptions();
-            SetStatus("Торговые ансамбли ZZ1, ZZ2 и ZZ3 рассчитаны напрямую из JBIN/​INI-пакетов.");
-            SetTradingCalculationStatus(
-                _tradingForecastDays == 0
-                    ? "Ансамбли рассчитаны"
-                    : $"Forecast {_tradingForecastDays}: готово");
+            int available = result.Statuses.Count(status => status.Available);
+            bool anyWarnings = result.Statuses.Any(status => status.Available && !string.IsNullOrWhiteSpace(status.Message));
+            BreadthProgressLevel level = available == 9 && !anyWarnings ? BreadthProgressLevel.Normal :
+                available == 0 ? BreadthProgressLevel.Error : BreadthProgressLevel.Waiting;
+            if (!result.AnyAvailable)
+                TradingEnsembleChart.SetMessage(result.Summary);
+            SetStatus($"Торговые ансамбли: {result.Summary}", level);
+            SetTradingCalculationStatus(result.Summary, level);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
@@ -1214,22 +1895,65 @@ public partial class BreezeWindow : ChildWindow
         }
     }
 
-    private void OpenTradingDirectoryTreeClick(object sender, RoutedEventArgs e)
+    private void ApplyTradingPackageAvailability(IReadOnlyList<TradingPackageStatus> statuses)
     {
-        EnsureTradingDirectoryTree();
-        TradingDirectoryPopup.IsOpen = true;
-        Dispatcher.BeginInvoke(new Action(() => SelectDirectoryTreePath(TradingEnsembleDirectory.Text)));
+        foreach (TradingPackageStatus status in statuses)
+        {
+            CheckBox selector = status.PackageName switch
+            {
+                "GPU-ZZ1" => TradingShowGpuZz1,
+                "GPU-ZZ2" => TradingShowGpuZz2,
+                "GPU-ZZ3" => TradingShowGpuZz3,
+                "Torch-ZZ1" => TradingShowTorchZz1,
+                "Torch-ZZ2" => TradingShowTorchZz2,
+                "Torch-ZZ1-Jordan" => TradingShowTorchZz1Jordan,
+                "Torch-ZZ2-Jordan" => TradingShowTorchZz2Jordan,
+                "Encog-ZZ1" => TradingShowEncogZz1,
+                _ => TradingShowEncogZz2
+            };
+            bool wasUnavailable = !selector.IsEnabled;
+            selector.IsEnabled = status.Available;
+            selector.ToolTip = status.Available
+                ? $"{status.PackageName}: {status.ModelCount} пригодных моделей, данные до {status.LastDate:yyyy-MM-dd}" +
+                  (string.IsNullOrWhiteSpace(status.Message) ? "" : $"; {status.Message}")
+                : $"{status.PackageName} недоступен: {status.Message}";
+            if (!status.Available)
+                selector.IsChecked = false;
+            else if (wasUnavailable)
+                selector.IsChecked = false;
+        }
     }
 
-    private void EnsureTradingDirectoryTree()
+    private void OpenTradingGpuDirectoryTreeClick(object sender, RoutedEventArgs e)
     {
-        if (_tradingDirectoryTreeInitialized)
+        EnsureTradingDirectoryTree(TradingGpuDirectoryTree, ref _tradingGpuDirectoryTreeInitialized);
+        TradingGpuDirectoryPopup.IsOpen = true;
+        Dispatcher.BeginInvoke(new Action(() => SelectDirectoryTreePath(TradingGpuDirectoryTree, TradingGpuDirectory.Text)));
+    }
+
+    private void OpenTradingTorchDirectoryTreeClick(object sender, RoutedEventArgs e)
+    {
+        EnsureTradingDirectoryTree(TradingTorchDirectoryTree, ref _tradingTorchDirectoryTreeInitialized);
+        TradingTorchDirectoryPopup.IsOpen = true;
+        Dispatcher.BeginInvoke(new Action(() => SelectDirectoryTreePath(TradingTorchDirectoryTree, TradingTorchDirectory.Text)));
+    }
+
+    private void OpenTradingEncogDirectoryTreeClick(object sender, RoutedEventArgs e)
+    {
+        EnsureTradingDirectoryTree(TradingEncogDirectoryTree, ref _tradingEncogDirectoryTreeInitialized);
+        TradingEncogDirectoryPopup.IsOpen = true;
+        Dispatcher.BeginInvoke(new Action(() => SelectDirectoryTreePath(TradingEncogDirectoryTree, TradingEncogDirectory.Text)));
+    }
+
+    private void EnsureTradingDirectoryTree(TreeView tree, ref bool initialized)
+    {
+        if (initialized)
             return;
-        _tradingDirectoryTreeInitialized = true;
+        initialized = true;
         foreach (DriveInfo drive in DriveInfo.GetDrives().Where(drive => drive.IsReady))
         {
             TreeViewItem item = CreateDirectoryTreeItem(drive.RootDirectory.FullName, drive.Name);
-            TradingDirectoryTree.Items.Add(item);
+            tree.Items.Add(item);
         }
     }
 
@@ -1267,7 +1991,7 @@ public partial class BreezeWindow : ChildWindow
         e.Handled = true;
     }
 
-    private void SelectDirectoryTreePath(string? path)
+    private void SelectDirectoryTreePath(TreeView tree, string? path)
     {
         if (string.IsNullOrWhiteSpace(path))
             return;
@@ -1275,7 +1999,7 @@ public partial class BreezeWindow : ChildWindow
         try { fullPath = Path.GetFullPath(path); }
         catch { return; }
         string rootPath = Path.GetPathRoot(fullPath) ?? string.Empty;
-        TreeViewItem? current = TradingDirectoryTree.Items.OfType<TreeViewItem>()
+        TreeViewItem? current = tree.Items.OfType<TreeViewItem>()
             .FirstOrDefault(item => string.Equals(item.Tag as string, rootPath, StringComparison.OrdinalIgnoreCase));
         if (current is null)
             return;
@@ -1296,24 +2020,48 @@ public partial class BreezeWindow : ChildWindow
         current.BringIntoView();
     }
 
-    private void SelectTradingDirectoryClick(object sender, RoutedEventArgs e) =>
-        ApplySelectedTradingDirectory();
+    private void SelectTradingGpuDirectoryClick(object sender, RoutedEventArgs e) =>
+        ApplySelectedTradingDirectory(TradingGpuDirectoryTree, TradingGpuDirectory, TradingGpuDirectoryPopup);
 
-    private void TradingDirectoryTreeMouseDoubleClick(object sender, MouseButtonEventArgs e)
+    private void SelectTradingTorchDirectoryClick(object sender, RoutedEventArgs e) =>
+        ApplySelectedTradingDirectory(TradingTorchDirectoryTree, TradingTorchDirectory, TradingTorchDirectoryPopup);
+
+    private void SelectTradingEncogDirectoryClick(object sender, RoutedEventArgs e) =>
+        ApplySelectedTradingDirectory(TradingEncogDirectoryTree, TradingEncogDirectory, TradingEncogDirectoryPopup);
+
+    private void TradingGpuDirectoryTreeMouseDoubleClick(object sender, MouseButtonEventArgs e)
     {
-        ApplySelectedTradingDirectory();
+        ApplySelectedTradingDirectory(TradingGpuDirectoryTree, TradingGpuDirectory, TradingGpuDirectoryPopup);
         e.Handled = true;
     }
 
-    private void CloseTradingDirectoryTreeClick(object sender, RoutedEventArgs e) =>
-        TradingDirectoryPopup.IsOpen = false;
-
-    private void ApplySelectedTradingDirectory()
+    private void TradingTorchDirectoryTreeMouseDoubleClick(object sender, MouseButtonEventArgs e)
     {
-        if (TradingDirectoryTree.SelectedItem is not TreeViewItem item || item.Tag is not string path)
+        ApplySelectedTradingDirectory(TradingTorchDirectoryTree, TradingTorchDirectory, TradingTorchDirectoryPopup);
+        e.Handled = true;
+    }
+
+    private void TradingEncogDirectoryTreeMouseDoubleClick(object sender, MouseButtonEventArgs e)
+    {
+        ApplySelectedTradingDirectory(TradingEncogDirectoryTree, TradingEncogDirectory, TradingEncogDirectoryPopup);
+        e.Handled = true;
+    }
+
+    private void CloseTradingGpuDirectoryTreeClick(object sender, RoutedEventArgs e) =>
+        TradingGpuDirectoryPopup.IsOpen = false;
+
+    private void CloseTradingTorchDirectoryTreeClick(object sender, RoutedEventArgs e) =>
+        TradingTorchDirectoryPopup.IsOpen = false;
+
+    private void CloseTradingEncogDirectoryTreeClick(object sender, RoutedEventArgs e) =>
+        TradingEncogDirectoryPopup.IsOpen = false;
+
+    private void ApplySelectedTradingDirectory(TreeView tree, TextBox pathBox, System.Windows.Controls.Primitives.Popup popup)
+    {
+        if (tree.SelectedItem is not TreeViewItem item || item.Tag is not string path)
             return;
-        TradingEnsembleDirectory.Text = path;
-        TradingDirectoryPopup.IsOpen = false;
+        pathBox.Text = path;
+        popup.IsOpen = false;
         _tradingEnsembleCalculationGeneration++;
         _tradingEnsembleCts?.Cancel();
         _tradingEnsembleCalculationStarted = false;
@@ -1325,11 +2073,38 @@ public partial class BreezeWindow : ChildWindow
     private void TradingEnsembleOptionsChanged(object sender, RoutedEventArgs e) =>
         ApplyTradingEnsembleOptions();
 
-    private void DecreaseTradingForecastClick(object sender, RoutedEventArgs e) =>
+    private void DecreaseTradingForecastClick(object sender, RoutedEventArgs e)
+    {
+        CommitTradingForecast();
         SetTradingForecastDays(_tradingForecastDays - 5);
+    }
 
-    private void IncreaseTradingForecastClick(object sender, RoutedEventArgs e) =>
+    private void IncreaseTradingForecastClick(object sender, RoutedEventArgs e)
+    {
+        CommitTradingForecast();
         SetTradingForecastDays(_tradingForecastDays + 5);
+    }
+
+    private void TradingForecastLostFocus(object sender, KeyboardFocusChangedEventArgs e) =>
+        CommitTradingForecast();
+
+    private void TradingForecastKeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.Enter) { CommitTradingForecast(); TradingForecastValue.SelectAll(); e.Handled = true; }
+        else if (e.Key == Key.Escape)
+        {
+            TradingForecastValue.Text = _tradingForecastDays.ToString(CultureInfo.InvariantCulture);
+            TradingForecastValue.SelectAll();
+            e.Handled = true;
+        }
+    }
+
+    private void CommitTradingForecast()
+    {
+        if (int.TryParse(TradingForecastValue.Text, NumberStyles.Integer, CultureInfo.InvariantCulture, out int value))
+            SetTradingForecastDays(value);
+        TradingForecastValue.Text = _tradingForecastDays.ToString(CultureInfo.InvariantCulture);
+    }
 
     private void SetTradingForecastDays(int value)
     {
@@ -1349,21 +2124,38 @@ public partial class BreezeWindow : ChildWindow
         SetTradingCalculationStatus(
             normalized == 0 ? "Ожидайте — расчёт ансамблей…" : $"Ожидайте — Forecast {normalized}…",
             BreadthProgressLevel.Waiting);
-        if (ReferenceEquals(BreadthTabs.SelectedItem, TradingEnsemblesTab))
-            StartTradingEnsembleCalculationIfNeeded();
+        // Repeated presses update the number immediately, but calculate only after input settles.
+        if (_tradingForecastTimer is null)
+        {
+            _tradingForecastTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(350) };
+            _tradingForecastTimer.Tick += (_, _) =>
+            {
+                _tradingForecastTimer.Stop();
+                if (IsLoaded && ReferenceEquals(BreadthTabs.SelectedItem, TradingEnsemblesTab))
+                    StartTradingEnsembleCalculationIfNeeded();
+            };
+        }
+        _tradingForecastTimer.Stop();
+        _tradingForecastTimer.Start();
     }
 
     private void ApplyTradingEnsembleOptions()
     {
-        if (TradingEnsembleChart is null || TradingShowZz1 is null) return;
-        TradingEnsembleChart.SetPackages(
-            TradingShowZz1.IsChecked == true,
-            TradingShowZz2.IsChecked == true,
-            TradingShowZz3.IsChecked == true);
+        if (TradingEnsembleChart is null || TradingShowGpuZz1 is null) return;
+        var selected = new List<string>(9);
+        if (TradingShowGpuZz1.IsChecked == true) selected.Add("GPU-ZZ1");
+        if (TradingShowGpuZz2.IsChecked == true) selected.Add("GPU-ZZ2");
+        if (TradingShowGpuZz3.IsChecked == true) selected.Add("GPU-ZZ3");
+        if (TradingShowTorchZz1.IsChecked == true) selected.Add("Torch-ZZ1");
+        if (TradingShowTorchZz2.IsChecked == true) selected.Add("Torch-ZZ2");
+        if (TradingShowTorchZz1Jordan.IsChecked == true) selected.Add("Torch-ZZ1-Jordan");
+        if (TradingShowTorchZz2Jordan.IsChecked == true) selected.Add("Torch-ZZ2-Jordan");
+        if (TradingShowEncogZz1.IsChecked == true) selected.Add("Encog-ZZ1");
+        if (TradingShowEncogZz2.IsChecked == true) selected.Add("Encog-ZZ2");
+        TradingEnsembleChart.SetPackages(selected);
         TradingEnsembleChart.SetShowEma(TradingShowEma.IsChecked == true);
-        TradingEnsembleChart.SetShowScoringClassification(TradingShowScoring.IsChecked == true);
-        TradingEnsembleChart.SetShowPrice(
-            TradingShowSp500.IsChecked == true && ShowSp500Price.IsChecked == true);
+        TradingEnsembleChart.SetShowActiveEnsembles(TradingShowActiveEnsembles.IsChecked == true);
+        TradingEnsembleChart.SetShowPrice(ShowSp500Price.IsChecked == true);
     }
 
     private void SetPriceSeries(PriceSeries? series)
@@ -1375,6 +2167,8 @@ public partial class BreezeWindow : ChildWindow
         }
         FuzzyChart?.SetData(series, _fuzzyStates, _technicalIndicators);
         TradingEnsembleChart?.SetData(_tradingEnsembles, series, _technicalIndicators);
+        SentimentSpChart?.SetPriceSeries(series);
+        MarketSetupSpChart?.SetPriceSeries(series);
         SetPriceVisibility(ShowSp500Price.IsChecked == true);
         SetPriceCandleMode(ShowSp500Candles.IsChecked == true);
     }
@@ -1386,7 +2180,9 @@ public partial class BreezeWindow : ChildWindow
 
         foreach (BreadthChart chart in AllCharts)
             chart.SetShowPriceSeries(show);
-        TradingEnsembleChart?.SetShowPrice(show && TradingShowSp500.IsChecked == true);
+        SentimentSpChart?.SetShowPriceSeries(show);
+        MarketSetupSpChart?.SetShowPriceSeries(show);
+        TradingEnsembleChart?.SetShowPrice(show);
     }
 
     private void SetPriceCandleMode(bool showCandles)
@@ -1396,6 +2192,8 @@ public partial class BreezeWindow : ChildWindow
 
         foreach (BreadthChart chart in AllCharts)
             chart.SetShowPriceCandles(showCandles);
+        SentimentSpChart?.SetShowPriceCandles(showCandles);
+        MarketSetupSpChart?.SetShowPriceCandles(showCandles);
         FuzzyChart?.SetShowCandles(showCandles);
         TitanicChart?.SetShowCandles(showCandles);
         ZweigChart?.SetShowCandles(showCandles);
@@ -1449,9 +2247,49 @@ public partial class BreezeWindow : ChildWindow
 
     private void PositionProfileChanged(object sender, SelectionChangedEventArgs e)
     {
+        if (_scoreSelectionReady)
+        {
+            _layoutState.ScoreProfile = Math.Clamp(PositionProfile.SelectedIndex, 0, 2);
+            SavePersistentLayout();
+        }
         if (_fuzzyStates is null || _technicalIndicators is null || _zweigSeries is null)
             return;
         RefreshHoldConfidence();
+    }
+
+    private void ScoreModelChanged(object sender, RoutedEventArgs e)
+    {
+        if (!_scoreSelectionReady || Rules1Selector is null || Rules2Selector is null)
+            return;
+        _layoutState.SelectedScoreModel = Rules2Selector.IsChecked == true ? "Rules2" : "Rules1";
+        SavePersistentLayout();
+        ApplySelectedScoreModel();
+        PopulateMarketSetupRuleTree();
+        RefreshMarketSetupData();
+        if (_rules1Confidence is not null)
+            QueueScoreExports();
+    }
+
+    private void ApplySelectedScoreModel()
+    {
+        bool rules2 = Rules2Selector.IsChecked == true;
+        _holdConfidence = rules2 ? _rules2Confidence : _rules1Confidence;
+        FuzzyChart.SetHoldConfidence(_holdConfidence);
+        FuzzyChart.SetScoreComparison(_rules1Confidence, _rules2Confidence);
+        TitanicChart.SetHoldConfidence(_holdConfidence);
+        TitanicChart.SetScoreModelName(rules2 ? "Rules2" : "Rules1");
+        ZweigChart.SetHoldConfidence(_holdConfidence);
+        ZweigChart.SetScoreModelName(rules2 ? "Rules2" : "Rules1");
+        if (_cursorDate.HasValue)
+            ApplyCursorValues(_cursorDate.Value);
+    }
+
+    private void QueueScoreExports()
+    {
+        if (_rules1Confidence is null && _rules2Confidence is null) return;
+        int generation = Interlocked.Increment(ref _holdConfidenceExportGeneration);
+        _ = ExportHoldConfidenceAsync(_rules1Confidence, _rules2Confidence,
+            _holdConfidence, CurrentScoreModel, generation);
     }
 
     private void SetActiveZweigMode(bool exportConfidence = true)
@@ -1462,7 +2300,8 @@ public partial class BreezeWindow : ChildWindow
         ZweigChart.SetData(_sp500PriceSeries, _zweigSeries);
         ZweigChart.SetShowCandles(ShowSp500Candles.IsChecked == true);
         UpdateZweigModeText();
-        RefreshHoldConfidence(exportConfidence);
+        if (exportConfidence)
+            RefreshHoldConfidence();
     }
 
     private void HoldVisibilityChanged(object sender, RoutedEventArgs e)
@@ -1494,53 +2333,53 @@ public partial class BreezeWindow : ChildWindow
             return;
 
         int profile = Math.Clamp(PositionProfile?.SelectedIndex ?? 1, 0, 2);
+        var issues = new List<string>();
+        bool modelError = false;
         if (!ResearchHoldConfidenceCalculator.TryCalculate(
                 profile, out HoldConfidenceSeries research, out string researchError,
                 out ResearchCalculationFailure failure))
         {
-            if (failure == ResearchCalculationFailure.SnapshotNotReady)
-            {
-                // The first calculation has not promoted its CSV snapshot yet.
-                // The research model is retried after the current export.
-                _holdConfidence ??= HoldConfidenceCalculator.Calculate(
-                    _fuzzyStates,
-                    _technicalIndicators,
-                    _contangoStates,
-                    _titanicSeries,
-                    _zweigSeries);
-            }
-            else
-            {
-                // Retain the last valid result instead of silently replacing it
-                // with a different model when a real calculation error occurs.
-                _holdConfidence ??= HoldConfidenceCalculator.Calculate(
-                    _fuzzyStates,
-                    _technicalIndicators,
-                    _contangoStates,
-                    _titanicSeries,
-                    _zweigSeries);
-                SetStatus($"Ошибка исследовательской модели: {researchError}", BreadthProgressLevel.Error);
-            }
+            modelError = true;
+            string message = failure == ResearchCalculationFailure.SnapshotNotReady
+                ? $"Rules1 пока недоступна: {researchError}"
+                : $"Rules1 недоступна: {researchError}";
+            _rules1Confidence = ModelSeriesState.Unavailable(_rules1Confidence, message);
+            issues.Add(message + (_rules1Confidence is null ? string.Empty :
+                $"; показан последний корректный ряд до {_rules1Confidence.LastDate:yyyy-MM-dd} как устаревший"));
         }
-        else _holdConfidence = research;
-        FuzzyChart.SetHoldConfidence(_holdConfidence);
-        TitanicChart.SetHoldConfidence(_holdConfidence);
-        ZweigChart.SetHoldConfidence(_holdConfidence);
-        if (_cursorDate.HasValue)
-            ApplyCursorValues(_cursorDate.Value);
+        else _rules1Confidence = ModelSeriesState.Available(research);
+        if (Rules2HoldConfidenceCalculator.TryCalculate(profile, out HoldConfidenceSeries rules2, out string rules2Error))
+        {
+            _rules2Confidence = ModelSeriesState.Available(rules2, rules2Error);
+            if (!string.IsNullOrEmpty(rules2Error)) issues.Add(rules2Error);
+        }
+        else
+        {
+            modelError = true;
+            string message = string.IsNullOrWhiteSpace(rules2Error) ? "Rules2 недоступна." : rules2Error;
+            _rules2Confidence = ModelSeriesState.Unavailable(_rules2Confidence, message);
+            issues.Add(message + (_rules2Confidence is null ? string.Empty :
+                $"; показан последний корректный ряд до {_rules2Confidence.LastDate:yyyy-MM-dd} как устаревший"));
+        }
+        _modelStatusMessage = issues.Count == 0
+            ? $"Rules1 и Rules2 рассчитаны по текущему снимку до {new[] { _rules1Confidence?.LastDate, _rules2Confidence?.LastDate }.Where(d => d.HasValue).Min():yyyy-MM-dd}."
+            : string.Join(" ", issues);
+        _modelStatusLevel = modelError ? BreadthProgressLevel.Error :
+            issues.Count == 0 ? BreadthProgressLevel.Normal : BreadthProgressLevel.Waiting;
+        ApplySelectedScoreModel();
+        SetStatus(_modelStatusMessage, _modelStatusLevel);
 
         if (!export)
             return;
-        int generation = Interlocked.Increment(ref _holdConfidenceExportGeneration);
-        HoldConfidenceSeries snapshot = _holdConfidence;
-        _ = ExportHoldConfidenceAsync(snapshot, generation);
+        QueueScoreExports();
     }
 
-    private async Task ExportHoldConfidenceAsync(HoldConfidenceSeries series, int generation)
+    private async Task ExportHoldConfidenceAsync(HoldConfidenceSeries? rules1, HoldConfidenceSeries? rules2,
+        HoldConfidenceSeries? selected, string selectedModel, int generation)
     {
         try
         {
-            await Task.Run(() => ExportHoldConfidenceSnapshot(series, generation));
+            await Task.Run(() => ExportHoldConfidenceSnapshot(rules1, rules2, selected, selectedModel, generation));
         }
         catch (Exception ex)
         {
@@ -1584,6 +2423,11 @@ public partial class BreezeWindow : ChildWindow
         TitanicChart.SetCursorDate(date);
         ZweigChart.SetCursorDate(date);
         TradingEnsembleChart.SetCursorDate(date);
+        SentimentSpChart.SetCursorDate(date);
+        SentimentIndicatorChart.SetCursorDate(date);
+        MarketSetupSpChart.SetCursorDate(date);
+        MarketSetupIndicatorChart.SetCursorDate(date);
+        MarketSetupAtrpChart.SetCursorDate(date);
         UpdateContangoSnapshot();
 
         BreadthPoint? sp50 = FindPoint(_sp50Series, date);
@@ -1603,8 +2447,10 @@ public partial class BreezeWindow : ChildWindow
               $"S {fuzzy.PrepareSell:P0}, SS {fuzzy.ReduceRisk:P0})" +
               (hold is null
                   ? string.Empty
-                  : $"   Оценка модели: {hold.Value:F0} ({HumanLanguage.PositionDecision(hold.Value)})");
+                  : $"   {hold.Model}: {(double.IsFinite(hold.Value) ? hold.Value.ToString("F1") : "нет данных")} " +
+                    $"({(ModelPositionSizing.TargetContracts(hold) == 0 ? "вне рынка" : "позиция открыта")})");
         TechnicalIndicatorPoint? technical = FindPoint(_technicalIndicators, date);
+        SentimentPoint? sentiment = FindPoint(_sentimentSeries, date);
         TitanicPoint? titanic = FindPoint(_titanicSeries, date);
         ZweigPoint? zweig = FindPoint(_zweigSeries, date);
         string titanicRatioText = titanic is not null && double.IsFinite(titanic.NasdaqHighLowRatio)
@@ -1620,9 +2466,12 @@ public partial class BreezeWindow : ChildWindow
             : $"   Плотность Цвейга: {zweig.Density}";
         string curveText = curve is null
             ? "   Кривая VIX: данных нет"
-            : $"   Кривая VIX: {HumanLanguage.CurveState(curve.State)}; " +
+            : $"   Кривая VIX New: {HumanLanguage.CurveState(curve.State)}; " +
               $"участок 30–60 дней {curve.Contango30To60Pct:+0.00;-0.00;0.00}%; " +
-              $"оценка формы {curve.CurveRegimeScore:+0.00;-0.00;0.00}";
+               $"оценка формы {curve.CurveRegimeScore:+0.00;-0.00;0.00}" +
+               (curve.LegacyState == curve.State
+                   ? string.Empty
+                   : $"; Old: {HumanLanguage.CurveState(curve.LegacyState)}");
         string svxyRecommendationText = curve?.SvxyRecommendation switch
         {
             SvxyRecommendation.StrongBuy => "   SVXY: первый день после выхода из красной зоны",
@@ -1635,6 +2484,55 @@ public partial class BreezeWindow : ChildWindow
             FuzzyAnalysisText.Text = BuildMarketStateExplanation(
                 date, fuzzy, hold, technical, curve, titanic, zweig, _marketResearch);
         UpdateOperationalPosition(date, hold, curve);
+        if (ReferenceEquals(BreadthTabs.SelectedItem, SentimentTab))
+        {
+            CursorValuesText.Text = sentiment is null
+                ? $"{date:yyyy-MM-dd}   Sentiment: no value"
+                : $"{date:yyyy-MM-dd}   CNN Fear Greed: {FormatSentimentValue(sentiment.CnnFearGreed)}   " +
+                  $"Risk Measure: {FormatSentimentValue(sentiment.RiskMeasure)}   " +
+                  $"Panic Euphoria: {FormatSentimentValue(sentiment.PanicEuphoria)}   " +
+                  $"ARSI: {FormatSentimentValue(sentiment.Arsi)}   " +
+                  $"MyRSI 14,8: {FormatSentimentValue(sentiment.MyRsi)}   " +
+                  $"Trend Score: {FormatSentimentValue(sentiment.TrendScore)}   " +
+                  $"Hurst: {FormatSentimentValue(sentiment.Hurst)}";
+            CursorIndicatorsText.Text = sentiment is null
+                ? "Sentiment indicators: no value"
+                : $"CMF: {FormatSentimentValue(sentiment.Cmf)}   " +
+                  $"Decibel: {FormatSentimentValue(sentiment.Decibel)}   " +
+                  $"Jocker: {FormatSentimentValue(sentiment.Jocker)}   " +
+                  $"Market Breadth: {FormatSentimentValue(sentiment.MarketBreadth)}   " +
+                  $"Dumb Money: {FormatSentimentValue(sentiment.DumbMoney)}   " +
+                  $"Smart Money: {FormatSentimentValue(sentiment.SmartMoney)}   " +
+                  (technical is null
+                      ? "EMA: no value"
+                      : $"EMA20: {technical.Ema20:F1}   EMA50: {technical.Ema50:F1}   " +
+                        $"EMA100: {technical.Ema100:F1}   EMA200: {technical.Ema200:F1}");
+            return;
+        }
+        if (ReferenceEquals(BreadthTabs.SelectedItem, MarketSetupTab))
+        {
+            MarketSetupPoint? setupPoint = _marketSetupSeries is null ? null : FindPoint(_marketSetupSeries, date);
+            double setupValue = _selectedMarketSetupRule is null || _marketSetupSeries is null
+                ? double.NaN
+                : setupPoint?.Value(_selectedMarketSetupRule.Id) ?? double.NaN;
+            string ruleText = _selectedMarketSetupEntry is null
+                ? "Выберите правило"
+                : $"{_selectedMarketSetupEntry.Id} {_selectedMarketSetupEntry.NameRu}: " +
+                  (_selectedMarketSetupRule is null ? "исследовательская запись; рабочий детектор не подключён" : FormatSentimentValue(setupValue));
+            if (_selectedMarketSetupEntry is not null)
+            {
+                if (_selectedMarketSetupRule?.Id == "T02" && double.IsFinite(setupValue))
+                    ruleText += $" — растут {setupValue * 4:0} из 4 EMA";
+                MarketSetupRuleDescription.Text = (_selectedMarketSetupRule is null ? string.Empty :
+                    MarketSetupDescription.AtCursor(_selectedMarketSetupRule, setupPoint)) + DescribeMarketSetupEntry(_selectedMarketSetupEntry);
+            }
+            CursorValuesText.Text = $"{date:yyyy-MM-dd}   {ruleText}";
+            CursorIndicatorsText.Text = sentiment is null
+                ? "Нет значений выбранных индикаторов"
+                : BuildSelectedMarketSetupValues(sentiment, technical);
+            return;
+        }
+
         CursorValuesText.Text =
             $"{date:yyyy-MM-dd}   S&P SMA50: {sp50.Value:F1}%   " +
             $"S&P SMA100: {sp100.Value:F1}%   S&P SMA200: {sp200.Value:F1}%   " +
@@ -1648,6 +2546,62 @@ public partial class BreezeWindow : ChildWindow
               $"{curveText}{svxyRecommendationText}{zweigText}{titanicText}";
     }
 
+    private static string FormatSentimentValue(double value) =>
+        double.IsFinite(value) ? value.ToString("F3", CultureInfo.InvariantCulture) : "—";
+
+    private string BuildSelectedMarketSetupValues(SentimentPoint sentiment, TechnicalIndicatorPoint? technical)
+    {
+        var values = new List<string>();
+        void Add(CheckBox? checkBox, SentimentIndicator indicator)
+        {
+            if (checkBox?.IsChecked == true)
+                values.Add($"{SentimentIndicatorCatalog.DisplayName(indicator)}: " +
+                           FormatSentimentValue(sentiment.Value(indicator)));
+        }
+
+        Add(MarketSetupCnnFearGreed, SentimentIndicator.CnnFearGreed);
+        Add(MarketSetupRiskMeasure, SentimentIndicator.RiskMeasure);
+        Add(MarketSetupPanicEuphoria, SentimentIndicator.PanicEuphoria);
+        Add(MarketSetupArsi, SentimentIndicator.Arsi);
+        Add(MarketSetupMyRsi, SentimentIndicator.MyRsi);
+        Add(MarketSetupMyRsiFast, SentimentIndicator.MyRsiFast);
+        Add(MarketSetupTrendScore, SentimentIndicator.TrendScore);
+        foreach ((SentimentIndicator indicator, CheckBox selector) in _marketSetupExtraSelectors)
+            Add(selector, indicator);
+        Add(MarketSetupHurst, SentimentIndicator.Hurst);
+        Add(MarketSetupCmf, SentimentIndicator.Cmf);
+        Add(MarketSetupDecibel, SentimentIndicator.Decibel);
+        Add(MarketSetupJocker, SentimentIndicator.Jocker);
+        Add(MarketSetupMarketBreadth, SentimentIndicator.MarketBreadth);
+        Add(MarketSetupDumbMoney, SentimentIndicator.DumbMoney);
+        Add(MarketSetupSmartMoney, SentimentIndicator.SmartMoney);
+        if (MarketSetupEma?.IsChecked == true && technical is not null)
+        {
+            values.Add($"EMA20: {technical.Ema20:F1}");
+            values.Add($"EMA50: {technical.Ema50:F1}");
+            values.Add($"EMA100: {technical.Ema100:F1}");
+            values.Add($"EMA200: {technical.Ema200:F1}");
+        }
+        if (_cursorDate.HasValue)
+        {
+            void AddBreadth(CheckBox? selector, BreadthSeries? series, string label)
+            {
+                if (selector?.IsChecked == true)
+                {
+                    BreadthPoint? point = FindPoint(series, _cursorDate.Value);
+                    values.Add($"{label}: {(point is null ? "—" : point.Value.ToString("F1", CultureInfo.InvariantCulture) + "%")}");
+                }
+            }
+            AddBreadth(MarketSetupSp50, _sp50Series, "S&P SMA50");
+            AddBreadth(MarketSetupSp100, _sp100Series, "S&P SMA100");
+            AddBreadth(MarketSetupSp200, _sp200Series, "S&P SMA200");
+            AddBreadth(MarketSetupNasdaq100, _nasdaq100Series, "Nasdaq SMA100");
+        }
+        if (MarketSetupAtrp?.IsChecked == true && technical is not null)
+            values.Add($"ATRP(1): {technical.Atrp1.ToString("F2", CultureInfo.InvariantCulture)}%");
+        return values.Count == 0 ? "Индикаторы не выбраны" : string.Join("   ", values);
+    }
+
     private void UpdateOperationalPosition(
         DateTime date,
         HoldConfidencePoint? hold,
@@ -1657,11 +2611,14 @@ public partial class BreezeWindow : ChildWindow
             OperationalPositionBorder is null)
             return;
 
-        OperationalPositionTitle.Text = $"ПОЗИЦИЯ ПО МОДЕЛИ НА {date:yyyy-MM-dd}";
+        OperationalPositionTitle.Text = $"{(Rules2Selector.IsChecked == true ? "Rules2" : "Rules1")} · {date:yyyy-MM-dd}";
         UpdateExpirationWarning(date);
         if (hold is null)
         {
-            OperationalPositionText.Text = "Расчёт модели: данных нет\nЦелевая позиция: данных нет\nДействие: ждать";
+            string unavailable = Rules2Selector.IsChecked == true
+                ? _rules2Confidence?.Status ?? "Rules2 недоступна: достоверный ряд оценки отсутствует."
+                : _rules1Confidence?.Status ?? "Rules1 недоступна: достоверный ряд оценки отсутствует.";
+            OperationalPositionText.Text = $"Расчёт модели: данных нет\nЦелевая позиция: данных нет\nДействие: ждать\n{unavailable}";
             OperationalPositionBorder.Background = new SolidColorBrush(Color.FromRgb(245, 247, 249));
             OperationalPositionBorder.BorderBrush = new SolidColorBrush(Color.FromRgb(185, 200, 213));
             if (TopContributionsBorder is not null)
@@ -1669,9 +2626,9 @@ public partial class BreezeWindow : ChildWindow
             return;
         }
 
-        int target = ModelPositionSizing.TargetContracts(hold.Value);
+        int target = ModelPositionSizing.TargetContracts(hold);
         HoldConfidencePoint? previous = FindPreviousPoint(_holdConfidence, hold.Date);
-        int previousTarget = previous is null ? 0 : ModelPositionSizing.TargetContracts(previous.Value);
+        int previousTarget = previous is null ? 0 : ModelPositionSizing.TargetContracts(previous);
         int delta = target - previousTarget;
         string action = previous is null
             ? target == 0 ? "оставаться вне рынка" : $"открыть {target} контрактов"
@@ -1682,7 +2639,7 @@ public partial class BreezeWindow : ChildWindow
                     : target == 0 ? "оставаться вне рынка" : $"удерживать {target} контрактов";
         string yesterday = previous is null
             ? "предыдущего значения нет"
-            : $"{previous.Date:yyyy-MM-dd}: уровень {previous.Value:F1}%, позиция {previousTarget} из 10";
+            : $"{previous.Date:yyyy-MM-dd}: оценка {(double.IsFinite(previous.Value) ? previous.Value.ToString("F1") : "нет данных")}, позиция {previousTarget} из 10";
         string curveState = curve is null
             ? "данных нет"
             : HumanLanguage.CurveState(curve.State);
@@ -1697,21 +2654,30 @@ public partial class BreezeWindow : ChildWindow
             };
 
         string model = HumanLanguage.Profile(hold.Profile);
-        double distance = hold.Value - ModelPositionSizing.FixedLevel;
-        string thresholdExplanation = distance >= 0
-            ? $"на {distance:F1} балла выше порога {ModelPositionSizing.FixedLevel:F0}"
-            : $"на {Math.Abs(distance):F1} балла ниже порога {ModelPositionSizing.FixedLevel:F0}";
+        string thresholdExplanation = hold.EntryThreshold == hold.ExitThreshold
+            ? $"Порог срабатывания: {hold.EntryThreshold:0.##}"
+            : $"Вход: {hold.EntryThreshold:0.##}; выход: {hold.ExitThreshold:0.##}";
         OperationalPositionTitle.Text =
-            $"ПОЗИЦИЯ ПО МОДЕЛИ «{model.ToUpperInvariant()}» НА {date:yyyy-MM-dd}";
-        OperationalPositionText.Text =
-            $"Оценка модели: {hold.Value:F1} балла из 100; {thresholdExplanation}.\n" +
-            $"Позиция на следующем открытии: {target} из 10 контрактов.\n" +
+            $"{hold.Model} · {model} · {date:yyyy-MM-dd}";
+        OperationalPositionText.Inlines.Clear();
+        OperationalPositionText.Inlines.Add(new Run("Оценка модели: "));
+        OperationalPositionText.Inlines.Add(new Run(double.IsFinite(hold.Value) ? $"{hold.Value:F1} балла" : "нет данных") { FontWeight = FontWeights.Bold });
+        OperationalPositionText.Inlines.Add(new Run($" из 100. {thresholdExplanation}.\nПозиция на следующем открытии: "));
+        OperationalPositionText.Inlines.Add(new Run(target.ToString()) { FontWeight = FontWeights.Bold });
+        OperationalPositionText.Inlines.Add(new Run($" из 10 контрактов.\n" +
+            (_holdConfidence?.IsStale == true
+                ? $"ВНИМАНИЕ: показан последний корректный ряд до {_holdConfidence.LastDate:yyyy-MM-dd}; текущий расчёт недоступен. {_holdConfidence.Status}\n"
+                : string.Empty) +
+            (!double.IsFinite(hold.Value) ? "Новой достоверной оценки нет; сохраняется прежняя позиция.\n" : string.Empty) +
             $"Действие: {action}.\n" +
             $"Предыдущий торговый день: {yesterday}.\n" +
             $"Наиболее сильный положительный фактор: {MainHoldSupport(hold)}.\n" +
             $"Наиболее сильный отрицательный фактор: {MainHoldRisk(hold)}.\n" +
             $"Кривая фьючерсов VIX: {curveState}.\n" +
-            $"SVXY: {svxy}.";
+            $"SVXY: {svxy}."));
+        OperationalPositionText.ToolTip = hold.Model == "Rules2"
+            ? $"Нормированная шкала Rules2 0–100. Исходная оценка: {(double.IsFinite(hold.RawValue) ? hold.RawValue.ToString("F4") : "нет данных")}."
+            : "Исходная оценка Rules1 по шкале 0–100.";
 
         if (TopContributionsBorder is not null && TopContributionsTitle is not null && TopContributionsText is not null)
         {
@@ -1720,7 +2686,7 @@ public partial class BreezeWindow : ChildWindow
             if (hasContributions)
             {
                 TopContributionsTitle.Text =
-                    $"ТОП-10 ПОКАЗАТЕЛЕЙ РЕЖИМА {HumanLanguage.Profile(hold.Profile)} " +
+                    $"ТОП-10 ФАКТОРОВ {hold.Model} · {HumanLanguage.Profile(hold.Profile)} " +
                     $"НА {date:yyyy-MM-dd} И ИХ ВЛИЯНИЕ НА ОЦЕНКУ";
                 TopContributionsText.Text = hold.TopContributions;
             }
@@ -1959,6 +2925,24 @@ public partial class BreezeWindow : ChildWindow
         ZweigPoint? zweig,
         MarketResearchSummary? research)
     {
+        if (Rules2Selector.IsChecked == true)
+        {
+            if (hold is null) return $"{date:yyyy-MM-dd} · Rules2\nРасчёт Rules2 пока недоступен. Проверьте исходные данные и строку состояния.";
+            string score = double.IsFinite(hold.Value) ? $"{hold.Value:F1} из 100" : "нет достоверного значения";
+            return $"{date:yyyy-MM-dd} · Rules2 {hold.Profile}\n" +
+                (_rules2Confidence?.IsStale == true
+                    ? $"ВНИМАНИЕ: ряд устарел; последняя корректная дата {_rules2Confidence.LastDate:yyyy-MM-dd}. {_rules2Confidence.Status}\n"
+                    : string.Empty) +
+                $"Нормированная оценка: {score}. Вход {hold.EntryThreshold:0.##}, выход {hold.ExitThreshold:0.##}.\n" +
+                $"Целевая позиция: {ModelPositionSizing.TargetContracts(hold)} из 10 на следующем открытии.\n" +
+                "Между порогами и при отсутствии новой оценки сохраняется прежняя позиция.\n\n" +
+                $"Поддержка: {hold.MainSupport}.\nРиск: {hold.MainRisk}.\n\n" +
+                "Оценка складывается из раннего разворота и срыва восстановления, состояния широт, порядка и наклонов EMA, " +
+                "ценового стресса при контанго VIX и относительного объёма SPY.\n" +
+                "Полосы Rules1 и Rules2 показывают обе модели на одной временной шкале. " +
+                "Phase, Contango и SVXY остаются отдельными характеристиками рынка.\n\n" +
+                DescribeContangoAssessment(curve);
+        }
         if (fuzzy is null || technical is null)
             return $"{date:yyyy-MM-dd}\nНет полного набора данных для объяснения Phase Logic.";
 
@@ -1998,12 +2982,7 @@ public partial class BreezeWindow : ChildWindow
         string candleText = fuzzy.LargeRedDay >= 0.50
             ? $"Крупная красная свеча значима ({fuzzy.LargeRedDay:P0}); это усиливает риск."
             : $"Крупного красного импульса нет ({fuzzy.LargeRedDay:P0}).";
-        string vixText = curve is null
-            ? "VIX curve ещё не загружена."
-            : $"Кривая фьючерсов VIX: {HumanLanguage.CurveState(curve.State)}; " +
-              $"оценка формы {curve.CurveRegimeScore:+0.00;-0.00;0.00}, участок 30–60 дней " +
-              $"{curve.Contango30To60Pct:+0.00;-0.00;0.00}%. " +
-              DescribeSvxyRecommendation(curve);
+        string vixText = DescribeContangoAssessment(curve);
         string titanicText = titanic is null
             ? "Titanic: нет данных."
             : titanic.Signal
@@ -2020,6 +2999,8 @@ public partial class BreezeWindow : ChildWindow
         var text = new StringBuilder();
         text.AppendLine($"{date:yyyy-MM-dd}   {HumanLanguage.MarketZone(fuzzy.DominantZone)} " +
                         $"({fuzzy.Confidence:P0})");
+        if (_rules1Confidence?.IsStale == true)
+            text.AppendLine($"ВНИМАНИЕ: ряд Rules1 устарел; последняя корректная дата {_rules1Confidence.LastDate:yyyy-MM-dd}. {_rules1Confidence.Status}");
         if (hold is not null)
         {
             if (hold.Profile == "Legacy")
@@ -2513,6 +3494,29 @@ public partial class BreezeWindow : ChildWindow
         _ => "нейтральная область"
     };
 
+    private static string DescribeContangoAssessment(VixCurveStatePoint? curve)
+    {
+        if (curve is null)
+            return "Кривая фьючерсов VIX ещё не загружена.";
+
+        var text = new StringBuilder();
+        text.Append($"Кривая фьючерсов VIX (New): {HumanLanguage.CurveState(curve.State)}; " +
+                    $"оценка формы {curve.CurveRegimeScore:+0.00;-0.00;0.00}, участок 30–60 дней " +
+                    $"{curve.Contango30To60Pct:+0.00;-0.00;0.00}%.");
+        if (curve.LegacyState != curve.State ||
+            Math.Abs(curve.LegacyCurveRegimeScore - curve.CurveRegimeScore) > 0.000001)
+        {
+            text.Append($" До исправления Old: {HumanLanguage.CurveState(curve.LegacyState)}, " +
+                        $"оценка {curve.LegacyCurveRegimeScore:+0.00;-0.00;0.00}.");
+        }
+        if (!string.IsNullOrWhiteSpace(curve.AdjustmentExplanation))
+            text.Append($" Исправление: {curve.AdjustmentExplanation}.");
+        else
+            text.Append(" Дополнительная коррекция формы и стресса не потребовалась.");
+        text.Append(' ').Append(DescribeSvxyRecommendation(curve));
+        return text.ToString();
+    }
+
     private static string DescribeSvxyRecommendation(VixCurveStatePoint curve) =>
         curve.SvxyRecommendation switch
         {
@@ -2561,8 +3565,6 @@ public partial class BreezeWindow : ChildWindow
             if (snapshot.SvxyPrice is not null)
                 WritePriceCsv(Path.Combine(stagingDirectory, "SVXY.csv"), snapshot.SvxyPrice, startDate, endDate);
             WriteFuzzyCsv(Path.Combine(stagingDirectory, "fuzzy_market_states.csv"), snapshot.FuzzyStates);
-            WriteHoldConfidenceCsv(
-                Path.Combine(stagingDirectory, "hold_confidence.csv"), snapshot.HoldConfidence);
             WriteTechnicalIndicatorsCsv(
                 Path.Combine(stagingDirectory, "spy_ema_myrsi_agc.csv"),
                 snapshot.TechnicalIndicators,
@@ -2574,6 +3576,7 @@ public partial class BreezeWindow : ChildWindow
                 snapshot.Sp500Price,
                 startDate,
                 endDate);
+            WriteSentimentCsvFiles(stagingDirectory, snapshot.Sentiment);
             WriteTitanicCsv(Path.Combine(stagingDirectory, "titanic_sentiment.csv"), snapshot.Titanic, false);
             WriteTitanicCsv(Path.Combine(stagingDirectory, "titanic_sentiment_events.csv"), snapshot.Titanic, true);
             WriteZweigCsv(
@@ -2581,10 +3584,11 @@ public partial class BreezeWindow : ChildWindow
                 snapshot.ZweigStrong,
                 snapshot.ZweigWorking);
             PromoteStagedFiles(stagingDirectory, ExportDirectory);
+            ArchiveLegacySentimentFiles(ExportDirectory);
             string svxyStatus = snapshot.SvxyPrice is null
                 ? " SVXY history was unavailable, so SVXY.csv was not written."
                 : " SVXY OHLCV saved to SVXY.csv.";
-            return $"CSV, phase states, Titanic, Zweig density and both MyRSI/AGC series saved.{svxyStatus}";
+            return $"CSV, Sentiment series, phase states, Titanic, Zweig density and both MyRSI/AGC series saved.{svxyStatus}";
         }
         catch (Exception ex)
         {
@@ -2624,7 +3628,8 @@ public partial class BreezeWindow : ChildWindow
         }
     }
 
-    private void ExportHoldConfidenceSnapshot(HoldConfidenceSeries series, int generation)
+    private void ExportHoldConfidenceSnapshot(HoldConfidenceSeries? rules1, HoldConfidenceSeries? rules2,
+        HoldConfidenceSeries? selected, string selectedModel, int generation)
     {
         ExportGate.Wait();
         string? stagingDirectory = null;
@@ -2633,7 +3638,11 @@ public partial class BreezeWindow : ChildWindow
             Directory.CreateDirectory(ExportDirectory);
             stagingDirectory = Path.Combine(ExportDirectory, $".staging-hold-{Guid.NewGuid():N}");
             Directory.CreateDirectory(stagingDirectory);
-            WriteHoldConfidenceCsv(Path.Combine(stagingDirectory, "hold_confidence.csv"), series);
+            // Preserve the legacy Rules1 feed used by existing strategy consumers.
+            WriteScoreFile(Path.Combine(stagingDirectory, "hold_confidence.csv"), rules1, displayBands: false, "Rules1");
+            WriteScoreFile(Path.Combine(stagingDirectory, "rules1_score.csv"), rules1, displayBands: true, "Rules1");
+            WriteScoreFile(Path.Combine(stagingDirectory, "rules2_score.csv"), rules2, displayBands: true, "Rules2");
+            WriteScoreFile(Path.Combine(stagingDirectory, "selected_model.csv"), selected, displayBands: true, selectedModel);
             if (generation == Volatile.Read(ref _holdConfidenceExportGeneration))
                 PromoteStagedFiles(stagingDirectory, ExportDirectory);
         }
@@ -2664,6 +3673,23 @@ public partial class BreezeWindow : ChildWindow
         {
             string destinationPath = Path.Combine(destinationDirectory, Path.GetFileName(sourcePath));
             File.Move(sourcePath, destinationPath, true);
+        }
+    }
+
+    private static void ArchiveLegacySentimentFiles(string directory)
+    {
+        foreach (string fileName in new[]
+                 {
+                     "sentiment_myrsi.csv", "sentiment_rsi.csv", "sentiment_chaikin_money_flow.csv"
+                 })
+        {
+            string path = Path.Combine(directory, fileName);
+            if (File.Exists(path))
+            {
+                string archive = Path.Combine(directory, "legacy-sentiment", DateTime.UtcNow.ToString("yyyyMMdd-HHmmss-fffffff", CultureInfo.InvariantCulture));
+                Directory.CreateDirectory(archive);
+                File.Move(path, Path.Combine(archive, fileName));
+            }
         }
     }
 
@@ -2747,15 +3773,29 @@ public partial class BreezeWindow : ChildWindow
         File.WriteAllText(path, csv.ToString(), new UTF8Encoding(false));
     }
 
-    private static void WriteHoldConfidenceCsv(string path, HoldConfidenceSeries series)
+    private static void WriteScoreFile(string path, HoldConfidenceSeries? series, bool displayBands, string model)
+    {
+        if (series is null)
+        {
+            File.WriteAllText(path,
+                "Date,HoldConfidencePct,Band,Trend,Breadth,Phase,VolatilityCalm,Contango,ZweigSupport,TitanicPenalty,ShockPenalty,Rationale,Profile,MainSupport,MainRisk,ActiveEvents,Model,RawScore,EntryThreshold,ExitThreshold,TargetContracts,ScoreKnown,DataState,Status\n" +
+                $",,,,,,,,,,,,,,,,,,,,,0,Unavailable,\"{model} недоступна\"\n", new UTF8Encoding(false));
+            return;
+        }
+        WriteHoldConfidenceCsv(path, series, displayBands);
+    }
+
+    private static void WriteHoldConfidenceCsv(string path, HoldConfidenceSeries series, bool displayBands = false)
     {
         var csv = new StringBuilder();
-        csv.AppendLine("Date,HoldConfidencePct,Band,Trend,Breadth,Phase,VolatilityCalm,Contango,ZweigSupport,TitanicPenalty,ShockPenalty,Rationale,Profile,MainSupport,MainRisk,ActiveEvents");
+        csv.AppendLine("Date,HoldConfidencePct,Band,Trend,Breadth,Phase,VolatilityCalm,Contango,ZweigSupport,TitanicPenalty,ShockPenalty,Rationale,Profile,MainSupport,MainRisk,ActiveEvents,Model,RawScore,EntryThreshold,ExitThreshold,TargetContracts,ScoreKnown,DataState,Status");
         foreach (HoldConfidencePoint point in series.Points)
         {
             csv.Append(point.Date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)).Append(',')
-                .Append(point.Value.ToString("0.####", CultureInfo.InvariantCulture)).Append(',')
-                .Append(HoldConfidenceCalculator.Band(point.Value)).Append(',')
+                .Append(double.IsFinite(point.Value) ? point.Value.ToString("0.########", CultureInfo.InvariantCulture) : string.Empty).Append(',')
+                .Append(double.IsFinite(point.Value)
+                    ? displayBands ? ScorePalette.Label(point.Value) : HoldConfidenceCalculator.Band(point.Value)
+                    : "Unknown").Append(',')
                 .Append(point.TrendComponent.ToString("0.####", CultureInfo.InvariantCulture)).Append(',')
                 .Append(point.BreadthComponent.ToString("0.####", CultureInfo.InvariantCulture)).Append(',')
                 .Append(point.PhaseComponent.ToString("0.####", CultureInfo.InvariantCulture)).Append(',')
@@ -2768,7 +3808,15 @@ public partial class BreezeWindow : ChildWindow
                 .Append('"').Append(point.Profile.Replace("\"", "\"\"")).Append("\",")
                 .Append('"').Append(point.MainSupport.Replace("\"", "\"\"")).Append("\",")
                 .Append('"').Append(point.MainRisk.Replace("\"", "\"\"")).Append("\",")
-                .Append('"').Append(point.ActiveEvents.Replace("\"", "\"\"")).AppendLine("\"");
+                .Append('"').Append(point.ActiveEvents.Replace("\"", "\"\"")).Append("\",")
+                .Append(point.Model).Append(',')
+                .Append(double.IsFinite(point.Value) ? (double.IsFinite(point.RawValue) ? point.RawValue : point.Value).ToString("0.########", CultureInfo.InvariantCulture) : string.Empty).Append(',')
+                .Append(point.EntryThreshold.ToString("0.########", CultureInfo.InvariantCulture)).Append(',')
+                .Append(point.ExitThreshold.ToString("0.########", CultureInfo.InvariantCulture)).Append(',')
+                .Append(ModelPositionSizing.TargetContracts(point)).Append(',')
+                .Append(double.IsFinite(point.Value) ? "1" : "0").Append(',')
+                .Append(series.IsStale ? "Stale" : "Current").Append(',')
+                .Append('"').Append(series.Status.Replace("\"", "\"\"")).AppendLine("\"");
         }
         File.WriteAllText(path, csv.ToString(), new UTF8Encoding(false));
     }
@@ -2923,6 +3971,44 @@ public partial class BreezeWindow : ChildWindow
             throw new InvalidOperationException($"ATRP(1) is negative on {point.Date:yyyy-MM-dd}.");
     }
 
+    private static void WriteSentimentCsvFiles(string directory, SentimentSeries series)
+    {
+        var combined = new StringBuilder();
+        combined.AppendLine("Date," + string.Join(",", SentimentIndicatorCatalog.All.Select(SentimentIndicatorCatalog.FileStem)));
+        foreach (SentimentPoint point in series.Points)
+        {
+            combined.Append(point.Date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));
+            foreach (SentimentIndicator indicator in SentimentIndicatorCatalog.All)
+                combined.Append(',').Append(FormatCsvValue(point.Value(indicator)));
+            combined.AppendLine();
+        }
+        File.WriteAllText(
+            Path.Combine(directory, "sentiment_indicators.csv"),
+            combined.ToString(),
+            new UTF8Encoding(false));
+
+        foreach (SentimentIndicator indicator in SentimentIndicatorCatalog.All)
+        {
+            var csv = new StringBuilder();
+            csv.AppendLine("Date,Value");
+            foreach (SentimentPoint point in series.Points)
+            {
+                double value = point.Value(indicator);
+                if (!double.IsFinite(value))
+                    continue;
+                csv.Append(point.Date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)).Append(',')
+                    .AppendLine(value.ToString("0.########", CultureInfo.InvariantCulture));
+            }
+            File.WriteAllText(
+                Path.Combine(directory, $"sentiment_{SentimentIndicatorCatalog.FileStem(indicator)}.csv"),
+                csv.ToString(),
+                new UTF8Encoding(false));
+        }
+    }
+
+    private static string FormatCsvValue(double value) =>
+        double.IsFinite(value) ? value.ToString("0.########", CultureInfo.InvariantCulture) : string.Empty;
+
     private static void WriteTitanicCsv(string path, TitanicSeries series, bool eventsOnly)
     {
         var csv = new StringBuilder();
@@ -3024,6 +4110,20 @@ public partial class BreezeWindow : ChildWindow
     }
 
     private static TechnicalIndicatorPoint? FindPoint(TechnicalIndicatorSeries? series, DateTime date)
+    {
+        if (series is null || series.Points.Count == 0)
+            return null;
+        return FindNearest(series.Points, date, point => point.Date);
+    }
+
+    private static SentimentPoint? FindPoint(SentimentSeries? series, DateTime date)
+    {
+        if (series is null || series.Points.Count == 0)
+            return null;
+        return FindNearest(series.Points, date, point => point.Date);
+    }
+
+    private static MarketSetupPoint? FindPoint(MarketSetupSeries? series, DateTime date)
     {
         if (series is null || series.Points.Count == 0)
             return null;
@@ -3141,6 +4241,7 @@ public partial class BreezeWindow : ChildWindow
         {
             if (current is BreadthChart || current is FuzzyStateChart ||
                 current is TitanicChart || current is ZweigChart || current is MyRsiChart ||
+                current is SentimentChart ||
                 current is AtrpChart || current is TradingEnsembleChart)
                 return current as FrameworkElement;
             current = current is Visual ? VisualTreeHelper.GetParent(current) : null;
@@ -3209,6 +4310,11 @@ public partial class BreezeWindow : ChildWindow
         TitanicChart.SetCursorPinned(pinned);
         ZweigChart.SetCursorPinned(pinned);
         TradingEnsembleChart.SetCursorPinned(pinned);
+        SentimentSpChart.SetCursorPinned(pinned);
+        SentimentIndicatorChart.SetCursorPinned(pinned);
+        MarketSetupSpChart.SetCursorPinned(pinned);
+        MarketSetupIndicatorChart.SetCursorPinned(pinned);
+        MarketSetupAtrpChart.SetCursorPinned(pinned);
     }
 
     private void HistorySliderValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e) =>
@@ -3222,19 +4328,39 @@ public partial class BreezeWindow : ChildWindow
         Dispatcher.BeginInvoke(DispatcherPriority.Render, new Action(() =>
         {
             _viewportUpdateScheduled = false;
+            bool refreshMarketSetup = _marketSetupRefreshScheduled && ReferenceEquals(BreadthTabs.SelectedItem, MarketSetupTab);
+            _marketSetupRefreshScheduled = false;
+            if (refreshMarketSetup) MarketSetupChartGrid.UpdateLayout();
             ApplyHistoryViewport();
+            if (refreshMarketSetup)
+            {
+                if (_viewportMaster is null || _viewportMaster.Points.Count == 0)
+                {
+                    MarketSetupSpChart.Refresh();
+                    MarketSetupIndicatorChart.Refresh();
+                    MarketSetupAtrpChart.Refresh();
+                }
+                if (_cursorDate.HasValue) ApplyCursorValues(_cursorDate.Value);
+            }
         }));
+    }
+
+    private bool TryGetHistoryViewport(out DateTime start, out DateTime end)
+    {
+        start = end = default;
+        if (_viewportMaster is null || _viewportMaster.Points.Count == 0)
+            return false;
+
+        int startIndex = Math.Clamp((int)Math.Round(HistorySlider.Value), 0, Math.Max(0, _viewportMaster.Points.Count - 1));
+        int endIndex = Math.Min(_viewportMaster.Points.Count - 1, startIndex + _visibleBarCount - 1);
+        start = _viewportMaster.Points[startIndex].Date;
+        end = _viewportMaster.Points[endIndex].Date;
+        return true;
     }
 
     private void ApplyHistoryViewport()
     {
-        if (_viewportMaster is null || _viewportMaster.Points.Count == 0)
-            return;
-
-        int startIndex = Math.Clamp((int)Math.Round(HistorySlider.Value), 0, Math.Max(0, _viewportMaster.Points.Count - 1));
-        int endIndex = Math.Min(_viewportMaster.Points.Count - 1, startIndex + _visibleBarCount - 1);
-        DateTime start = _viewportMaster.Points[startIndex].Date;
-        DateTime end = _viewportMaster.Points[endIndex].Date;
+        if (!TryGetHistoryViewport(out DateTime start, out DateTime end)) return;
 
         Sp200Chart.SetViewport(start, end);
         Sp100Chart.SetViewport(start, end);
@@ -3246,6 +4372,11 @@ public partial class BreezeWindow : ChildWindow
         TitanicChart.SetViewport(start, end);
         ZweigChart.SetViewport(start, end);
         TradingEnsembleChart.SetViewport(start, end);
+        SentimentSpChart.SetViewport(start, end);
+        SentimentIndicatorChart.SetViewport(start, end);
+        MarketSetupSpChart.SetViewport(start, end);
+        MarketSetupIndicatorChart.SetViewport(start, end);
+        MarketSetupAtrpChart.SetViewport(start, end);
         ContangoSpChart.SetViewport(start, end);
         ContangoSvxyChart.SetViewport(start, end);
         ContangoMyRsiChart.SetViewport(start, end);
@@ -3269,7 +4400,12 @@ public partial class BreezeWindow : ChildWindow
         FuzzyAnalysisText.Text = "Рассчитайте данные, затем наведите курсор на график.";
         TitanicChart.SetMessage("SentimenTrader Titanic", "Waiting for calculation");
         ZweigChart.SetMessage("Zweig Breadth Thrust", "Waiting for calculation");
-        TradingEnsembleChart.SetMessage("После завершения общего расчёта откройте эту вкладку: расчёт ZZ1, ZZ2 и ZZ3 запустится один раз автоматически.");
+        TradingEnsembleChart.SetMessage("После завершения общего расчёта откройте эту вкладку: расчёт девяти ансамблей TorchSharp4GPU/TorchSharp/Jordan/Encog запустится один раз автоматически.");
+        SentimentSpChart.SetMessage("S&P 500 (SPY)", "Waiting for calculation");
+        SentimentIndicatorChart.SetMessage("Waiting for calculation");
+        MarketSetupSpChart.SetMessage("S&P 500 (SPY) — selected market setup", "Waiting for calculation");
+        MarketSetupIndicatorChart.SetMessage("Waiting for calculation");
+        MarketSetupAtrpChart.SetMessage("Waiting for calculation");
         ContangoSpChart.SetMessage("S&P 500 — above SMA(200)", "Waiting for calculation");
         ContangoSvxyChart.SetMessage("SVXY", "Waiting for calculation");
         ContangoMyRsiChart.SetMessage("Waiting for calculation");

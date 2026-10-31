@@ -8,8 +8,8 @@
     <PlatformTarget>x64</PlatformTarget>
     <AssemblyName>Breeze</AssemblyName>
     <RootNamespace>BreezeVL</RootNamespace>
-    <Version>0.10.26</Version>
-    <DefineConstants>$(DefineConstants);EVENT_MODEL_TEST</DefineConstants>
+    <Version>0.11.8</Version>
+    <DefineConstants>$(DefineConstants);EVENT_MODEL_TEST;RULES2_ENGINE_ONLY</DefineConstants>
     <WealthLabInstallDir Condition="'$(WealthLabInstallDir)' == ''">C:\Program Files\Quantacula, LLC\WealthLab 8</WealthLabInstallDir>
   </PropertyGroup>
 
@@ -38,6 +38,14 @@
       <HintPath>$(WealthLabInstallDir)\Indicators.JohnEhlers_8Wealth.dll</HintPath>
       <Private>false</Private>
     </Reference>
+    <Reference Include="TorchSharp">
+      <HintPath>$(WealthLabInstallDir)\TorchSharp.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="encog-core-cs">
+      <HintPath>$(WealthLabInstallDir)\encog-core-cs.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
   </ItemGroup>
 
   <ItemGroup>
@@ -48,6 +56,8 @@
           CopyToPublishDirectory="PreserveNewest"
           Condition="Exists('BreezeHelp.standalone.html')" />
     <EmbeddedResource Include="BreezeRules.json" />
+    <EmbeddedResource Include="BreezeEventCatalog.json" />
+    <None Update="BreezeEventCatalog.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <None Update="BreezeRules.json"
           CopyToOutputDirectory="PreserveNewest"
           CopyToPublishDirectory="PreserveNewest" />
@@ -55,5 +65,6 @@
          75-event model. EVENT_MODEL_TEST excludes only the strategy shell. -->
     <Compile Include="../Breeze.Strategies/BreezeHoldPositionStrategy_new.cs"
              Link="Research/BreezeHoldPositionEventModel.cs" />
+    <Compile Include="../Rules2ResearchStrategy.cs" Link="Research/Rules2Engine.cs" />
   </ItemGroup>
 </Project>

@@ -32,6 +32,7 @@ internal static class ZweigBreadthCalculator
     public static ZweigSeries Calculate(
         PriceSeries advancing,
         PriceSeries declining,
+        IReadOnlySet<DateTime> spyTradingDates,
         ZweigMode mode,
         DateTime displayStart,
         DateTime displayEnd)
@@ -44,6 +45,7 @@ internal static class ZweigBreadthCalculator
         var decliningByDate = declining.Points.ToDictionary(point => point.Date, point => point.Close);
         DateTime[] dates = advancingByDate.Keys
             .Intersect(decliningByDate.Keys)
+            .Where(date => spyTradingDates.Contains(date.Date))
             .OrderBy(date => date)
             .ToArray();
         if (dates.Length == 0)

@@ -13,6 +13,8 @@ internal sealed class ZweigChart : Border
     private PriceSeries? _priceSeries;
     private ZweigSeries? _series;
     private HoldConfidenceSeries? _holdConfidence;
+    private string _scoreModelName = "Rules1";
+    public void SetScoreModelName(string name) { _scoreModelName = name; if (IsVisible) RenderSeries(); }
     private bool _showCandles;
     private bool _showHoldConfidence = true;
     private DateTime? _viewportStart;
@@ -26,6 +28,11 @@ internal sealed class ZweigChart : Border
     private double _top;
     private double _width;
     private double _fullPlotHeight;
+    private double _paneRatio = 0.68;
+    private double _paneAvailableHeight;
+    private double _dividerCenterY;
+    private double _dividerOffset;
+    private bool _paneResizeActive;
 
     public event Action<DateTime>? CursorDateChanged;
 
@@ -59,6 +66,20 @@ internal sealed class ZweigChart : Border
     public void SetCursorDate(DateTime? date) { _cursorDate = date; if (IsVisible) DrawCursor(); }
     public void SetCursorPinned(bool pinned) { if (_cursorPinned == pinned) return; _cursorPinned = pinned; if (IsVisible) DrawCursor(); }
     public void Refresh() => RenderSeries();
+    public void SetPaneRatio(double ratio) { if (!double.IsFinite(ratio)) return; _paneRatio = Math.Clamp(ratio, 0.20, 0.85); if (IsVisible) RenderSeries(); }
+    public double GetPaneRatio() => _paneRatio;
+    public bool TryBeginPaneResize(Point point)
+    {
+        _paneResizeActive = Math.Abs(point.Y - _dividerCenterY) <= 8.0;
+        return _paneResizeActive;
+    }
+    public void ResizePane(Point point)
+    {
+        if (!_paneResizeActive || _paneAvailableHeight <= 1.0) return;
+        _paneRatio = Math.Clamp((point.Y - _top - _dividerOffset) / _paneAvailableHeight, 0.20, 0.85);
+        RenderSeries();
+    }
+    public void EndPaneResize() => _paneResizeActive = false;
 
     public void SetMessage(string title, string message)
     {
@@ -94,12 +115,15 @@ internal sealed class ZweigChart : Border
         _top = 42;
         const double right = 20;
         const double bottom = 10;
-        double paneGap = _showHoldConfidence ? 24 : 8;
+        double paneGap = _showHoldConfidence ? 35 : 11;
         _width = Math.Max(1, ActualWidth - _left - right);
         double availableHeight = Math.Max(1, ActualHeight - _top - bottom - paneGap);
-        double zbtHeight = Math.Max(90, availableHeight * 0.32);
-        double priceHeight = Math.Max(90, availableHeight - zbtHeight);
+        _paneAvailableHeight = availableHeight;
+        double priceHeight = Math.Max(90, availableHeight * _paneRatio);
+        double zbtHeight = Math.Max(90, availableHeight - priceHeight);
         double zbtTop = _top + priceHeight + paneGap;
+        _dividerOffset = paneGap - 5.5;
+        _dividerCenterY = zbtTop - 5.5;
         _fullPlotHeight = zbtTop + zbtHeight - _top;
         double slots = Math.Max(1, _rendered.Count - 1);
         double slotWidth = _width / slots;
@@ -231,9 +255,20 @@ internal sealed class ZweigChart : Border
                 Canvas.SetTop(ribbon, _top + priceHeight + 5);
                 _canvas.Children.Add(ribbon);
             }
-            AddText("Оценка", 5, _top + priceHeight + 3, 9,
+            AddText(_scoreModelName, 5, _top + priceHeight + 3, 9,
                 Color.FromRgb(90, 92, 85), FontWeights.SemiBold);
         }
+
+        var divider = new Rectangle
+        {
+            Width = _width, Height = 5,
+            Fill = new SolidColorBrush(Color.FromRgb(215, 207, 187)),
+            IsHitTestVisible = false
+        };
+        Canvas.SetLeft(divider, _left);
+        Canvas.SetTop(divider, _dividerCenterY - 2.5);
+        Panel.SetZIndex(divider, 900);
+        _canvas.Children.Add(divider);
 
         var zbtBackground = new Rectangle
         {

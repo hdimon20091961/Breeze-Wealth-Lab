@@ -2,11 +2,18 @@ using System.Globalization;
 using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
+using Encog.ML.Data.Basic;
+using Encog.Neural.Networks;
+using Encog.Persist;
+using TorchSharp;
+using TorchSharp.Modules;
 using WealthLab.AdvancedSmoothers;
 using WealthLab.Backtest;
 using WealthLab.Core;
 using WealthLab.Indicators;
 using WealthLab.TASC;
+using static TorchSharp.torch;
+using static TorchSharp.torch.nn;
 
 namespace BreezeVL;
 
@@ -29,32 +36,67 @@ internal sealed class TradingEnsembleInference : UserStrategyBase
     public override void Initialize(BarHistory bars) { }
     public override void Execute(BarHistory bars, int idx) { }
 
-    public static IReadOnlyDictionary<string, TradingEnsembleSeries> Calculate(
+    public static TradingEnsembleCalculationResult Calculate(
         BarHistory bars,
-        string workingDirectory,
+        string gpuDirectory,
+        string torchDirectory,
+        string encogDirectory,
         int forecastDays,
         IProgress<BreadthProgress>? progress,
         CancellationToken cancellationToken)
     {
         var engine = new TradingEnsembleInference();
-        var result = new Dictionary<string, TradingEnsembleSeries>(StringComparer.OrdinalIgnoreCase);
-        for (int method = 1; method <= 3; method++)
+        TradingPackageDefinition[] packages =
+        [
+            new("GPU-ZZ1", "GPU ZZ1", "trading_package_Jordan_ZZ1", 1, TradingModelEngine.GpuJbin),
+            new("GPU-ZZ2", "GPU ZZ2", "trading_package_Jordan_ZZ2", 2, TradingModelEngine.GpuJbin),
+            new("GPU-ZZ3", "GPU ZZ3", "trading_package_Jordan_ZZ3", 3, TradingModelEngine.GpuJbin),
+            new("Torch-ZZ1", "Torch ZZ1", "trading_package", 1, TradingModelEngine.TorchSharp),
+            new("Torch-ZZ2", "Torch ZZ2", "trading_package_zz2", 2, TradingModelEngine.TorchSharp),
+            new("Torch-ZZ1-Jordan", "Torch ZZ1 Jordan", "trading_package_J", 1, TradingModelEngine.JordanJbin),
+            new("Torch-ZZ2-Jordan", "Torch ZZ2 Jordan", "trading_package_zz2_J", 2, TradingModelEngine.JordanJbin),
+            new("Encog-ZZ1", "Encog ZZ1", "trading_package", 1, TradingModelEngine.Encog),
+            new("Encog-ZZ2", "Encog ZZ2", "trading_package_zz2", 2, TradingModelEngine.Encog)
+        ];
+        return TradingPackageCollector.Calculate(packages, package =>
         {
             cancellationToken.ThrowIfCancellationRequested();
-            string package = $"ZZ{method}";
-            progress?.Report(new BreadthProgress($"Торговые ансамбли: расчёт {package} из готового пакета …"));
-            result[package] = engine.CalculatePackage(
-                bars,
-                Path.Combine(workingDirectory, $"trading_package_Jordan_ZZ{method}"),
-                package,
-                method,
-                Math.Max(0, forecastDays),
-                cancellationToken);
-        }
-        return result;
+            progress?.Report(new BreadthProgress($"Торговые ансамбли: расчёт {package.DisplayName} …"));
+            string root = package.Engine switch
+            {
+                TradingModelEngine.Encog => encogDirectory,
+                TradingModelEngine.GpuJbin => gpuDirectory,
+                _ => torchDirectory
+            };
+            string path = Path.Combine(root, package.RelativeDirectory);
+            TradingEnsembleSeries series = package.Engine switch
+            {
+                TradingModelEngine.TorchSharp => engine.CalculateTorchPackage(
+                    bars, path, package.Key, package.CalculationMethod, Math.Max(0, forecastDays), cancellationToken),
+                TradingModelEngine.Encog => engine.CalculateEncogPackage(
+                    bars, path, package.Key, package.CalculationMethod, Math.Max(0, forecastDays), cancellationToken),
+                _ => engine.CalculateJbinPackage(
+                    bars, path, package.Key, package.CalculationMethod, Math.Max(0, forecastDays), cancellationToken)
+            };
+            ValidatePackage(series, bars);
+            return series;
+        }, message => progress?.Report(new BreadthProgress(message, BreadthProgressLevel.Error)), cancellationToken);
     }
 
-    private TradingEnsembleSeries CalculatePackage(
+    private static void ValidatePackage(TradingEnsembleSeries series, BarHistory bars)
+    {
+        if (series.ModelCount <= 0)
+            throw new InvalidOperationException($"{series.PackageName}: нет пригодных моделей.");
+        if (series.Points.Count != bars.Count || series.Points.Count == 0)
+            throw new InvalidOperationException($"{series.PackageName}: неполный временной ряд ({series.Points.Count}/{bars.Count}).");
+        if (series.Points[^1].Date != bars.DateTimes[bars.Count - 1].Date)
+            throw new InvalidOperationException($"{series.PackageName}: последняя дата не совпадает с историей SPY.");
+        if (!double.IsFinite(series.Points[^1].EnsemblePercent) ||
+            series.Points[^1].Deciles.Count != 10 || series.Points[^1].Deciles.Any(value => !double.IsFinite(value)))
+            throw new InvalidOperationException($"{series.PackageName}: последнее значение пустое или некорректное.");
+    }
+
+    private TradingEnsembleSeries CalculateJbinPackage(
         BarHistory bars, string packagePath, string packageName, int method, int forecastDays,
         CancellationToken cancellationToken)
     {
@@ -67,6 +109,7 @@ internal sealed class TradingEnsembleInference : UserStrategyBase
             throw new InvalidOperationException($"В {packagePath} нет JBIN-моделей.");
 
         var models = new List<ModelForecast>(modelFiles.Length);
+        var failures = new List<string>();
         int firstForecastOrigin = forecastDays > 0
             ? Math.Max(0, bars.Count - forecastDays - 1)
             : bars.Count;
@@ -76,29 +119,123 @@ internal sealed class TradingEnsembleInference : UserStrategyBase
         foreach (string modelFile in modelFiles)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            ModelParameters? parameters = LoadParameters(Path.ChangeExtension(modelFile, ".ini"));
-            if (parameters is null || parameters.CalculationMethod != method) continue;
-            FeatureSet features = GetFeatures(bars, parameters);
-            Dictionary<string, double>[][]? forecastFeatures = forecastDays > 0
-                ? GetForecastFeatures(bars, parameters, features, forecastDays)
-                : null;
-            double[] forecast = RunModel(
-                modelFile, bars.Count, features, parameters, forecastFeatures,
-                firstForecastOrigin, forecastCounts, cancellationToken);
-            double bench = ParseBench(Path.GetFileName(modelFile));
-            models.Add(new ModelForecast(Path.GetFileName(modelFile), bench, forecast));
+            try
+            {
+                ModelParameters? parameters = LoadParameters(Path.ChangeExtension(modelFile, ".ini"),
+                    Path.Combine(Path.GetDirectoryName(packagePath) ?? packagePath, "system_param.ini"));
+                if (parameters is null || parameters.CalculationMethod != method) continue;
+                FeatureSet features = GetFeatures(bars, parameters);
+                Dictionary<string, double>[][]? forecastFeatures = forecastDays > 0
+                    ? GetForecastFeatures(bars, parameters, features, forecastDays)
+                    : null;
+                double[,]? modelForecastCounts = CreateForecastCountsLike(forecastCounts);
+                double[] forecast = RunModel(modelFile, bars.Count, features, parameters, forecastFeatures,
+                    firstForecastOrigin, modelForecastCounts, cancellationToken);
+                models.Add(new ModelForecast(Path.GetFileName(modelFile), ParseBench(Path.GetFileName(modelFile)), forecast));
+                MergeForecastCounts(forecastCounts, modelForecastCounts);
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { throw; }
+            catch (Exception ex) { failures.Add($"{Path.GetFileName(modelFile)}: {ex.Message}"); }
         }
         if (models.Count == 0)
             throw new InvalidOperationException($"В {packageName} нет комплектных моделей метода {method}.");
 
+        return BuildSeries(bars, packageName, models, forecastCounts, firstForecastOrigin, FailureSummary(failures));
+    }
+
+    private TradingEnsembleSeries CalculateTorchPackage(
+        BarHistory bars, string packagePath, string packageName, int method, int forecastDays,
+        CancellationToken cancellationToken)
+    {
+        if (!Directory.Exists(packagePath))
+            throw new DirectoryNotFoundException($"Торговый пакет {packageName} не найден: {packagePath}");
+        string[] modelFiles = Directory.GetFiles(packagePath, "*.pt");
+        Array.Sort(modelFiles, StringComparer.OrdinalIgnoreCase);
+        if (modelFiles.Length == 0)
+            throw new InvalidOperationException($"В {packagePath} нет PT-моделей.");
+
+        int firstForecastOrigin = forecastDays > 0 ? Math.Max(0, bars.Count - forecastDays - 1) : bars.Count;
+        double[,]? forecastCounts = forecastDays > 0 ? new double[bars.Count - firstForecastOrigin, 5] : null;
+        var models = new List<ModelForecast>(modelFiles.Length);
+        var failures = new List<string>();
+        foreach (string modelFile in modelFiles)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            try
+            {
+                ModelParameters? parameters = LoadParameters(Path.ChangeExtension(modelFile, ".ini"),
+                    Path.Combine(Path.GetDirectoryName(packagePath) ?? packagePath, "system_param.ini"));
+                if (parameters is null || parameters.CalculationMethod != method)
+                    continue;
+                FeatureSet features = GetFeatures(bars, parameters);
+                Dictionary<string, double>[][]? forecastFeatures = forecastDays > 0
+                    ? GetForecastFeatures(bars, parameters, features, forecastDays)
+                    : null;
+                double[,]? modelForecastCounts = CreateForecastCountsLike(forecastCounts);
+                double[] values = RunTorchModel(modelFile, bars.Count, features, parameters,
+                    forecastFeatures, firstForecastOrigin, modelForecastCounts, cancellationToken);
+                models.Add(new ModelForecast(Path.GetFileName(modelFile), ParseBench(Path.GetFileName(modelFile)), values));
+                MergeForecastCounts(forecastCounts, modelForecastCounts);
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { throw; }
+            catch (Exception ex) { failures.Add($"{Path.GetFileName(modelFile)}: {ex.Message}"); }
+        }
+        if (models.Count == 0)
+            throw new InvalidOperationException($"В {packageName} нет комплектных PT-моделей метода {method}.");
+        return BuildSeries(bars, packageName, models, forecastCounts, firstForecastOrigin, FailureSummary(failures));
+    }
+
+    private TradingEnsembleSeries CalculateEncogPackage(
+        BarHistory bars, string packagePath, string packageName, int method, int forecastDays,
+        CancellationToken cancellationToken)
+    {
+        if (!Directory.Exists(packagePath))
+            throw new DirectoryNotFoundException($"Торговый пакет {packageName} не найден: {packagePath}");
+        string[] iniFiles = Directory.GetFiles(packagePath, "*.ini");
+        Array.Sort(iniFiles, StringComparer.OrdinalIgnoreCase);
+        int firstForecastOrigin = forecastDays > 0 ? Math.Max(0, bars.Count - forecastDays - 1) : bars.Count;
+        double[,]? forecastCounts = forecastDays > 0 ? new double[bars.Count - firstForecastOrigin, 5] : null;
+        var models = new List<ModelForecast>(iniFiles.Length);
+        var failures = new List<string>();
+        foreach (string iniFile in iniFiles)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            string modelFile = Path.ChangeExtension(iniFile, ".eg");
+            if (!File.Exists(modelFile))
+                continue;
+            try
+            {
+                ModelParameters? parameters = LoadParameters(iniFile,
+                    Path.Combine(Path.GetDirectoryName(packagePath) ?? packagePath, "system_param.ini"));
+                if (parameters is null || parameters.CalculationMethod != method || parameters.ActiveFeatures.Count == 0)
+                    continue;
+                FeatureSet features = GetFeatures(bars, parameters);
+                Dictionary<string, double>[][]? forecastFeatures = forecastDays > 0
+                    ? GetForecastFeatures(bars, parameters, features, forecastDays)
+                    : null;
+                double[,]? modelForecastCounts = CreateForecastCountsLike(forecastCounts);
+                double[] values = RunEncogModel(modelFile, bars.Count, features, parameters,
+                    forecastFeatures, firstForecastOrigin, modelForecastCounts, cancellationToken);
+                models.Add(new ModelForecast(Path.GetFileName(iniFile), ParseBench(Path.GetFileName(iniFile)), values));
+                MergeForecastCounts(forecastCounts, modelForecastCounts);
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { throw; }
+            catch (Exception ex) { failures.Add($"{Path.GetFileName(iniFile)}: {ex.Message}"); }
+        }
+        if (models.Count == 0)
+            throw new InvalidOperationException($"В {packageName} нет комплектных EG/INI-моделей метода {method}.");
+        return BuildSeries(bars, packageName, models, forecastCounts, firstForecastOrigin, FailureSummary(failures));
+    }
+
+    private static TradingEnsembleSeries BuildSeries(
+        BarHistory bars, string packageName, IReadOnlyList<ModelForecast> models,
+        double[,]? forecastCounts, int firstForecastOrigin, string warning)
+    {
         double[] ensemble = new double[bars.Count];
         foreach (ModelForecast model in models)
             for (int bar = 0; bar < bars.Count; bar++) ensemble[bar] += model.Values[bar];
-
-        List<ModelForecast> sorted = models
-            .OrderBy(model => model.Bench)
-            .ThenBy(model => model.FileName, StringComparer.OrdinalIgnoreCase)
-            .ToList();
+        List<ModelForecast> sorted = models.OrderBy(model => model.Bench)
+            .ThenBy(model => model.FileName, StringComparer.OrdinalIgnoreCase).ToList();
         var deciles = Enumerable.Range(0, 10).Select(_ => new double[bars.Count]).ToArray();
         var counts = new int[10];
         for (int modelIndex = 0; modelIndex < sorted.Count; modelIndex++)
@@ -107,35 +244,44 @@ internal sealed class TradingEnsembleInference : UserStrategyBase
             counts[group]++;
             for (int bar = 0; bar < bars.Count; bar++) deciles[group][bar] += sorted[modelIndex].Values[bar];
         }
-
         var points = new List<TradingEnsemblePoint>(bars.Count);
         for (int bar = 0; bar < bars.Count; bar++)
         {
             var values = new double[10];
             for (int group = 0; group < 10; group++)
                 values[group] = counts[group] == 0 ? 0.0 : 100.0 * deciles[group][bar] / counts[group];
-            points.Add(new TradingEnsemblePoint(
-                bars.DateTimes[bar].Date,
-                100.0 * ensemble[bar] / models.Count,
-                values));
+            points.Add(new TradingEnsemblePoint(bars.DateTimes[bar].Date,
+                100.0 * ensemble[bar] / models.Count, values));
         }
         var forecasts = new List<TradingForecastPoint>();
         if (forecastCounts is not null)
-        {
             for (int origin = firstForecastOrigin; origin < bars.Count; origin++)
             {
-                var scenarioPercentages = new double[5];
                 int row = origin - firstForecastOrigin;
-                for (int scenario = 0; scenario < scenarioPercentages.Length; scenario++)
-                    scenarioPercentages[scenario] = 100.0 * forecastCounts[row, scenario] / models.Count;
-                bool isNextBar = origin == bars.Count - 1;
-                DateTime displayDate = isNextBar
-                    ? NextTradingDate(bars.DateTimes[origin].Date)
-                    : bars.DateTimes[origin + 1].Date;
-                forecasts.Add(new TradingForecastPoint(displayDate, scenarioPercentages, isNextBar));
+                var scenarios = new double[5];
+                for (int scenario = 0; scenario < scenarios.Length; scenario++)
+                    scenarios[scenario] = 100.0 * forecastCounts[row, scenario] / models.Count;
+                bool next = origin == bars.Count - 1;
+                DateTime date = next ? NextTradingDate(bars.DateTimes[origin].Date) : bars.DateTimes[origin + 1].Date;
+                forecasts.Add(new TradingForecastPoint(date, scenarios, next));
             }
-        }
-        return new TradingEnsembleSeries(packageName, points, forecasts);
+        return new TradingEnsembleSeries(packageName, points, forecasts, models.Count, warning);
+    }
+
+    private static string FailureSummary(IReadOnlyList<string> failures)
+        => failures.Count == 0 ? string.Empty :
+            $"пропущено моделей: {failures.Count}; первая ошибка: {failures[0]}";
+
+    private static double[,]? CreateForecastCountsLike(double[,]? target)
+        => target is null ? null : new double[target.GetLength(0), target.GetLength(1)];
+
+    private static void MergeForecastCounts(double[,]? target, double[,]? source)
+    {
+        if (target is null || source is null)
+            return;
+        for (int row = 0; row < target.GetLength(0); row++)
+            for (int scenario = 0; scenario < target.GetLength(1); scenario++)
+                target[row, scenario] += source[row, scenario];
     }
 
     private FeatureSet GetFeatures(BarHistory bars, ModelParameters p)
@@ -395,15 +541,125 @@ internal sealed class TradingEnsembleInference : UserStrategyBase
         return result;
     }
 
-    private static ModelParameters? LoadParameters(string path)
+    private static double[] RunTorchModel(
+        string path, int count, FeatureSet features, ModelParameters p,
+        Dictionary<string, double>[][]? forecastFeatures, int firstForecastOrigin,
+        double[,]? forecastCounts, CancellationToken token)
+    {
+        string[] names = p.ActiveFeatures.Count > 0 ? p.ActiveFeatures.ToArray() : FeatureNames;
+        int rows = Math.Max(0, count - features.StartIndex);
+        var result = new double[count];
+        if (rows == 0)
+            return result;
+        float[] input = new float[rows * names.Length];
+        for (int row = 0; row < rows; row++)
+        {
+            int bar = features.StartIndex + row;
+            if ((row & 63) == 0) token.ThrowIfCancellationRequested();
+            for (int feature = 0; feature < names.Length; feature++)
+            {
+                double value = features.Map[names[feature]][bar];
+                input[row * names.Length + feature] = double.IsFinite(value) ? (float)value : 0f;
+            }
+        }
+        using var model = new MlpModel(names.Length, Math.Max(1, p.AddLayer), p.ExitType);
+        model.load(path);
+        model.eval();
+        using Tensor inputTensor = torch.tensor(input, new long[] { rows, names.Length },
+            dtype: ScalarType.Float32, device: torch.CPU);
+        using Tensor prediction = model.forward(inputTensor);
+        using Tensor flat = prediction.detach().to(torch.CPU).reshape(new long[] { -1 }).contiguous();
+        float[] output = flat.data<float>().ToArray();
+        for (int row = 0; row < Math.Min(rows, output.Length); row++)
+            result[features.StartIndex + row] = output[row] >= p.Level ? 1.0 : 0.0;
+
+        if (forecastFeatures is not null && forecastCounts is not null)
+            for (int origin = firstForecastOrigin; origin < count; origin++)
+            {
+                token.ThrowIfCancellationRequested();
+                if (forecastFeatures[origin] is null)
+                    continue;
+                float[] scenarioInput = new float[5 * names.Length];
+                for (int scenario = 0; scenario < 5; scenario++)
+                    for (int feature = 0; feature < names.Length; feature++)
+                    {
+                        double value = forecastFeatures[origin][scenario].TryGetValue(names[feature], out double found) ? found : 0.0;
+                        scenarioInput[scenario * names.Length + feature] = double.IsFinite(value) ? (float)value : 0f;
+                    }
+                using Tensor scenarioTensor = torch.tensor(scenarioInput, new long[] { 5, names.Length },
+                    dtype: ScalarType.Float32, device: torch.CPU);
+                using Tensor scenarioPrediction = model.forward(scenarioTensor);
+                using Tensor scenarioFlat = scenarioPrediction.detach().to(torch.CPU).reshape(new long[] { -1 }).contiguous();
+                float[] scenarioOutput = scenarioFlat.data<float>().ToArray();
+                for (int scenario = 0; scenario < Math.Min(5, scenarioOutput.Length); scenario++)
+                    if (scenarioOutput[scenario] >= p.Level)
+                        forecastCounts[origin - firstForecastOrigin, scenario] += 1.0;
+            }
+        return result;
+    }
+
+    private static double[] RunEncogModel(
+        string path, int count, FeatureSet features, ModelParameters p,
+        Dictionary<string, double>[][]? forecastFeatures, int firstForecastOrigin,
+        double[,]? forecastCounts, CancellationToken token)
+    {
+        BasicNetwork network = (BasicNetwork)EncogDirectoryPersistence.LoadObject(new FileInfo(path));
+        string[] names = p.ActiveFeatures.ToArray();
+        var result = new double[count];
+        var input = new double[names.Length];
+        for (int bar = features.StartIndex; bar < count; bar++)
+        {
+            if ((bar & 63) == 0) token.ThrowIfCancellationRequested();
+            for (int feature = 0; feature < names.Length; feature++)
+            {
+                double value = features.Map[names[feature]][bar];
+                input[feature] = (double.IsFinite(value) ? value : 0.0) * EncogFeatureWeight(names[feature], p.FeatureWeights);
+            }
+            result[bar] = network.Compute(new BasicMLData(input))[0] >= p.Level ? 1.0 : 0.0;
+            if (forecastFeatures is null || forecastCounts is null || bar < firstForecastOrigin || forecastFeatures[bar] is null)
+                continue;
+            for (int scenario = 0; scenario < 5; scenario++)
+            {
+                for (int feature = 0; feature < names.Length; feature++)
+                {
+                    double value = forecastFeatures[bar][scenario].TryGetValue(names[feature], out double found) ? found : 0.0;
+                    input[feature] = (double.IsFinite(value) ? value : 0.0) * EncogFeatureWeight(names[feature], p.FeatureWeights);
+                }
+                if (network.Compute(new BasicMLData(input))[0] >= p.Level)
+                    forecastCounts[bar - firstForecastOrigin, scenario] += 1.0;
+            }
+        }
+        return result;
+    }
+
+    private static double EncogFeatureWeight(string feature, IReadOnlyList<double> weights)
+    {
+        int index = feature.ToLowerInvariant() switch
+        {
+            "model_cnn_fear_greed" => 0, "risk_measure" => 1, "model_panic_euphoria" => 2,
+            "myrsi_rep" => 3, "trendscore" => 4, "aroonup" or "aroondown" => 5,
+            "diminus" or "diplus" => 6, "correlationangle_rep" => 7,
+            "correlationtrend" => 8, "hurst" => 9, "cmf" => 10, "decibel" => 11,
+            "jocker" => 12, "marketbreadth" => 13, _ => -1
+        };
+        return index >= 0 && index < weights.Count ? weights[index] : 1.0;
+    }
+
+    private static ModelParameters? LoadParameters(string path, string? defaultsPath = null)
     {
         if (!File.Exists(path)) return null;
         var ini = new Dictionary<string,string>(StringComparer.OrdinalIgnoreCase);
-        foreach (string raw in File.ReadLines(path))
+        IEnumerable<string> Sources()
         {
-            string line = raw.Trim(); int equals = line.IndexOf('=');
-            if (equals > 0 && !line.StartsWith('[')) ini[line[..equals].Trim()] = line[(equals + 1)..].Trim();
+            if (!string.IsNullOrWhiteSpace(defaultsPath) && File.Exists(defaultsPath)) yield return defaultsPath;
+            yield return path;
         }
+        foreach (string source in Sources())
+            foreach (string raw in File.ReadLines(source))
+            {
+                string line = raw.Trim(); int equals = line.IndexOf('=');
+                if (equals > 0 && !line.StartsWith('[')) ini[line[..equals].Trim()] = line[(equals + 1)..].Trim();
+            }
         string Get(string key, string fallback) => ini.TryGetValue(key, out string? value) && !string.IsNullOrWhiteSpace(value) ? value : fallback;
         int Int(string key, int fallback) => int.TryParse(Get(key, ""), NumberStyles.Integer, CultureInfo.InvariantCulture, out int value) ? value : fallback;
         double Double(string key, double fallback) => double.TryParse(Get(key, ""), NumberStyles.Float, CultureInfo.InvariantCulture, out double value) ? value : fallback;
@@ -412,13 +668,17 @@ internal sealed class TradingEnsembleInference : UserStrategyBase
         if (x13Mode is < 0 or > 1)
             throw new InvalidDataException($"Модель {Path.GetFileName(path)} использует удалённый режим X13/2={x13Mode}.");
 
+        string[] activeFeatures = Get("ActiveFeatureNames", Get("ALLall_Header", ""))
+            .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        double[] featureWeights = Enumerable.Range(1, 15).Select(index => Double($"x{index}", 1.0)).ToArray();
         return new ModelParameters(
             Int("network_type", 1), Int("context_mode", Int("jordan_mode", 1)), Double("level_class", .5),
             Int("CalculationMethod", 1), Int("InputGradations", 0), Int("ValidationWithoutGradation", 0),
             Int("Param_X4", 14), Int("Param_X4/1", 8), x6, Int("Param_X6/1", x6),
             x7 > 0 ? x7 : 7, Math.Max(1, Int("Param_X7/1", 14)), Int("Param_X8", 28), Int("Param_X9", 35),
             Int("Param_X10", 120), Int("Param_X11", 80), Int("Param_X12", 96), Int("Param_X13", 3),
-            Int("Param_X13/1", 3), x13Mode, Int("Param_X14", 3), Int("Param_X14/1", 64));
+            Int("Param_X13/1", 3), x13Mode, Int("Param_X14", 3), Int("Param_X14/1", 64),
+            Int("addLayer", 3), Int("exit_type", 1), activeFeatures, featureWeights);
     }
 
     private static double ParseBench(string name)
@@ -435,7 +695,30 @@ internal sealed class TradingEnsembleInference : UserStrategyBase
         int InputGradations, int ValidationWithoutGradation,
         int X4, int X4Smooth, int X6, int X6Down, int X7, int X7Plus,
         int X8, int X9, int X10, int X11, int X12, int X13,
-        int X13HiLoPeriod, int X13Mode, int X14, int X14MaPeriod);
+        int X13HiLoPeriod, int X13Mode, int X14, int X14MaPeriod,
+        int AddLayer, int ExitType, IReadOnlyList<string> ActiveFeatures, IReadOnlyList<double> FeatureWeights);
+
+    private sealed class MlpModel : nn.Module<Tensor, Tensor>
+    {
+        private readonly Linear hidden;
+        private readonly Linear output;
+        private readonly bool useSigmoidOutput;
+
+        public MlpModel(int inputSize, int hiddenSize, int exitType) : base("MLPModel")
+        {
+            hidden = Linear(inputSize, hiddenSize);
+            output = Linear(hiddenSize, 1);
+            useSigmoidOutput = exitType == 1;
+            RegisterComponents();
+        }
+
+        public override Tensor forward(Tensor x)
+        {
+            x = torch.sigmoid(hidden.forward(x));
+            x = output.forward(x);
+            return useSigmoidOutput ? torch.sigmoid(x) : x;
+        }
+    }
 
     private sealed class JbinModel
     {

@@ -13,7 +13,7 @@ internal sealed class BreezeHelpWindow : Window
 
     public BreezeHelpWindow(string fallbackReason)
     {
-        Title = "Zweig Breeze — резервная справка";
+        Title = "Market Breeze — резервная справка";
         Width = 980;
         Height = 760;
         MinWidth = 700;
@@ -27,7 +27,7 @@ internal sealed class BreezeHelpWindow : Window
             .FirstOrDefault(name => name.EndsWith("BreezeHelp.html", StringComparison.OrdinalIgnoreCase));
         if (resourceName is null)
         {
-            browser.NavigateToString("<html><body><h1>Zweig Breeze</h1><p>Embedded help is unavailable.</p></body></html>");
+            browser.NavigateToString("<html><body><h1>Market Breeze</h1><p>Embedded help is unavailable.</p></body></html>");
             return;
         }
 

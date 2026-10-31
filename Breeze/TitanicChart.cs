@@ -13,6 +13,8 @@ internal sealed class TitanicChart : Border
     private readonly Canvas _canvas = new();
     private TitanicSeries? _series;
     private HoldConfidenceSeries? _holdConfidence;
+    private string _scoreModelName = "Rules1";
+    public void SetScoreModelName(string name) { _scoreModelName = name; if (IsVisible) RenderSeries(); }
     private bool _showCandles;
     private bool _showHoldConfidence = true;
     private bool _showActive = true;
@@ -33,6 +35,11 @@ internal sealed class TitanicChart : Border
     private double _width;
     private double _height;
     private double _fullPlotHeight;
+    private double _paneRatio = 0.68;
+    private double _paneAvailableHeight;
+    private double _dividerCenterY;
+    private double _dividerOffset;
+    private bool _paneResizeActive;
 
     public event Action<DateTime>? CursorDateChanged;
     public event Action<int>? PersistentDaysChanged;
@@ -72,6 +79,20 @@ internal sealed class TitanicChart : Border
     public void SetCursorDate(DateTime? date) { _cursorDate = date; if (IsVisible) DrawCursor(); }
     public void SetCursorPinned(bool pinned) { if (_cursorPinned == pinned) return; _cursorPinned = pinned; if (IsVisible) DrawCursor(); }
     public void Refresh() => RenderSeries();
+    public void SetPaneRatio(double ratio) { if (!double.IsFinite(ratio)) return; _paneRatio = Math.Clamp(ratio, 0.20, 0.85); if (IsVisible) RenderSeries(); }
+    public double GetPaneRatio() => _paneRatio;
+    public bool TryBeginPaneResize(Point point)
+    {
+        _paneResizeActive = Math.Abs(point.Y - _dividerCenterY) <= 8.0;
+        return _paneResizeActive;
+    }
+    public void ResizePane(Point point)
+    {
+        if (!_paneResizeActive || _paneAvailableHeight <= 1.0) return;
+        _paneRatio = Math.Clamp((point.Y - _top - _dividerOffset) / _paneAvailableHeight, 0.20, 0.85);
+        RenderSeries();
+    }
+    public void EndPaneResize() => _paneResizeActive = false;
 
     public void SetMessage(string title, string message)
     {
@@ -103,12 +124,15 @@ internal sealed class TitanicChart : Border
         _top = 50;
         const double right = 60;
         const double bottom = 10;
-        double paneGap = _showHoldConfidence ? 24 : 8;
+        double paneGap = _showHoldConfidence ? 35 : 11;
         _width = Math.Max(1, ActualWidth - _left - right);
         double availableHeight = Math.Max(1, ActualHeight - _top - bottom - paneGap);
-        double breadthHeight = Math.Max(90, availableHeight * 0.32);
-        _height = Math.Max(90, availableHeight - breadthHeight);
+        _paneAvailableHeight = availableHeight;
+        _height = Math.Max(90, availableHeight * _paneRatio);
+        double breadthHeight = Math.Max(90, availableHeight - _height);
         double breadthTop = _top + _height + paneGap;
+        _dividerOffset = paneGap - 5.5;
+        _dividerCenterY = breadthTop - 5.5;
         _fullPlotHeight = breadthTop + breadthHeight - _top;
         double slot = _width / Math.Max(1, _rendered.Count - 1);
         double min = _rendered.Min(point => point.QqqLow);
@@ -224,9 +248,20 @@ internal sealed class TitanicChart : Border
                 Canvas.SetTop(ribbon, _top + _height + 5);
                 _canvas.Children.Add(ribbon);
             }
-            AddText("Оценка", 5, _top + _height + 3, 9,
+            AddText(_scoreModelName, 5, _top + _height + 3, 9,
                 Color.FromRgb(90, 92, 95), FontWeights.SemiBold);
         }
+
+        var divider = new Rectangle
+        {
+            Width = _width, Height = 5,
+            Fill = new SolidColorBrush(Color.FromRgb(215, 207, 187)),
+            IsHitTestVisible = false
+        };
+        Canvas.SetLeft(divider, _left);
+        Canvas.SetTop(divider, _dividerCenterY - 2.5);
+        Panel.SetZIndex(divider, 900);
+        _canvas.Children.Add(divider);
 
         var breadthBackground = new Rectangle
         {

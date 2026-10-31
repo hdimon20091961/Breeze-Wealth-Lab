@@ -59,8 +59,7 @@ internal static class BreezeResearchHelp
     public static string BuildHtml()
     {
         BreezeRuleSet ruleSet = BreezeRuleCatalog.Current;
-        Dictionary<string, BreezeRuleEntry> catalog = ruleSet.Rules.ToDictionary(rule => rule.Id, StringComparer.Ordinal);
-        double[] soft = ruleSet.BreezeWeights(0), standard = ruleSet.BreezeWeights(1), strong = ruleSet.BreezeWeights(2);
+        Dictionary<string, BreezeRuleEntry> catalog = ruleSet.AllRules.ToDictionary(rule => rule.Id, StringComparer.Ordinal);
         var b = new StringBuilder(120_000);
         b.AppendLine("<section id=\"position-research\">");
         b.AppendLine("<h2>Позиционная событийная модель 0.10.0</h2>");
@@ -109,14 +108,14 @@ internal static class BreezeResearchHelp
         }
         b.AppendLine("</tbody></table>");
 
-        b.AppendLine("<h3>Полный каталог 75 состояний</h3>");
+        b.AppendLine($"<h3>Полный каталог {ruleSet.AllRules.Count} вычисляемых состояний</h3>");
+        b.AppendLine("<p>Исходные 75 весовых признаков сохранены. Дополнительные EMA-состояния включены в ежедневный расчёт и Market Setup; их нулевые веса не добавляют непроверенный вклад в Score. ATRP(1) расположен последним после Nasdaq в блоке широт, на отдельной синхронной процентной панели. HLC3 используется только для исследовательских исходов на 3/5/10 баров.</p>");
+        b.AppendLine("<p>В Market Setup пустые нижние панели скрываются: только EMA — один график SPY; индикаторы/широты и ATRP независимо показывают свои панели. При каждом выборе правила остаются только нужные ему слои; ручные дополнения действуют до следующего выбора правила. Текущие значения рядов выводятся только в нижней строке. После изменения раскладки шкалы обновляются по текущему общему диапазону дат.</p>");
         b.AppendLine("<p>Номер является постоянной сквозной ссылкой, ID — программным ключом. Вес 0 в Breeze означает, что состояние рассчитывается, но не влияет на Score. Вес TorchSharp измеряется в процентных пунктах порога: отрицательный вес снижает порог, положительный повышает. Настройки жизненного цикла TorchSharp не изменяют замороженную модель Breeze.</p>");
         b.AppendLine("<table><thead><tr><th>№</th><th>ID</th><th>Состояние</th><th>Soft</th><th>Standard</th><th>Hard</th><th>Breeze</th><th>TorchSharp, п.п.</th><th>Действие TorchSharp</th><th>Реализованная формула</th><th>Исследовательское описание</th></tr></thead><tbody>");
-        for (int i = 0; i < M.Features.Length; i++)
+        foreach (BreezeRuleEntry entry in ruleSet.AllRules)
         {
-            M.Feature feature = M.Features[i];
-            BreezeRuleEntry entry = catalog[feature.Id];
-            bool zero = soft[i] == 0 && standard[i] == 0 && strong[i] == 0;
+            bool zero = !entry.IsActiveInBreeze;
             string status = zero ? "<b>0 — сохранён</b>" : "активен";
             string torch = entry.TorchEnabled
                 ? $"<b>{Signed(entry.TorchWeightThresholdPp)}</b>"
@@ -124,13 +123,17 @@ internal static class BreezeResearchHelp
                     ? "<b>отклонено</b>"
                     : "0 — не настроен";
             string description = $"<b>Смысл:</b> {H(entry.Meaning)}<br><b>Предварительное определение:</b> {H(entry.ProposedDefinition)}<br><b>Жизненный цикл:</b> {H(entry.Lifecycle)}<br><b>Требует уточнения:</b> {H(entry.Unresolved)}";
+            if(entry.Parameters is EmaStateParameters p)
+                description += $"<br><b>Параметры:</b> ATRP ≤ {N(p.AtrpMaxPercent)}%; широты " +
+                    string.Join(" / ",p.Breadths.Select(v=>N(entry.DisplayDirection==1 ? v : 100-v))) +
+                    $"%; подтверждение {p.ConfirmationBars} торговых дней.";
             if (string.Equals(entry.TorchWeightStatus, "rejected_after_test", StringComparison.Ordinal))
                 description += $"<br><b>Результат теста TorchSharp:</b> {H(entry.TorchNote)}";
             b.Append("<tr").Append(zero ? " style=\"background:#f5f6f7;color:#4f5963\"" : string.Empty).Append("><td>")
-                .Append(entry.Number).Append("</td><td><b>").Append(H(feature.Id)).Append("</b></td><td>").Append(H(entry.NameRu))
-                .Append("<br><span class=\"small\">").Append(H(feature.Name)).Append("</span></td><td>")
-                .Append(N(soft[i])).Append("</td><td>").Append(N(standard[i])).Append("</td><td>")
-                .Append(N(strong[i])).Append("</td><td>").Append(status).Append("</td><td>")
+                .Append(entry.Number).Append("</td><td><b>").Append(H(entry.Id)).Append("</b></td><td>").Append(H(entry.NameRu))
+                .Append("<br><span class=\"small\">").Append(H(entry.NameCode)).Append("</span></td><td>")
+                .Append(N(entry.SoftWeight)).Append("</td><td>").Append(N(entry.StandardWeight)).Append("</td><td>")
+                .Append(N(entry.HardWeight)).Append("</td><td>").Append(status).Append("</td><td>")
                 .Append(torch).Append("</td><td>").Append(H(BreezeRuleCatalog.ActivationText(entry)))
                 .Append("</td><td>").Append(H(entry.ImplementedFormula)).Append("</td><td>")
                 .Append(description).AppendLine("</td></tr>");

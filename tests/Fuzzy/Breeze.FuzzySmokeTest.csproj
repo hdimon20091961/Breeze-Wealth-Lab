@@ -13,11 +13,13 @@
     <Compile Include="..\..\Breeze\ZweigBreadth.cs" Link="ZweigBreadth.cs" />
     <Compile Include="..\..\Breeze\VixTermStructure.cs" Link="VixTermStructure.cs" />
     <Compile Include="..\..\Breeze\HoldConfidence.cs" Link="HoldConfidence.cs" />
+    <Compile Include="..\..\Breeze\ScoringModels.cs" Link="ScoringModels.cs" />
     <Compile Include="..\..\Breeze\ModelPositionSizing.cs" Link="ModelPositionSizing.cs" />
     <Compile Include="..\..\Breeze\HumanLanguage.cs" Link="HumanLanguage.cs" />
     <Compile Include="..\..\Breeze\ResearchHoldConfidence.cs" Link="ResearchHoldConfidence.cs" />
     <Compile Include="..\..\Breeze\BreezeResearchHelp.cs" Link="BreezeResearchHelp.cs" />
     <Compile Include="..\..\Breeze\BreezeRuleCatalog.cs" Link="BreezeRuleCatalog.cs" />
+    <Compile Include="..\..\Breeze\EmaAdditionalStates.cs" Link="EmaAdditionalStates.cs" />
     <Compile Include="..\..\Breeze.Strategies\BreezeHoldPositionStrategy_new.cs" Link="BreezeHoldPositionEventModel.cs" />
     <EmbeddedResource Include="..\..\Breeze\BreezeRules.json" Link="BreezeRules.json" />
   </ItemGroup>

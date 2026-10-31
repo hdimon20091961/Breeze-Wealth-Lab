@@ -1,25 +1,5 @@
 namespace BreezeVL;
 
-internal sealed record HoldConfidencePoint(
-    DateTime Date,
-    double Value,
-    double TrendComponent,
-    double BreadthComponent,
-    double PhaseComponent,
-    double VolatilityComponent,
-    double ContangoComponent,
-    double ZweigComponent,
-    double TitanicPenalty,
-    double ShockPenalty,
-    string Rationale,
-    string Profile = "Legacy",
-    string MainSupport = "",
-    string MainRisk = "",
-    string ActiveEvents = "",
-    string TopContributions = "");
-
-internal sealed record HoldConfidenceSeries(IReadOnlyList<HoldConfidencePoint> Points);
-
 internal static class HoldConfidenceCalculator
 {
     // Selected from the broad Wealth-Lab optimization run (run 10502):
