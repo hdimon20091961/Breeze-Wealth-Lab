@@ -122,6 +122,30 @@ VixCurveStatePoint spotStress = VixCurveStateClassifier.Classify(new(2024, 6, 24
 if (!spotStress.SpotStress || spotStress.State == VixCurveState.StrongContango ||
     !spotStress.AdjustmentExplanation.Contains("рыночный стресс", StringComparison.Ordinal))
     throw new InvalidDataException("Spot VIX above M1 did not cap and explain strong contango.");
+
+VixTermPoint[] smallFrontInversion =
+[
+    new(20, 20.0000), new(50, 19.9600), new(80, 20.2000),
+    new(110, 20.4000), new(140, 20.6000), new(170, 20.8000)
+];
+VixCurveStatePoint ordinaryFront = VixCurveStateClassifier.Classify(
+    new(2026, 10, 30), smallFrontInversion, 19.4, new VixMarketStressContext(0.0, 1.0, 9.99));
+VixCurveStatePoint shockedFront = VixCurveStateClassifier.Classify(
+    new(2026, 10, 30), smallFrontInversion, 19.4, new VixMarketStressContext(0.0, 1.0, 10.0));
+if (ordinaryFront.IgnoredMinorInversions != 1 || ordinaryFront.FallingAdjacentPairs != 1 ||
+    shockedFront.IgnoredMinorInversions != 0 || !shockedFront.VixShockFrontInversion ||
+    shockedFront.State != VixCurveState.Contango)
+    throw new InvalidDataException("The >=10% VIX-high shock did not remove only the M1-M2 tolerance and cap New at Contango.");
+
+var octoberShock = new Dictionary<DateTime, VixMarketStressContext>
+{
+    [new DateTime(2026, 10, 30)] = new(0.0, 1.0, 10.0)
+};
+VixCurveStatePoint october30 = store.BuildStateSeries(CancellationToken.None, octoberShock).Points
+    .Single(point => point.Date == new DateTime(2026, 10, 30));
+if (october30.State != VixCurveState.Contango || !october30.VixShockFrontInversion ||
+    october30.TransitionConfirmationApplied)
+    throw new InvalidDataException("The 2026-10-30 VIX shock still retained StrongContango for a confirmation day.");
 Console.WriteLine($"Curve states: {states.Points.Count:N0}; 2017-11-17={calm.State}; 2020-03-23={covid.State}; SVXY candidates={svxyCandidates:N0}");
 
 if (!string.IsNullOrWhiteSpace(output))

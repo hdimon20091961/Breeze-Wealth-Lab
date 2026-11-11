@@ -178,8 +178,7 @@ internal sealed class FuzzyStateChart : Border
                     SvxyRecommendation.Neutral, null)).ToList();
         const double left = 58;
         bool compactLegend = ActualWidth < 720;
-        bool compactEma = ActualWidth < 470;
-        double top = compactLegend ? compactEma ? 88 : 70 : 38;
+        double top = compactLegend ? 88 : 38;
         const double right = 50;
         const double bottom = 30;
         double paneGap = _showHoldConfidence ? 82 : 50;
@@ -192,39 +191,36 @@ internal sealed class FuzzyStateChart : Border
         double slotWidth = width / horizontalSlots;
         double X(int index) => left + width * index / horizontalSlots;
 
-        IEnumerable<double> emaValues = _renderedIndicators.SelectMany(point =>
-            new[] { point.Ema20, point.Ema50, point.Ema100, point.Ema200 });
-        double priceMin = Math.Min(prices.Min(point => point.Low), emaValues.Min());
-        double priceMax = Math.Max(prices.Max(point => point.High), emaValues.Max());
+        double priceMin = prices.Min(point => point.Low);
+        double priceMax = prices.Max(point => point.High);
         double priceRange = Math.Max(0.01, priceMax - priceMin);
         priceMin -= priceRange * 0.04;
         priceMax += priceRange * 0.04;
         double Y(double value) => top + priceHeight * (1.0 - (value - priceMin) / (priceMax - priceMin));
         double RsiY(double value) => rsiTop + rsiHeight * (1.0 - (value + 1.0) / 2.0);
 
-        Brush ema20Brush = new SolidColorBrush(Color.FromRgb(30, 112, 191));
-        Brush ema50Brush = new SolidColorBrush(Color.FromRgb(221, 126, 28));
-        Brush ema100Brush = new SolidColorBrush(Color.FromRgb(130, 76, 170));
-        Brush ema200Brush = new SolidColorBrush(Color.FromRgb(31, 128, 81));
         Brush myRsiBrush = new SolidColorBrush(Color.FromRgb(25, 66, 110));
         Brush myRsi10Brush = new SolidColorBrush(Color.FromRgb(196, 43, 43));
 
         AddText("Fuzzy market-state map", 10, 6, 15,
             new SolidColorBrush(Color.FromRgb(37, 48, 61)), FontWeights.SemiBold);
-        double emaStart = compactEma ? 10 : 190;
-        double emaY = compactEma ? 27 : 9;
-        AddText("EMA20", emaStart, emaY, 11, ema20Brush, FontWeights.SemiBold);
-        AddText("EMA50", emaStart + 52, emaY, 11, ema50Brush, FontWeights.SemiBold);
-        double ema100LegendX = emaStart + 104;
-        double ema200LegendX = emaStart + 164;
-        double emaLegendStep = ema200LegendX - ema100LegendX;
-        AddText("EMA100", ema100LegendX, emaY, 11, ema100Brush, FontWeights.SemiBold);
-        AddText("EMA200", ema200LegendX, emaY, 11, ema200Brush, FontWeights.SemiBold);
         if (_showHoldConfidence)
         {
-            // Keep two EMA100-to-EMA200 intervals after EMA200, then place Hold.
-            double holdLabelX = ema200LegendX + 2.0 * emaLegendStep;
-            AddHoldConfidenceLegend(compactLegend ? 60 : holdLabelX + 34.0, compactLegend ? compactEma ? 46 : 28 : 7);
+            if (compactLegend)
+            {
+                AddScoreLegend("Оценка 1", 60, 28, ScorePalette.Rules1Boundaries, ColorForHoldConfidence);
+                AddScoreLegend("Оценка 2", 60, 52, ScorePalette.Rules2Boundaries, ColorForRules2Confidence);
+            }
+            else
+            {
+                const double legendFootprint = 193;
+                const double legendGap = 70;
+                double groupWidth = 2 * legendFootprint + legendGap;
+                double rules1LegendX = Math.Max(220, (ActualWidth - groupWidth) / 2 + 53);
+                AddScoreLegend("Оценка 1", rules1LegendX, 7, ScorePalette.Rules1Boundaries, ColorForHoldConfidence);
+                AddScoreLegend("Оценка 2", rules1LegendX + legendFootprint + legendGap, 7,
+                    ScorePalette.Rules2Boundaries, ColorForRules2Confidence);
+            }
         }
 
         for (int index = 0; index < _renderedStates.Count; index++)
@@ -280,7 +276,7 @@ internal sealed class FuzzyStateChart : Border
                 var rules2Ribbon = new Rectangle
                 {
                     Width = Math.Max(1.0, slotWidth + 0.8), Height = 14,
-                    Fill = new SolidColorBrush(ColorForHoldConfidence(rules2Value)),
+                    Fill = new SolidColorBrush(ColorForRules2Confidence(rules2Value)),
                     IsHitTestVisible = false
                 };
                 Canvas.SetLeft(rules2Ribbon, X(index) - slotWidth / 2);
@@ -400,11 +396,6 @@ internal sealed class FuzzyStateChart : Border
                 line.Points.Add(new Point(X(index), Y(prices[index].Close)));
             _canvas.Children.Add(line);
         }
-
-        AddSeriesLine(_renderedIndicators.Select(point => point.Ema20), X, Y, ema20Brush, 1.35);
-        AddSeriesLine(_renderedIndicators.Select(point => point.Ema50), X, Y, ema50Brush, 1.35);
-        AddSeriesLine(_renderedIndicators.Select(point => point.Ema100), X, Y, ema100Brush, 1.45);
-        AddSeriesLine(_renderedIndicators.Select(point => point.Ema200), X, Y, ema200Brush, 1.7);
 
         var rsiBackground = new Rectangle
         {
@@ -605,13 +596,23 @@ internal sealed class FuzzyStateChart : Border
         return band < 0 ? Color.FromRgb(190, 190, 190) : ScoreColors[band];
     }
 
-    private void AddHoldConfidenceLegend(double x, double y)
+    internal static Color ColorForRules2Confidence(double value)
     {
-        AddText("Оценка", x - 43, y - 2, 9,
+        int band = ScorePalette.Rules2Band(value);
+        return band < 0 ? Color.FromRgb(190, 190, 190) : ScoreColors[band];
+    }
+
+    private void AddScoreLegend(
+        string title,
+        double x,
+        double y,
+        IReadOnlyList<double> boundaries,
+        Func<double, Color> colorForValue)
+    {
+        AddText(title, x - 53, y - 2, 9,
             new SolidColorBrush(Color.FromRgb(90, 92, 95)), FontWeights.SemiBold);
         const int segments = 5;
         const double width = 140.0;
-        double[] boundaries = [0, 30, 45, 55, 70, 100];
         for (int index = 0; index < segments; index++)
         {
             double value = (boundaries[index] + boundaries[index + 1]) / 2;
@@ -619,15 +620,41 @@ internal sealed class FuzzyStateChart : Border
             {
                 Width = width * (boundaries[index + 1] - boundaries[index]) / 100 + 0.5,
                 Height = 9,
-                Fill = new SolidColorBrush(ColorForHoldConfidence(value)),
+                Fill = new SolidColorBrush(colorForValue(value)),
                 IsHitTestVisible = false
             };
             Canvas.SetLeft(sample, x + width * boundaries[index] / 100);
             Canvas.SetTop(sample, y);
             _canvas.Children.Add(sample);
         }
-        string[] labels = ["0", "30", "45", "55", "70", "100"];
-        for (int i = 0; i < labels.Length; i++)
-            AddText(labels[i], x + width * boundaries[i] / 100 - (i == 5 ? 15 : 3), y + 9, 8, Brushes.DimGray, FontWeights.Normal);
+        double[] labelValues = boundaries.Append(50.0).Distinct().OrderBy(value => value).ToArray();
+        double[] labelCenters = labelValues.Select(value => x + width * value / 100).ToArray();
+        const double minimumLabelSpacing = 14.0;
+        for (int i = 1; i < labelCenters.Length - 1; i++)
+            labelCenters[i] = Math.Max(labelCenters[i], labelCenters[i - 1] + minimumLabelSpacing);
+        for (int i = labelCenters.Length - 2; i > 0; i--)
+            labelCenters[i] = Math.Min(labelCenters[i], labelCenters[i + 1] - minimumLabelSpacing);
+        for (int i = 0; i < labelValues.Length; i++)
+        {
+            double labelValue = labelValues[i];
+            string label = Math.Round(labelValue, MidpointRounding.AwayFromZero)
+                .ToString("0", CultureInfo.InvariantCulture);
+            double tickX = x + width * labelValue / 100;
+            bool isCentre = Math.Abs(labelValue - 50.0) < 1e-9;
+            _canvas.Children.Add(new Line
+            {
+                X1 = tickX,
+                X2 = tickX,
+                Y1 = isCentre ? y - 1 : y + 7,
+                Y2 = y + 11,
+                Stroke = isCentre ? Brushes.Black : Brushes.DimGray,
+                StrokeThickness = isCentre ? 1.1 : 0.6,
+                IsHitTestVisible = false
+            });
+            double estimatedWidth = Math.Max(6, label.Length * 4.5);
+            AddText(label, labelCenters[i] - estimatedWidth / 2,
+                y + 9, 8, isCentre ? Brushes.Black : Brushes.DimGray,
+                isCentre ? FontWeights.SemiBold : FontWeights.Normal);
+        }
     }
 }

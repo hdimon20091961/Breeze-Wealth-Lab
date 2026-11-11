@@ -30,6 +30,17 @@ public partial class BreezeWindow : ChildWindow
         IReadOnlyDictionary<MarketZone, ForwardOutcomeStats> PhaseOutcomes,
         IReadOnlyDictionary<EmaResearchRegime, ForwardOutcomeStats> EmaOutcomes);
 
+    private sealed record TradingEfficiencyRow(string Key, double FullPeriod, double RecentPerformance);
+
+    private sealed record TradingEfficiencyReport(
+        IReadOnlyList<TradingEfficiencyRow> Rows,
+        DateTime FullStart,
+        DateTime FullEnd,
+        DateTime RecentStart,
+        DateTime RecentEnd);
+
+    private readonly record struct TradingInputReadiness(bool IsReady, string Message);
+
     private sealed record ExportSnapshot(
         BreadthSeries Sp50,
         BreadthSeries Sp100,
@@ -48,6 +59,11 @@ public partial class BreezeWindow : ChildWindow
     private const int DefaultVisibleBarCount = 200;
     private const int MinimumVisibleBarCount = 20;
     private const int VisibleBarStep = 20;
+    private const int DefaultTradingPerformanceBars = 150;
+    private const int TradingPerformanceBarStep = 10;
+    private const int MinimumTradingPerformanceBars = 10;
+    private static readonly DateTime TradingEfficiencyStartDate = new(2018, 7, 15);
+    private const double TradingEfficiencyStartingCapital = 3000.0;
     private const string VixTermDataDirectory = @"D:\fear_greed_close\VIX";
     private const string VixTermExportPath = @"D:\fear_greed_close\vix_term_structure.csv";
     private const string VixCurveStateExportPath = @"D:\fear_greed_close\Breeze\contango_market_state.csv";
@@ -221,15 +237,29 @@ public partial class BreezeWindow : ChildWindow
     private ZweigSeries? _zweigWorkingSeries;
     private IReadOnlyDictionary<string, TradingEnsembleSeries> _tradingEnsembles =
         new Dictionary<string, TradingEnsembleSeries>(StringComparer.OrdinalIgnoreCase);
+    private IReadOnlyDictionary<DateTime, IReadOnlyList<double>> _tradingChandelierStops =
+        new Dictionary<DateTime, IReadOnlyList<double>>();
+    private IReadOnlyDictionary<DateTime, IReadOnlyList<double>> _tradingChandelierExecutions =
+        new Dictionary<DateTime, IReadOnlyList<double>>();
+    private IReadOnlyDictionary<DateTime, TradingActivePosition> _tradingActualActivePositions =
+        new Dictionary<DateTime, TradingActivePosition>();
+    private IReadOnlyDictionary<DateTime, TradingActivePosition> _tradingTargetActivePositions =
+        new Dictionary<DateTime, TradingActivePosition>();
     private CancellationTokenSource? _tradingEnsembleCts;
     private bool _tradingEnsembleCalculationStarted;
     private int _tradingEnsembleCalculationGeneration;
+    private int _marketDataGeneration;
+    private int _tradingEnsembleDataGeneration = -1;
+    private bool _tradingInputsReady;
+    private string _tradingInputStatus = "Ожидайте завершения общего расчёта.";
     private bool _initialCalculationStarted;
     private int _tradingForecastDays = 10;
+    private int _tradingPerformanceBars = DefaultTradingPerformanceBars;
     private DispatcherTimer? _tradingForecastTimer;
     private bool _tradingGpuDirectoryTreeInitialized;
     private bool _tradingTorchDirectoryTreeInitialized;
     private bool _tradingEncogDirectoryTreeInitialized;
+    private string _tradingAnalysisReportText = string.Empty;
     private static readonly object DirectoryTreePlaceholder = new();
     private int _visibleBarCount = DefaultVisibleBarCount;
     private DateTime? _cursorDate;
@@ -287,6 +317,9 @@ public partial class BreezeWindow : ChildWindow
         double fuzzyRatio = Math.Clamp(state.FuzzyAnalysisRatio, 0.20, 0.65);
         FuzzyAnalysisColumn.Width = new GridLength(fuzzyRatio, GridUnitType.Star);
         FuzzyChartColumn.Width = new GridLength(1.0 - fuzzyRatio, GridUnitType.Star);
+        double tradingAnalysisRatio = Math.Clamp(state.TradingAnalysisRatio, 0.16, 0.60);
+        TradingAnalysisColumn.Width = new GridLength(tradingAnalysisRatio, GridUnitType.Star);
+        TradingChartColumn.Width = new GridLength(1.0 - tradingAnalysisRatio, GridUnitType.Star);
         TradingEnsembleChart.SetPaneBoundaries(
             state.TradingPriceBoundary,
             state.TradingEnsembleBoundary,
@@ -360,6 +393,10 @@ public partial class BreezeWindow : ChildWindow
             _layoutState.FuzzyAnalysisRatio = Ratio(
                 FuzzyAnalysisColumn.ActualWidth, FuzzyChartColumn.ActualWidth,
                 _layoutState.FuzzyAnalysisRatio);
+        else if (ReferenceEquals(sender, TradingAnalysisSplitter))
+            _layoutState.TradingAnalysisRatio = Ratio(
+                TradingAnalysisColumn.ActualWidth, TradingChartColumn.ActualWidth,
+                _layoutState.TradingAnalysisRatio);
         else if (ReferenceEquals(sender, ContangoVerticalSplitter))
             _layoutState.ContangoLeftRatio = Ratio(
                 ContangoLeftColumn.ActualWidth, ContangoRightColumn.ActualWidth,
@@ -690,7 +727,23 @@ public partial class BreezeWindow : ChildWindow
                 start,
                 end), cancellationToken);
 
+            TradingInputReadiness tradingInputReadiness = EvaluateTradingInputReadiness(
+                sp500Bars,
+                ("CNN Fear Greed", cnnFearGreedTask.Result, 0),
+                ("Risk Measure", riskMeasureTask.Result, 0),
+                ("Panic Euphoria", panicEuphoriaTask.Result, 7),
+                ("NASDAQ New Highs", nasdaqNewHighs, 0),
+                ("NASDAQ New Lows", nasdaqNewLows, 0),
+                ("XLV", sectorTasks[0].Result, 0),
+                ("XLU", sectorTasks[1].Result, 0),
+                ("XLE", sectorTasks[2].Result, 0),
+                ("XLP", sectorTasks[3].Result, 0));
+
             cancellationToken.ThrowIfCancellationRequested();
+            _marketDataGeneration++;
+            _tradingInputsReady = tradingInputReadiness.IsReady;
+            _tradingInputStatus = tradingInputReadiness.Message;
+            InvalidateTradingEnsembleResults();
             _sp200Series = sp200Series;
             _sp100Series = sp100Series;
             _sp50Series = sp50Series;
@@ -860,6 +913,28 @@ public partial class BreezeWindow : ChildWindow
 
     private void IncreaseVisibleBarsClick(object sender, RoutedEventArgs e) =>
         ChangeVisibleBarCount(VisibleBarStep);
+
+    private void DecreaseTradingPerformanceBarsClick(object sender, RoutedEventArgs e) =>
+        ChangeTradingPerformanceBars(-TradingPerformanceBarStep);
+
+    private void IncreaseTradingPerformanceBarsClick(object sender, RoutedEventArgs e) =>
+        ChangeTradingPerformanceBars(TradingPerformanceBarStep);
+
+    private void ChangeTradingPerformanceBars(int delta)
+    {
+        int maximum = _sp500PriceSeries?.Points.Count is > 1
+            ? Math.Max(MinimumTradingPerformanceBars,
+                ((_sp500PriceSeries.Points.Count - 1) / TradingPerformanceBarStep) * TradingPerformanceBarStep)
+            : 5000;
+        int next = Math.Clamp(_tradingPerformanceBars + delta,
+            MinimumTradingPerformanceBars, maximum);
+        if (next == _tradingPerformanceBars)
+            return;
+        _tradingPerformanceBars = next;
+        TradingPerformanceBarsText.Text = next.ToString(CultureInfo.InvariantCulture);
+        TradingEnsembleChart.SetRecentPerformanceBars(next);
+        UpdateTradingAnalysis(SelectedTradingPackageKeys());
+    }
 
     private void ChartsPreviewMouseWheel(object sender, MouseWheelEventArgs e)
     {
@@ -1116,9 +1191,16 @@ public partial class BreezeWindow : ChildWindow
         Visibility detailVisibility = tradingEnsemble ? Visibility.Collapsed : Visibility.Visible;
         CursorValuesText.Visibility = detailVisibility;
         CursorIndicatorsText.Visibility = detailVisibility;
+        TradingCursorValuesText.Visibility = tradingEnsemble ? Visibility.Visible : Visibility.Collapsed;
+        TradingPerformancePeriodControls.Visibility = tradingEnsemble ? Visibility.Visible : Visibility.Collapsed;
         VisibleBarsText.Visibility = Visibility.Visible;
-        if (_cursorDate.HasValue && !tradingEnsemble)
-            ApplyCursorValues(_cursorDate.Value);
+        if (_cursorDate.HasValue)
+        {
+            if (tradingEnsemble)
+                UpdateTradingCursorValues(_cursorDate.Value);
+            else
+                ApplyCursorValues(_cursorDate.Value);
+        }
     }
 
     private void RequestContangoInitialization()
@@ -1325,6 +1407,10 @@ public partial class BreezeWindow : ChildWindow
 
         var technicalByDate = _technicalIndicators.Points.ToDictionary(point => point.Date);
         FuzzyMarketStatePoint[] prices = _fuzzyStates.Points.OrderBy(point => point.Date).ToArray();
+        IReadOnlyDictionary<DateTime, PricePoint> vixByDate = _vixPriceSeries?.Points
+            .GroupBy(point => point.Date.Date)
+            .ToDictionary(group => group.Key, group => group.Last())
+            ?? new Dictionary<DateTime, PricePoint>();
         var result = new Dictionary<DateTime, VixMarketStressContext>();
         for (int index = 1; index < prices.Length; index++)
         {
@@ -1332,9 +1418,15 @@ public partial class BreezeWindow : ChildWindow
             FuzzyMarketStatePoint previous = prices[index - 1];
             if (previous.SpyClose <= 0 || !technicalByDate.TryGetValue(current.Date, out TechnicalIndicatorPoint? technical))
                 continue;
+            double? vixHighRisePct = null;
+            if (vixByDate.TryGetValue(current.Date.Date, out PricePoint? currentVix) &&
+                vixByDate.TryGetValue(previous.Date.Date, out PricePoint? previousVix) &&
+                previousVix.Close > 0 && currentVix.High > 0)
+                vixHighRisePct = 100.0 * (currentVix.High / previousVix.Close - 1.0);
             result[current.Date] = new VixMarketStressContext(
                 100.0 * (current.SpyClose / previous.SpyClose - 1.0),
-                technical.Atrp1);
+                technical.Atrp1,
+                vixHighRisePct);
         }
         return result;
     }
@@ -1824,9 +1916,68 @@ public partial class BreezeWindow : ChildWindow
         help.Show();
     }
 
+    private static TradingInputReadiness EvaluateTradingInputReadiness(
+        BarHistory spy,
+        params (string Name, BarHistory History, int MaximumCalendarLagDays)[] inputs)
+    {
+        if (spy.Count == 0)
+            return new TradingInputReadiness(false, "История SPY пуста.");
+
+        DateTime spyDate = spy.DateTimes[^1].Date;
+        var stale = new List<string>();
+        foreach ((string name, BarHistory history, int maximumCalendarLagDays) in inputs)
+        {
+            DateTime? latest = LatestFiniteHistoryDate(history, spyDate);
+            DateTime minimumDate = spyDate.AddDays(-Math.Max(0, maximumCalendarLagDays));
+            if (!latest.HasValue || latest.Value < minimumDate)
+            {
+                stale.Add($"{name}: {(latest.HasValue ? latest.Value.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) : "нет данных")}");
+            }
+        }
+
+        return stale.Count == 0
+            ? new TradingInputReadiness(true, $"Входы Trading Ensemble готовы до {spyDate:yyyy-MM-dd}.")
+            : new TradingInputReadiness(false,
+                $"Ожидание входов для SPY {spyDate:yyyy-MM-dd}: {string.Join("; ", stale)}. " +
+                "После обновления данных нажмите Recalculate.");
+    }
+
+    private static DateTime? LatestFiniteHistoryDate(BarHistory history, DateTime notAfter)
+    {
+        for (int index = Math.Min(history.Count, history.Close.Count) - 1; index >= 0; index--)
+        {
+            DateTime date = history.DateTimes[index].Date;
+            if (date > notAfter || !double.IsFinite(history.Close[index]))
+                continue;
+            return date;
+        }
+        return null;
+    }
+
+    private void InvalidateTradingEnsembleResults()
+    {
+        _tradingEnsembleCalculationGeneration++;
+        _tradingEnsembleCts?.Cancel();
+        _tradingEnsembleCts?.Dispose();
+        _tradingEnsembleCts = null;
+        _tradingEnsembleCalculationStarted = false;
+        _tradingEnsembleDataGeneration = -1;
+        _tradingEnsembles = new Dictionary<string, TradingEnsembleSeries>(StringComparer.OrdinalIgnoreCase);
+        _tradingChandelierStops = new Dictionary<DateTime, IReadOnlyList<double>>();
+        _tradingChandelierExecutions = new Dictionary<DateTime, IReadOnlyList<double>>();
+        _tradingActualActivePositions = new Dictionary<DateTime, TradingActivePosition>();
+        _tradingTargetActivePositions = new Dictionary<DateTime, TradingActivePosition>();
+        TradingEnsembleChart?.SetData(_tradingEnsembles, _sp500PriceSeries, _technicalIndicators);
+        TradingEnsembleChart?.SetChandelierStops(_tradingChandelierStops);
+        TradingEnsembleChart?.SetChandelierExecutions(_tradingChandelierExecutions);
+        TradingEnsembleChart?.SetActualActivePositions(_tradingActualActivePositions);
+        TradingEnsembleChart?.SetTargetActivePositions(_tradingTargetActivePositions);
+    }
+
     private async void StartTradingEnsembleCalculationIfNeeded()
     {
-        if (_tradingEnsembleCalculationStarted)
+        if (_tradingEnsembleCalculationStarted &&
+            _tradingEnsembleDataGeneration == _marketDataGeneration)
             return;
         if (_sp500Bars is null)
         {
@@ -1834,8 +1985,17 @@ public partial class BreezeWindow : ChildWindow
             SetTradingCalculationStatus("Ожидайте — подготовка данных…", BreadthProgressLevel.Waiting);
             return;
         }
+        if (!_tradingInputsReady)
+        {
+            TradingEnsembleChart.SetMessage(_tradingInputStatus);
+            SetTradingCalculationStatus(_tradingInputStatus, BreadthProgressLevel.Waiting);
+            return;
+        }
 
+        BarHistory barsSnapshot = _sp500Bars;
+        int marketGeneration = _marketDataGeneration;
         _tradingEnsembleCalculationStarted = true;
+        _tradingEnsembleDataGeneration = marketGeneration;
         int generation = ++_tradingEnsembleCalculationGeneration;
         _tradingEnsembleCts?.Cancel();
         _tradingEnsembleCts?.Dispose();
@@ -1846,7 +2006,8 @@ public partial class BreezeWindow : ChildWindow
         string encogDirectory = TradingEncogDirectory.Text?.Trim() ?? @"D:\model_ensemble_Encog";
         var progress = new Progress<BreadthProgress>(update =>
         {
-            if (generation != _tradingEnsembleCalculationGeneration)
+            if (generation != _tradingEnsembleCalculationGeneration ||
+                marketGeneration != _marketDataGeneration)
                 return;
             SetStatus(update.Message, update.Level);
             SetTradingCalculationStatus(update.Message, update.Level);
@@ -1854,6 +2015,7 @@ public partial class BreezeWindow : ChildWindow
         _tradingEnsembles = new Dictionary<string, TradingEnsembleSeries>(StringComparer.OrdinalIgnoreCase);
         TradingEnsembleChart.SetData(_tradingEnsembles, _sp500PriceSeries, _technicalIndicators);
         TradingEnsembleChart.SetMessage("Расчёт ансамблей TorchSharp4GPU, TorchSharp, Jordan и Encog …");
+        ApplyTradingEnsembleOptions();
         SetTradingCalculationStatus(
             _tradingForecastDays == 0
                 ? "Ожидайте — расчёт ансамблей…"
@@ -1863,9 +2025,11 @@ public partial class BreezeWindow : ChildWindow
         {
             TradingEnsembleCalculationResult result = await Task.Run(() =>
                 TradingEnsembleInference.Calculate(
-                    _sp500Bars, gpuDirectory, torchDirectory, encogDirectory, _tradingForecastDays, progress, cancellationToken),
+                    barsSnapshot, gpuDirectory, torchDirectory, encogDirectory, _tradingForecastDays, progress, cancellationToken),
                 cancellationToken);
-            if (generation != _tradingEnsembleCalculationGeneration || cancellationToken.IsCancellationRequested)
+            if (generation != _tradingEnsembleCalculationGeneration ||
+                marketGeneration != _marketDataGeneration ||
+                cancellationToken.IsCancellationRequested)
                 return;
             _tradingEnsembles = result.Series;
             TradingEnsembleChart.SetData(_tradingEnsembles, _sp500PriceSeries, _technicalIndicators);
@@ -1882,13 +2046,21 @@ public partial class BreezeWindow : ChildWindow
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
-            if (generation == _tradingEnsembleCalculationGeneration)
+            if (generation == _tradingEnsembleCalculationGeneration &&
+                marketGeneration == _marketDataGeneration)
+            {
+                _tradingEnsembleCalculationStarted = false;
+                _tradingEnsembleDataGeneration = -1;
                 SetTradingCalculationStatus("Расчёт отменён", BreadthProgressLevel.Waiting);
+            }
         }
         catch (Exception ex)
         {
-            if (generation != _tradingEnsembleCalculationGeneration)
+            if (generation != _tradingEnsembleCalculationGeneration ||
+                marketGeneration != _marketDataGeneration)
                 return;
+            _tradingEnsembleCalculationStarted = false;
+            _tradingEnsembleDataGeneration = -1;
             TradingEnsembleChart.SetMessage(ex.Message);
             SetStatus($"Расчёт торговых ансамблей не выполнен: {ex.Message}", BreadthProgressLevel.Error);
             SetTradingCalculationStatus("Ошибка Forecast — см. сообщение", BreadthProgressLevel.Error);
@@ -2062,10 +2234,7 @@ public partial class BreezeWindow : ChildWindow
             return;
         pathBox.Text = path;
         popup.IsOpen = false;
-        _tradingEnsembleCalculationGeneration++;
-        _tradingEnsembleCts?.Cancel();
-        _tradingEnsembleCalculationStarted = false;
-        _tradingEnsembles = new Dictionary<string, TradingEnsembleSeries>(StringComparer.OrdinalIgnoreCase);
+        InvalidateTradingEnsembleResults();
         if (ReferenceEquals(BreadthTabs.SelectedItem, TradingEnsemblesTab))
             StartTradingEnsembleCalculationIfNeeded();
     }
@@ -2114,10 +2283,7 @@ public partial class BreezeWindow : ChildWindow
 
         _tradingForecastDays = normalized;
         TradingForecastValue.Text = normalized.ToString(CultureInfo.InvariantCulture);
-        _tradingEnsembleCalculationGeneration++;
-        _tradingEnsembleCts?.Cancel();
-        _tradingEnsembleCalculationStarted = false;
-        _tradingEnsembles = new Dictionary<string, TradingEnsembleSeries>(StringComparer.OrdinalIgnoreCase);
+        InvalidateTradingEnsembleResults();
         TradingEnsembleChart.SetMessage(normalized == 0
             ? "Forecast отключён. Пересчёт основных ансамблей …"
             : $"Forecast: {normalized} дней. Пересчёт ансамблей …");
@@ -2142,6 +2308,36 @@ public partial class BreezeWindow : ChildWindow
     private void ApplyTradingEnsembleOptions()
     {
         if (TradingEnsembleChart is null || TradingShowGpuZz1 is null) return;
+        IReadOnlyList<string> selected = SelectedTradingPackageKeys();
+        TradingEnsembleChart.SetPackages(selected);
+        TradingEnsembleChart.SetRecentPerformanceBars(_tradingPerformanceBars);
+        TradingEnsembleChart.SetShowEma(TradingShowEma.IsChecked == true);
+        TradingActiveMode activeMode = SelectedTradingActiveMode();
+        TradingEnsembleChart.SetActiveMode(activeMode);
+        TradingEnsembleChart.SetShowPrice(ShowSp500Price.IsChecked == true);
+        _tradingTargetActivePositions = CalculateTradingTargetActivePositions(selected, activeMode);
+        _tradingChandelierStops = CalculateTradingChandelierStops(
+            selected, activeMode, out _tradingChandelierExecutions,
+            out _tradingActualActivePositions);
+        TradingEnsembleChart.SetChandelierStops(_tradingChandelierStops);
+        TradingEnsembleChart.SetChandelierExecutions(_tradingChandelierExecutions);
+        TradingEnsembleChart.SetActualActivePositions(_tradingActualActivePositions);
+        TradingEnsembleChart.SetTargetActivePositions(_tradingTargetActivePositions);
+        UpdateTradingAnalysis(selected);
+        UpdateTradingAnalysisTitle(selected, activeMode);
+        if (_cursorDate.HasValue)
+            UpdateTradingCursorValues(_cursorDate.Value);
+    }
+
+    private TradingActiveMode SelectedTradingActiveMode() => TradingActiveMode?.SelectedIndex switch
+    {
+        0 => BreezeVL.TradingActiveMode.ProportionalEnsembles,
+        2 => BreezeVL.TradingActiveMode.QuantumEnsembles,
+        _ => BreezeVL.TradingActiveMode.IndependentDeciles
+    };
+
+    private IReadOnlyList<string> SelectedTradingPackageKeys()
+    {
         var selected = new List<string>(9);
         if (TradingShowGpuZz1.IsChecked == true) selected.Add("GPU-ZZ1");
         if (TradingShowGpuZz2.IsChecked == true) selected.Add("GPU-ZZ2");
@@ -2152,10 +2348,689 @@ public partial class BreezeWindow : ChildWindow
         if (TradingShowTorchZz2Jordan.IsChecked == true) selected.Add("Torch-ZZ2-Jordan");
         if (TradingShowEncogZz1.IsChecked == true) selected.Add("Encog-ZZ1");
         if (TradingShowEncogZz2.IsChecked == true) selected.Add("Encog-ZZ2");
-        TradingEnsembleChart.SetPackages(selected);
-        TradingEnsembleChart.SetShowEma(TradingShowEma.IsChecked == true);
-        TradingEnsembleChart.SetShowActiveEnsembles(TradingShowActiveEnsembles.IsChecked == true);
-        TradingEnsembleChart.SetShowPrice(ShowSp500Price.IsChecked == true);
+        return selected;
+    }
+
+    private void UpdateTradingCursorValues(DateTime date)
+    {
+        if (TradingCursorValuesText is null || TradingShowGpuZz1 is null)
+            return;
+
+        TradingCursorValuesText.Inlines.Clear();
+        TradingCursorValuesText.Inlines.Add(new Run($"{date:yyyy-MM-dd}   "));
+        string activeText = _tradingActualActivePositions.TryGetValue(date.Date,
+                out TradingActivePosition actualPosition)
+            ? actualPosition.Percentage.ToString("0.#", CultureInfo.InvariantCulture) + "%"
+            : "—";
+        TradingCursorValuesText.Inlines.Add(new Run($"Active {activeText}   ")
+        {
+            Foreground = Brushes.DarkBlue
+        });
+        double? stop = TradingStopAt(date);
+        TradingCursorValuesText.Inlines.Add(new Run($"Stop {(stop.HasValue ? stop.Value.ToString("0.00", CultureInfo.InvariantCulture) : "—")}   ")
+        {
+            Foreground = Brushes.Firebrick
+        });
+        IReadOnlyList<string> selected = SelectedTradingPackageKeys();
+        foreach (string key in selected)
+        {
+            TradingEnsemblePoint? point = null;
+            if (_tradingEnsembles.TryGetValue(key, out TradingEnsembleSeries? series))
+            {
+                point = FindTradingPoint(series, date);
+            }
+
+            string value = point is null
+                ? "—"
+                : point.EnsemblePercent.ToString("0.0", CultureInfo.InvariantCulture);
+            TradingCursorValuesText.Inlines.Add(new Run($"{TradingPackageLabel(key)} {value}")
+            {
+                Foreground = TradingEnsembleChart.PackageBrush(key)
+            });
+            TradingCursorValuesText.Inlines.Add(new Run("   "));
+        }
+
+    }
+
+    private static string TradingActiveLabel(TradingActiveMode mode) => mode switch
+    {
+        BreezeVL.TradingActiveMode.ProportionalEnsembles => "Active Ensembles",
+        BreezeVL.TradingActiveMode.QuantumEnsembles => "Active Ensembles 0/10",
+        _ => "Active Deciles"
+    };
+
+    internal static (double Value, double Percentage)? TradingActiveMetrics(
+        IReadOnlyList<(TradingEnsemblePoint Point, int ModelCount)> packages,
+        TradingActiveMode mode)
+    {
+        if (packages.Count == 0) return null;
+        double total = packages.Sum(item => TradingDesiredQuantity(item.Point, mode, item.ModelCount));
+        double percentage = total * 100.0 / (packages.Count * 10.0);
+        double value = mode == BreezeVL.TradingActiveMode.IndependentDeciles
+            ? total
+            : total / packages.Count;
+        return (value, percentage);
+    }
+
+    private IReadOnlyDictionary<DateTime, TradingActivePosition> CalculateTradingTargetActivePositions(
+        IReadOnlyList<string> selected, TradingActiveMode mode)
+    {
+        TradingEnsembleSeries[] available = selected
+            .Where(_tradingEnsembles.ContainsKey)
+            .Select(key => _tradingEnsembles[key])
+            .Where(series => series.Points.Count > 0)
+            .ToArray();
+        if (available.Length == 0)
+            return new Dictionary<DateTime, TradingActivePosition>();
+
+        DateTime[] priceDates = _sp500PriceSeries?.Points
+            .Select(point => point.Date.Date)
+            .Distinct()
+            .OrderBy(date => date)
+            .ToArray() ?? [];
+        var nextPriceDate = new Dictionary<DateTime, DateTime>();
+        for (int index = 0; index + 1 < priceDates.Length; index++)
+            nextPriceDate[priceDates[index]] = priceDates[index + 1];
+
+        var positions = new Dictionary<DateTime, TradingActivePosition>();
+        foreach (DateTime signalDate in available
+                     .SelectMany(series => series.Points.Select(point => point.Date.Date))
+                     .Distinct()
+                     .OrderBy(date => date))
+        {
+            var packages = available
+                .Select(series => (Point: FindTradingPoint(series, signalDate), series.ModelCount))
+                .Where(item => item.Point is not null)
+                .Select(item => (item.Point!, item.ModelCount))
+                .ToList();
+            (double Value, double Percentage)? metrics = TradingActiveMetrics(packages, mode);
+            if (metrics.HasValue)
+            {
+                DateTime executionDate = nextPriceDate.TryGetValue(signalDate, out DateTime nextDate)
+                    ? nextDate
+                    : NextTradingTargetDate(available, signalDate);
+                positions[executionDate] = new TradingActivePosition(
+                    metrics.Value.Value, metrics.Value.Percentage);
+            }
+        }
+        return positions;
+    }
+
+    private static DateTime NextTradingTargetDate(
+        IReadOnlyList<TradingEnsembleSeries> available,
+        DateTime signalDate)
+    {
+        DateTime? forecastDate = available
+            .SelectMany(series => series.Forecasts)
+            .Where(point => point.IsNextBar && point.Date.Date > signalDate.Date)
+            .Select(point => (DateTime?)point.Date.Date)
+            .Min();
+        if (forecastDate.HasValue)
+            return forecastDate.Value;
+        DateTime next = signalDate.Date.AddDays(1);
+        while (next.DayOfWeek is DayOfWeek.Saturday or DayOfWeek.Sunday)
+            next = next.AddDays(1);
+        return next;
+    }
+
+    private void UpdateTradingAnalysisTitle(IReadOnlyList<string> selected, TradingActiveMode mode)
+    {
+        if (TradingAnalysisTitle is null) return;
+        var available = selected
+            .Where(_tradingEnsembles.ContainsKey)
+            .Select(key => _tradingEnsembles[key])
+            .Where(series => series.Points.Count > 0)
+            .ToArray();
+        if (available.Length == 0)
+        {
+            TradingAnalysisTitle.Text = "Активные ансамбли: Last — · Stop —";
+            return;
+        }
+        DateTime lastDate = available.Max(series => series.Points[^1].Date.Date);
+        var points = available
+            .Select(series => (Point: FindTradingPoint(series, lastDate), series.ModelCount))
+            .Where(item => item.Point is not null)
+            .Select(item => (item.Point!, item.ModelCount))
+            .ToList();
+        TradingActivePosition? held = _tradingActualActivePositions.TryGetValue(lastDate,
+            out TradingActivePosition actualPosition) ? actualPosition : null;
+        double? stop = TradingLatestStop(lastDate);
+        string stopText = stop.HasValue ? stop.Value.ToString("0.00", CultureInfo.InvariantCulture) : "—";
+        string heldText = held.HasValue
+            ? held.Value.Percentage.ToString("0.0", CultureInfo.InvariantCulture) + "%"
+            : "—";
+        TradingAnalysisTitle.Text = $"Активные ансамбли: Last {heldText} · Stop {stopText}";
+    }
+
+    private double? TradingStopAt(DateTime date)
+    {
+        if (!_tradingChandelierStops.TryGetValue(date.Date, out IReadOnlyList<double>? stops))
+            return null;
+        double[] finite = stops.Where(double.IsFinite).ToArray();
+        return finite.Length == 0 ? null : finite.Max();
+    }
+
+    private double? TradingLatestStop(DateTime lastDataDate)
+    {
+        foreach (DateTime date in _tradingChandelierStops.Keys
+                     .Where(date => date.Date >= lastDataDate.Date)
+                     .OrderByDescending(date => date))
+        {
+            double? stop = TradingStopAt(date);
+            if (stop.HasValue)
+                return stop;
+        }
+        return null;
+    }
+
+    private IReadOnlyDictionary<DateTime, IReadOnlyList<double>> CalculateTradingChandelierStops(
+        IReadOnlyList<string> selected, TradingActiveMode activeMode,
+        out IReadOnlyDictionary<DateTime, IReadOnlyList<double>> executions,
+        out IReadOnlyDictionary<DateTime, TradingActivePosition> activePositions)
+    {
+        if (_sp500PriceSeries?.Points is not { Count: > 2 } prices)
+        {
+            executions = new Dictionary<DateTime, IReadOnlyList<double>>();
+            activePositions = new Dictionary<DateTime, TradingActivePosition>();
+            return new Dictionary<DateTime, IReadOnlyList<double>>();
+        }
+        var combined = new Dictionary<DateTime, List<double>>();
+        var combinedExecutions = new Dictionary<DateTime, List<double>>();
+        var combinedHeldQuantities = new Dictionary<DateTime, List<int>>();
+        foreach (string key in selected)
+        {
+            if (!_tradingEnsembles.TryGetValue(key, out TradingEnsembleSeries? series) ||
+                series.Points.Count < 2)
+                continue;
+            DateTime firstDate = series.Points[0].Date.Date;
+            DateTime lastDate = series.Points[^1].Date.Date;
+            int startIndex = prices.ToList().FindIndex(point => point.Date.Date >= firstDate);
+            int endIndex = prices.ToList().FindLastIndex(point => point.Date.Date <= lastDate);
+            if (startIndex < 0 || endIndex <= startIndex)
+                continue;
+            TradingChandelierResult result = TradingChandelierSimulation.Run(
+                prices, series, startIndex, endIndex, activeMode, TradingEfficiencyStartingCapital);
+            foreach ((DateTime date, IReadOnlyList<double> stops) in result.StopsByDate)
+            {
+                if (!combined.TryGetValue(date, out List<double>? target))
+                    combined[date] = target = [];
+                target.AddRange(stops.Where(double.IsFinite));
+            }
+            foreach ((DateTime date, IReadOnlyList<double> fills) in result.ExecutedStopsByDate)
+            {
+                if (!combinedExecutions.TryGetValue(date, out List<double>? target))
+                    combinedExecutions[date] = target = [];
+                target.AddRange(fills.Where(double.IsFinite));
+            }
+            foreach ((DateTime date, int quantity) in result.HeldQuantityByDate)
+            {
+                if (!combinedHeldQuantities.TryGetValue(date, out List<int>? target))
+                    combinedHeldQuantities[date] = target = [];
+                target.Add(Math.Clamp(quantity, 0, 10));
+            }
+            if (result.NextBarStops.Count > 0)
+            {
+                DateTime nextDate = NextTradingDate(series, prices, endIndex, lastDate);
+                if (!combined.TryGetValue(nextDate, out List<double>? target))
+                    combined[nextDate] = target = [];
+                target.AddRange(result.NextBarStops.Where(double.IsFinite));
+            }
+        }
+        // The simulator keeps every position-level chandelier for profit accounting.
+        // The chart needs only the highest (closest protective) level for each date.
+        // Collapsing here prevents navigation from creating one marker per open lot.
+        executions = CollapseMaximumTradingLevels(combinedExecutions);
+        activePositions = combinedHeldQuantities.ToDictionary(item => item.Key, item =>
+        {
+            double total = item.Value.Sum();
+            double percentage = item.Value.Count == 0
+                ? double.NaN
+                : total * 100.0 / (item.Value.Count * 10.0);
+            double value = activeMode == BreezeVL.TradingActiveMode.IndependentDeciles
+                ? total
+                : total / item.Value.Count;
+            return new TradingActivePosition(value, percentage);
+        });
+        return CollapseMaximumTradingLevels(combined);
+    }
+
+    private static DateTime NextTradingDate(TradingEnsembleSeries series,
+        IReadOnlyList<PricePoint> prices, int endIndex, DateTime lastDate)
+    {
+        DateTime? forecastDate = series.Forecasts
+            .Where(point => point.IsNextBar && point.Date.Date > lastDate.Date)
+            .Select(point => (DateTime?)point.Date.Date)
+            .Min();
+        if (forecastDate.HasValue)
+            return forecastDate.Value;
+        if (endIndex + 1 < prices.Count && prices[endIndex + 1].Date.Date > lastDate.Date)
+            return prices[endIndex + 1].Date.Date;
+        DateTime next = lastDate.Date.AddDays(1);
+        while (next.DayOfWeek is DayOfWeek.Saturday or DayOfWeek.Sunday)
+            next = next.AddDays(1);
+        return next;
+    }
+
+    private static IReadOnlyDictionary<DateTime, IReadOnlyList<double>> CollapseMaximumTradingLevels(
+        IReadOnlyDictionary<DateTime, List<double>> levels)
+    {
+        return levels
+            .Where(item => item.Value.Any(double.IsFinite))
+            .ToDictionary(item => item.Key,
+                item => (IReadOnlyList<double>)new[] { item.Value.Where(double.IsFinite).Max() });
+    }
+
+    private static TradingEnsemblePoint? FindTradingPoint(TradingEnsembleSeries series, DateTime date)
+    {
+        int low = 0;
+        int high = series.Points.Count - 1;
+        DateTime target = date.Date;
+        while (low <= high)
+        {
+            int middle = low + (high - low) / 2;
+            DateTime current = series.Points[middle].Date.Date;
+            int comparison = current.CompareTo(target);
+            if (comparison == 0)
+                return series.Points[middle];
+            if (comparison < 0)
+                low = middle + 1;
+            else
+                high = middle - 1;
+        }
+        return null;
+    }
+
+    private void UpdateTradingAnalysis(IReadOnlyList<string> selected)
+    {
+        if (TradingAnalysisCards is null)
+            return;
+        TradingAnalysisCards.Children.Clear();
+        if (selected.Count == 0)
+        {
+            _tradingAnalysisReportText =
+                "Ансамбли не выбраны. Включите необходимые ансамбли на верхней панели.";
+            TradingAnalysisCards.Children.Add(new TextBlock
+            {
+                Text = _tradingAnalysisReportText,
+                TextWrapping = TextWrapping.Wrap,
+                Foreground = new SolidColorBrush(Color.FromRgb(64, 74, 84))
+            });
+            return;
+        }
+
+        var report = new StringBuilder();
+        foreach (IGrouping<string, string> group in selected.GroupBy(TradingGroupKey))
+        {
+            string[] keys = group.ToArray();
+            DateTime[] dates = keys
+                .Select(key => _tradingEnsembles.TryGetValue(key, out TradingEnsembleSeries? series)
+                    ? series.Points.LastOrDefault()?.Date.Date
+                    : null)
+                .Where(date => date.HasValue)
+                .Select(date => date!.Value)
+                .ToArray();
+            DateTime? groupDate = dates.Length == 0 ? null : dates.Max();
+            string heading = TradingGroupName(group.Key) +
+                (groupDate.HasValue ? $" · {groupDate:yyyy-MM-dd}" : string.Empty);
+
+            var contents = new StackPanel();
+            contents.Children.Add(new TextBlock
+            {
+                Text = heading,
+                FontWeight = FontWeights.SemiBold,
+                Foreground = new SolidColorBrush(Color.FromRgb(38, 53, 68)),
+                Margin = new Thickness(0, 0, 0, 7)
+            });
+            report.AppendLine(heading);
+
+            foreach (string key in keys)
+            {
+                string packageLabel = TradingPackageLabel(key);
+                _tradingEnsembles.TryGetValue(key, out TradingEnsembleSeries? series);
+                var entry = new StringBuilder();
+                entry.Append("• ").Append(packageLabel).Append(" — ")
+                    .AppendLine(TradingTargetDescription(key));
+                entry.Append("  Состав: ");
+                if (series is not null)
+                    AppendArchitectureCounts(entry, series.ArchitectureCounts);
+                else
+                    entry.Append("ожидается анализ пакета");
+                TradingEnsemblePoint? lastPoint = series?.Points.LastOrDefault(point =>
+                    double.IsFinite(point.EnsemblePercent));
+                if (lastPoint is not null)
+                {
+                    entry.Append(". Последнее значение: ")
+                        .Append(lastPoint.EnsemblePercent.ToString("0.0", CultureInfo.GetCultureInfo("ru-RU")))
+                        .Append('%');
+                }
+                entry.Append('.');
+                string entryText = entry.ToString();
+                var entryBlock = new TextBlock
+                {
+                    TextWrapping = TextWrapping.Wrap,
+                    Foreground = new SolidColorBrush(Color.FromRgb(48, 58, 68)),
+                    Margin = new Thickness(0, 0, 0, 7)
+                };
+                entryBlock.Inlines.Add(new Run("• "));
+                entryBlock.Inlines.Add(new Run(packageLabel)
+                {
+                    Foreground = TradingEnsembleChart.PackageBrush(key),
+                    FontWeight = FontWeights.SemiBold
+                });
+                entryBlock.Inlines.Add(new Run(entryText[(2 + packageLabel.Length)..]));
+                contents.Children.Add(entryBlock);
+                report.AppendLine(entryText);
+
+                if (series is not null && !string.IsNullOrWhiteSpace(series.Warning))
+                {
+                    string warning = $"Предупреждение: {series.Warning}.";
+                    contents.Children.Add(new TextBlock
+                    {
+                        Text = warning,
+                        TextWrapping = TextWrapping.Wrap,
+                        Foreground = new SolidColorBrush(Color.FromRgb(170, 65, 55)),
+                        Margin = new Thickness(14, -4, 0, 7)
+                    });
+                    report.AppendLine(warning);
+                }
+            }
+
+            TradingAnalysisCards.Children.Add(new Border
+            {
+                Background = new SolidColorBrush(Color.FromRgb(242, 250, 241)),
+                BorderBrush = new SolidColorBrush(Color.FromRgb(168, 213, 162)),
+                BorderThickness = new Thickness(1),
+                CornerRadius = new CornerRadius(4),
+                Padding = new Thickness(9, 7, 9, 4),
+                Margin = new Thickness(0, 0, 0, 9),
+                Child = contents
+            });
+            report.AppendLine();
+        }
+
+        TradingActiveMode activeMode = SelectedTradingActiveMode();
+        TradingEfficiencyReport? efficiency = CalculateTradingEfficiency(selected, activeMode);
+        if (efficiency is not null)
+        {
+            TradingAnalysisCards.Children.Add(BuildTradingEfficiencyCard(efficiency, activeMode));
+            AppendTradingEfficiencyReport(report, efficiency, activeMode);
+        }
+        _tradingAnalysisReportText = report.ToString().TrimEnd();
+    }
+
+    private Border BuildTradingEfficiencyCard(TradingEfficiencyReport efficiency, TradingActiveMode activeMode)
+    {
+        var panel = new StackPanel();
+        panel.Children.Add(new TextBlock
+        {
+            Text = "Эффективность к benchmark SPY",
+            FontWeight = FontWeights.SemiBold,
+            Foreground = new SolidColorBrush(Color.FromRgb(38, 53, 68)),
+            Margin = new Thickness(0, 0, 0, 7)
+        });
+        panel.Children.Add(new TextBlock
+        {
+            Text = TradingModeDescription(activeMode),
+            FontSize = 11,
+            FontWeight = FontWeights.SemiBold,
+            Foreground = new SolidColorBrush(Color.FromRgb(58, 90, 68)),
+            TextWrapping = TextWrapping.Wrap,
+            Margin = new Thickness(0, -3, 0, 5)
+        });
+        panel.Children.Add(new TextBlock
+        {
+            Text = "Защита: люстра 3,75% от максимального High; повторный вход через один торговый бар",
+            FontSize = 10,
+            Foreground = new SolidColorBrush(Color.FromRgb(145, 50, 45)),
+            TextWrapping = TextWrapping.Wrap,
+            Margin = new Thickness(0, -2, 0, 5)
+        });
+        panel.Children.Add(new TextBlock
+        {
+            Text = "Str%: исходное среднее по отдельным моделям; от режима торговли не зависит",
+            FontSize = 10,
+            Foreground = new SolidColorBrush(Color.FromRgb(83, 93, 103)),
+            TextWrapping = TextWrapping.Wrap,
+            Margin = new Thickness(0, -2, 0, 5)
+        });
+        var table = new Grid();
+        table.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1.55, GridUnitType.Star) });
+        table.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(0.8, GridUnitType.Star) });
+        table.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(0.9, GridUnitType.Star) });
+        AddEfficiencyRow(table, 0, "Ансамбль", "Профит, весь период",
+            $"Str%, {_tradingPerformanceBars} баров", true);
+        int row = 1;
+        foreach (TradingEfficiencyRow item in efficiency.Rows)
+            AddEfficiencyRow(table, row++, TradingEfficiencyLabel(item.Key),
+                FormatRelativeEfficiency(item.FullPeriod), FormatRelativeEfficiency(item.RecentPerformance), false);
+        panel.Children.Add(table);
+        panel.Children.Add(new TextBlock
+        {
+            Text = $"Период: {efficiency.FullStart:yyyy-MM-dd} — {efficiency.FullEnd:yyyy-MM-dd}\n" +
+                   $"Последние {_tradingPerformanceBars} торговых баров: " +
+                   $"{efficiency.RecentStart:yyyy-MM-dd} — {efficiency.RecentEnd:yyyy-MM-dd}",
+            FontSize = 11,
+            Foreground = new SolidColorBrush(Color.FromRgb(83, 93, 103)),
+            Margin = new Thickness(0, 7, 0, 0),
+            TextWrapping = TextWrapping.Wrap
+        });
+        return new Border
+        {
+            Background = Brushes.White,
+            BorderBrush = new SolidColorBrush(Color.FromRgb(168, 213, 162)),
+            BorderThickness = new Thickness(1),
+            CornerRadius = new CornerRadius(4),
+            Padding = new Thickness(9, 7, 9, 7),
+            Child = panel
+        };
+    }
+
+    private static void AddEfficiencyRow(Grid table, int row, string name, string full, string recent, bool header)
+    {
+        table.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+        string[] values = [name, full, recent];
+        for (int column = 0; column < values.Length; column++)
+        {
+            var cell = new TextBlock
+            {
+                Text = values[column],
+                FontSize = 11,
+                FontWeight = header ? FontWeights.SemiBold : FontWeights.Normal,
+                TextAlignment = column == 0 ? TextAlignment.Left : TextAlignment.Right,
+                TextWrapping = TextWrapping.Wrap,
+                Margin = new Thickness(column == 0 ? 0 : 5, 3, 0, 3)
+            };
+            Grid.SetRow(cell, row);
+            Grid.SetColumn(cell, column);
+            table.Children.Add(cell);
+        }
+    }
+
+    private TradingEfficiencyReport? CalculateTradingEfficiency(
+        IReadOnlyList<string> selected, TradingActiveMode activeMode)
+    {
+        if (_sp500PriceSeries?.Points is not { Count: > 2 } prices)
+            return null;
+        TradingEnsembleSeries[] available = selected
+            .Where(_tradingEnsembles.ContainsKey)
+            .Select(key => _tradingEnsembles[key])
+            .Where(series => series.Points.Count > 1)
+            .ToArray();
+        if (available.Length == 0)
+            return null;
+
+        DateTime commonEnd = available.Min(series => series.Points[^1].Date.Date);
+        List<PricePoint> priceList = prices.ToList();
+        int fullStartIndex = priceList.FindIndex(point => point.Date.Date >= TradingEfficiencyStartDate);
+        int endIndex = priceList.FindLastIndex(point => point.Date.Date <= commonEnd);
+        if (fullStartIndex < 0 || endIndex <= fullStartIndex + 1)
+            return null;
+        int recentStartIndex = Math.Max(fullStartIndex, endIndex - _tradingPerformanceBars);
+
+        var rows = new List<TradingEfficiencyRow>();
+        foreach (string key in selected)
+        {
+            if (!_tradingEnsembles.TryGetValue(key, out TradingEnsembleSeries? series))
+                continue;
+            double recentPerformance = double.NaN;
+            if (series.BenchmarkPercentByLookback?.TryGetValue(
+                    _tradingPerformanceBars, out double calculated) == true)
+                recentPerformance = calculated;
+            else if (_tradingPerformanceBars == 125)
+                recentPerformance = series.Last125BenchmarkPercent;
+            rows.Add(new TradingEfficiencyRow(key,
+                CalculateModeProfitPercent(prices, series, fullStartIndex, endIndex, activeMode),
+                recentPerformance));
+        }
+        return rows.Count == 0 ? null : new TradingEfficiencyReport(rows,
+            TradingEfficiencyStartDate, prices[endIndex].Date.Date,
+            prices[recentStartIndex].Date.Date, prices[endIndex].Date.Date);
+    }
+
+    private static double CalculateModeProfitPercent(
+        IReadOnlyList<PricePoint> prices,
+        TradingEnsembleSeries series,
+        int startIndex,
+        int endIndex,
+        TradingActiveMode activeMode)
+    {
+        if (startIndex < 0 || endIndex <= startIndex || endIndex >= prices.Count)
+            return double.NaN;
+        return TradingChandelierSimulation.Run(prices, series, startIndex, endIndex,
+            activeMode, TradingEfficiencyStartingCapital).ProfitPercent;
+    }
+
+    internal static int TradingDesiredQuantity(
+        TradingEnsemblePoint point, TradingActiveMode activeMode, int modelCount = 0)
+    {
+        if (activeMode == BreezeVL.TradingActiveMode.IndependentDeciles)
+            return Math.Clamp(point.Deciles.Count(value => value >= 50.0), 0, 10);
+        if (activeMode == BreezeVL.TradingActiveMode.QuantumEnsembles)
+            return point.EnsemblePercent >= TradingEnsembleChart.BaseClassificationThreshold ? 10 : 0;
+        // Match Execute in the reference "что если" strategy, including its
+        // raw model-count division and midpoint rounding (not all-in/all-out).
+        if (modelCount > 0)
+        {
+            double activeModels = Math.Round(point.EnsemblePercent * modelCount / 100.0);
+            if (modelCount <= 10) return Math.Clamp((int)activeModels, 0, 10);
+            return Math.Clamp((int)Math.Round(activeModels / (modelCount / 10.0),
+                MidpointRounding.AwayFromZero), 0, 10);
+        }
+        return Math.Clamp((int)Math.Round(point.EnsemblePercent / 10.0,
+            MidpointRounding.AwayFromZero), 0, 10);
+    }
+
+    private void AppendTradingEfficiencyReport(
+        StringBuilder report, TradingEfficiencyReport efficiency, TradingActiveMode activeMode)
+    {
+        report.AppendLine("СРАВНИТЕЛЬНАЯ ЭФФЕКТИВНОСТЬ К BENCHMARK SPY");
+        report.AppendLine(TradingModeDescription(activeMode));
+        report.AppendLine("Защита: люстра 3,75% от максимального High; повторный вход через один торговый бар");
+        report.AppendLine("Str%: исходное среднее по отдельным моделям; от режима торговли не зависит");
+        report.AppendLine($"Ансамбль\tПрофит, весь период\tStr%, {_tradingPerformanceBars} баров");
+        foreach (TradingEfficiencyRow row in efficiency.Rows)
+            report.AppendLine($"{TradingEfficiencyLabel(row.Key)}\t{FormatRelativeEfficiency(row.FullPeriod)}\t{FormatRelativeEfficiency(row.RecentPerformance)}");
+        report.AppendLine($"Период: {efficiency.FullStart:yyyy-MM-dd} — {efficiency.FullEnd:yyyy-MM-dd}");
+        report.AppendLine($"Последние {_tradingPerformanceBars} торговых баров: " +
+            $"{efficiency.RecentStart:yyyy-MM-dd} — {efficiency.RecentEnd:yyyy-MM-dd}");
+    }
+
+    private static string TradingModeDescription(TradingActiveMode mode) => mode switch
+    {
+        BreezeVL.TradingActiveMode.ProportionalEnsembles =>
+            "Режим: ансамбль, пропорциональная позиция 0–10 (режим 0)",
+        BreezeVL.TradingActiveMode.QuantumEnsembles =>
+            "Режим: ансамбль, квантовая позиция 0/10 по порогу 50%",
+        _ => "Режим: независимые децели"
+    };
+
+    private static string FormatRelativeEfficiency(double value) => double.IsFinite(value)
+        ? value.ToString("0.0", CultureInfo.GetCultureInfo("ru-RU")) + "%"
+        : "—";
+
+    private static string TradingEfficiencyLabel(string key) =>
+        $"{(key.StartsWith("GPU-", StringComparison.Ordinal) ? "GPU" : key.StartsWith("Torch-", StringComparison.Ordinal) ? "TorchSharp" : "Encog")} · {TradingPackageLabel(key)}";
+
+    private void CopyTradingEnsemblesClick(object sender, RoutedEventArgs e)
+    {
+        if (string.IsNullOrWhiteSpace(_tradingAnalysisReportText))
+        {
+            SetStatus("Нет отчёта об активных ансамблях для копирования.", BreadthProgressLevel.Error);
+            return;
+        }
+        try
+        {
+            Clipboard.SetText(_tradingAnalysisReportText);
+            SetStatus("Отчёт об активных ансамблях скопирован в буфер обмена.");
+        }
+        catch (Exception ex)
+        {
+            SetStatus($"Не удалось скопировать отчёт: {ex.Message}", BreadthProgressLevel.Error);
+        }
+    }
+
+    private static void AppendArchitectureCounts(
+        StringBuilder text, IReadOnlyDictionary<int, int>? architectureCounts)
+    {
+        if (architectureCounts is null || architectureCounts.Count == 0)
+        {
+            text.Append("не определён");
+            return;
+        }
+
+        bool first = true;
+        foreach ((int architecture, int count) in architectureCounts.OrderBy(pair => pair.Key))
+        {
+            if (!first)
+                text.Append(", ");
+            text.Append(TradingArchitectureName(architecture));
+            text.Append(" — ");
+            text.Append(count.ToString(CultureInfo.InvariantCulture));
+            first = false;
+        }
+    }
+
+    private static string TradingArchitectureName(int architecture) => architecture switch
+    {
+        1 => "Classic MLP",
+        2 => "Jordan",
+        3 => "Elman",
+        4 => "Jordan–Elman",
+        _ => $"неизвестная архитектура {architecture}"
+    };
+
+    private static string TradingGroupKey(string key) => key.StartsWith("GPU-", StringComparison.Ordinal)
+        ? "GPU"
+        : key.StartsWith("Torch-", StringComparison.Ordinal) ? "Torch" : "Encog";
+
+    private static string TradingGroupName(string group) => group switch
+    {
+        "GPU" => "TorchSharp for GPT / GPU · видеокарта",
+        "Torch" => "Библиотека TorchSharp",
+        _ => "Библиотека Encog"
+    };
+
+    private static string TradingPackageLabel(string key) => key switch
+    {
+        "GPU-ZZ1" => "ZZ1",
+        "GPU-ZZ2" => "ZZ2",
+        "GPU-ZZ3" => "ZZ3",
+        "Torch-ZZ1" => "ZZ1",
+        "Torch-ZZ2" => "ZZ2",
+        "Torch-ZZ1-Jordan" => "ZZ1_J",
+        "Torch-ZZ2-Jordan" => "ZZ2_J",
+        "Encog-ZZ1" => "ZZ1",
+        "Encog-ZZ2" => "ZZ2",
+        _ => key
+    };
+
+    private static string TradingTargetDescription(string key)
+    {
+        if (key.Contains("ZZ3", StringComparison.Ordinal))
+            return "ATR-цель: состояние по движению цены, нормированному относительно ATR.";
+        if (key.Contains("ZZ2", StringComparison.Ordinal))
+            return "Трендовая цель: разметка Peak/Trough между подтверждёнными вершинами и основаниями.";
+        return "Осцилляторная цель на базе SuperSmoother(8).";
     }
 
     private void SetPriceSeries(PriceSeries? series)
@@ -2423,6 +3298,7 @@ public partial class BreezeWindow : ChildWindow
         TitanicChart.SetCursorDate(date);
         ZweigChart.SetCursorDate(date);
         TradingEnsembleChart.SetCursorDate(date);
+        UpdateTradingCursorValues(date);
         SentimentSpChart.SetCursorDate(date);
         SentimentIndicatorChart.SetCursorDate(date);
         MarketSetupSpChart.SetCursorDate(date);
@@ -2538,10 +3414,8 @@ public partial class BreezeWindow : ChildWindow
             $"S&P SMA100: {sp100.Value:F1}%   S&P SMA200: {sp200.Value:F1}%   " +
             $"Nasdaq SMA100: {nasdaq100.Value:F1}%{fuzzyText}";
         CursorIndicatorsText.Text = technical is null
-            ? "EMA and MyRSI_rep + AGC: no value"
-            : $"EMA20: {technical.Ema20:F1}   EMA50: {technical.Ema50:F1}   " +
-              $"EMA100: {technical.Ema100:F1}   EMA200: {technical.Ema200:F1}   " +
-              $"MyRSI 14,8: {technical.MyRsiRep:F3}   MyRSI 10,8: {technical.MyRsiRep10:F3}   " +
+            ? "MyRSI_rep + AGC: no value"
+            : $"MyRSI 14,8: {technical.MyRsiRep:F3}   MyRSI 10,8: {technical.MyRsiRep10:F3}   " +
               $"ATRP(1): {technical.Atrp1:F2}%" +
               $"{curveText}{svxyRecommendationText}{zweigText}{titanicText}";
     }

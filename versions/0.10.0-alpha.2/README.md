@@ -5,8 +5,8 @@
 - `BreezeHoldPositionStrategy_new.cs` — полный исходник для вставки в C#-редактор Wealth-Lab.
 - `Breeze.Strategies.New.dll` — отдельная скомпилированная стратегия; автоматически в Wealth-Lab не устанавливалась.
 - [Полная инструкция](../../docs/BreezeHoldPositionStrategy_new.md).
-- [Все признаки и замороженные веса](../../artifacts/event-model-new-validation/FEATURES.md).
-- [Отчёт проверок](../../artifacts/event-model-new-validation/validation.json).
+- [Все признаки и замороженные веса](../../research/artifacts/event-model-new-validation/FEATURES.md).
+- [Отчёт проверок](../../research/artifacts/event-model-new-validation/validation.json).
 
 Изменения относительно alpha.1:
 

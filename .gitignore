@@ -9,13 +9,32 @@
 # Local research inputs and generated working data
 .cache/
 .codex/
-research/artifacts/
+# Research reports, definitions, code, CSV paths/results and validation records
+# must remain visible to Git. Large media has a verified preservation snapshot.
+research/artifacts/**/*.jpg
+research/artifacts/**/*.jpeg
+research/artifacts/**/*.png
+research/artifacts/**/*.mp4
+research/artifacts/**/*.wav
+research/artifacts/**/*.mp3
+research/artifacts/**/__pycache__/
 research/inputs/videos/
 research/reference/
+preservation/snapshots/
 tests/FuturesCompileCheckTemp/
+tests/outputs/
 E.ZIP
 deployment-result.txt
 
 # Bundled local runtimes/dependencies and upstream checkouts
 tools/transcription/
+
+# Preserve published version binaries and the project-specific skill contract.
+!release/*.dll
+!versions/**/*.dll
+!.codex/
+.codex/*
+!.codex/skills/
+.codex/skills/*
+!.codex/skills/synchronized-chart-navigation/
 

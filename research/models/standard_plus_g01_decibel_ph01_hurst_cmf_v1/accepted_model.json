@@ -1,0 +1,366 @@
+{
+  "id": "standard_plus_g01_decibel_ph01_hurst_cmf_v1",
+  "accepted_by_user_date_moscow": "2026-10-25",
+  "scope": "accepted baseline for subsequent research; runtime DLL deployment not performed",
+  "previous_accepted_model": "D:\\CODEX_PRG\\Breadth\\research\\models\\standard_plus_g01_decibel_v1\\accepted_model.json",
+  "base": {
+    "id": "frozen_standard_75",
+    "snapshot": "D:\\CODEX_PRG\\Breadth\\research\\artifacts\\event_hypotheses_xhigh_v1\\baseline",
+    "rules_sha256": "f96729a08dff520aa8360272c86cd1a28bc2215889311c89462a61e53c50b2dc"
+  },
+  "composition": "clip(previous accepted Standard+G01/Decibel score + PH01 * weight(Hurst-CMF state, annual schedule),0,100)",
+  "event": {
+    "catalogue_id": "PH01",
+    "name": "Подхват с памятью предшествующего роста",
+    "detector": "D:\\CODEX_PRG\\Breadth\\research\\artifacts\\podhvat_candidate_experiment_v1\\detectors_podhvat.py",
+    "unchanged_since_experiment": true
+  },
+  "regime": {
+    "state": "2*H+C",
+    "H": "Hurst > median of preceding 252 bars",
+    "C": "CMF > median of preceding 252 bars",
+    "equality": "low",
+    "states": [
+      "H low / CMF low",
+      "H low / CMF high",
+      "H high / CMF low",
+      "H high / CMF high"
+    ],
+    "unknown_state": "zero supplement"
+  },
+  "schedule": [
+    {
+      "year": 2020,
+      "family": "PH01",
+      "mode": "hurst_cmf",
+      "train_start": "2015-10-26",
+      "train_end": "2019-07-02",
+      "weights": [
+        0.0,
+        0.0,
+        -20,
+        -2.5
+      ],
+      "gate": [
+        null,
+        1
+      ],
+      "training_objective": 1095.8364600000039,
+      "training_event_starts": 21,
+      "changed_executions": 19,
+      "training_starts_by_state": {
+        "0": 4,
+        "1": 3,
+        "2": 5,
+        "3": 9
+      },
+      "reason": "selected_on_training"
+    },
+    {
+      "year": 2021,
+      "family": "PH01",
+      "mode": "hurst_cmf",
+      "train_start": "2015-10-26",
+      "train_end": "2020-07-02",
+      "weights": [
+        0.0,
+        0.0,
+        -20,
+        -2.5
+      ],
+      "gate": [
+        null,
+        1
+      ],
+      "training_objective": 1895.7619400000028,
+      "training_event_starts": 25,
+      "changed_executions": 19,
+      "training_starts_by_state": {
+        "0": 4,
+        "1": 5,
+        "2": 5,
+        "3": 11
+      },
+      "reason": "selected_on_training"
+    },
+    {
+      "year": 2022,
+      "family": "PH01",
+      "mode": "hurst_cmf",
+      "train_start": "2015-10-26",
+      "train_end": "2021-07-02",
+      "weights": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "gate": [
+        null,
+        1
+      ],
+      "training_objective": 3172.7969900000035,
+      "training_event_starts": 37,
+      "changed_executions": 0,
+      "training_starts_by_state": {
+        "0": 4,
+        "1": 10,
+        "2": 7,
+        "3": 16
+      },
+      "reason": "zero_preferred"
+    },
+    {
+      "year": 2023,
+      "family": "PH01",
+      "mode": "hurst_cmf",
+      "train_start": "2015-10-26",
+      "train_end": "2022-07-01",
+      "weights": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "gate": [
+        null,
+        1
+      ],
+      "training_objective": 3522.530030000001,
+      "training_event_starts": 46,
+      "changed_executions": 0,
+      "training_starts_by_state": {
+        "0": 9,
+        "1": 14,
+        "2": 7,
+        "3": 16
+      },
+      "reason": "zero_preferred"
+    },
+    {
+      "year": 2024,
+      "family": "PH01",
+      "mode": "hurst_cmf",
+      "train_start": "2015-10-26",
+      "train_end": "2023-06-30",
+      "weights": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "gate": [
+        null,
+        1
+      ],
+      "training_objective": 4376.609799999999,
+      "training_event_starts": 46,
+      "changed_executions": 0,
+      "training_starts_by_state": {
+        "0": 9,
+        "1": 14,
+        "2": 7,
+        "3": 16
+      },
+      "reason": "zero_preferred"
+    },
+    {
+      "year": 2025,
+      "family": "PH01",
+      "mode": "hurst_cmf",
+      "train_start": "2015-10-26",
+      "train_end": "2024-07-02",
+      "weights": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "gate": [
+        null,
+        1
+      ],
+      "training_objective": 5573.0648200000005,
+      "training_event_starts": 54,
+      "changed_executions": 0,
+      "training_starts_by_state": {
+        "0": 10,
+        "1": 15,
+        "2": 12,
+        "3": 17
+      },
+      "reason": "zero_preferred"
+    },
+    {
+      "year": 2026,
+      "family": "PH01",
+      "mode": "hurst_cmf",
+      "train_start": "2015-10-26",
+      "train_end": "2025-07-02",
+      "weights": [
+        10,
+        10,
+        -20,
+        -2.5
+      ],
+      "gate": [
+        null,
+        1
+      ],
+      "training_objective": 6415.178729999999,
+      "training_event_starts": 62,
+      "changed_executions": 41,
+      "training_starts_by_state": {
+        "0": 14,
+        "1": 17,
+        "2": 13,
+        "3": 18
+      },
+      "reason": "selected_on_training"
+    }
+  ],
+  "before_2020": "zero PH01 supplement; previous accepted score preserved",
+  "continuation_from_2026": "retain latest accepted weights [10,10,-20,-2.5]; no automatic refit",
+  "original_rule_weights_changed": false,
+  "counts": {
+    "catalogue_entries": 105,
+    "selected_scoring_rules_including_zero": 77,
+    "scoring_rules_with_nonzero_configured_weight": 34,
+    "original_standard_rules": 75,
+    "original_standard_nonzero": 32,
+    "accepted_overlay_rules": 2,
+    "selected_original_rules_with_zero_weight": 43,
+    "retained_research_entries_outside_scoring": 28,
+    "all_entries_without_nonzero_configured_weight": 71
+  },
+  "members": "D:\\CODEX_PRG\\Breadth\\research\\models\\standard_plus_g01_decibel_ph01_hurst_cmf_v1\\model_members.json",
+  "catalogue": "D:\\CODEX_PRG\\Breadth\\docs\\event-catalog-v4\\catalog.json",
+  "score_series": "D:\\CODEX_PRG\\Breadth\\research\\models\\standard_plus_g01_decibel_ph01_hurst_cmf_v1\\accepted_score.csv",
+  "score_series_sha256": "6a365200cab937ae5774437ba1ec697fc641f9f7c1113ee2ad8e1094eb7e64e7",
+  "metrics_2bps": {
+    "full": {
+      "previous": {
+        "profit": 7730.420379999998,
+        "profit_pct_initial": 257.6806793333333,
+        "max_dd_pct": 8.871090396967698,
+        "max_dd_money": 716.067219999999,
+        "sharpe": 1.3412101698436816,
+        "position_changes": 324.0,
+        "costs": 269.17962,
+        "min_cash": 806.1946200000002,
+        "exposure_pct": 86.90777576853527
+      },
+      "accepted": {
+        "profit": 8015.681180000003,
+        "profit_pct_initial": 267.18937266666677,
+        "max_dd_pct": 8.871090396967698,
+        "max_dd_money": 632.3802200000027,
+        "sharpe": 1.370336663358924,
+        "position_changes": 321.0,
+        "costs": 263.01882,
+        "min_cash": 806.1946200000002,
+        "exposure_pct": 86.36528028933093
+      },
+      "delta_profit": 285.2608000000055,
+      "profit_improvement_pct": 3.690107212513656
+    },
+    "2020_2026": {
+      "previous": {
+        "profit": 6354.609099999998,
+        "profit_pct_initial": 211.82030333333327,
+        "max_dd_pct": 12.798973917090759,
+        "max_dd_money": 716.0672199999981,
+        "sharpe": 1.371024860536811,
+        "position_changes": 216.0,
+        "costs": 213.9909,
+        "min_cash": -295.25203999999985,
+        "exposure_pct": 87.14953271028037
+      },
+      "accepted": {
+        "profit": 6639.8699000000015,
+        "profit_pct_initial": 221.3289966666667,
+        "max_dd_pct": 12.798973917090759,
+        "max_dd_money": 632.3802200000027,
+        "sharpe": 1.4073723603578383,
+        "position_changes": 213.0,
+        "costs": 207.8301,
+        "min_cash": -295.25203999999985,
+        "exposure_pct": 86.2733644859813
+      },
+      "delta_profit": 285.26080000000366,
+      "profit_improvement_pct": 4.489037728536343
+    }
+  },
+  "PH01_event_starts": {
+    "full": 83,
+    "2020_2026": 60
+  },
+  "count_semantics": "Count rule IDs once; context cells, dates, video cards and historical starts are not extra rules. Nonzero weights need not contribute on every bar.",
+  "execution": "Unchanged: target 10 SPY units if score >=50, otherwise 0; next-session open; 2bps per side; capital 3000; no cash constraint.",
+  "limitations": [
+    "Best family/context chosen after examining 42 historical paths; this selection is not an untouched out-of-sample test.",
+    "Most gain occurs in 2026; weights in 2022-2025 remain zero.",
+    "Other PH and PX definitions retained, but no unaccepted scoring weights or limit execution policy added.",
+    "Research model materialized; runtime DLL deployment not performed."
+  ],
+  "inputs_sha256": {
+    "D:\\CODEX_PRG\\Breadth\\research\\models\\standard_plus_g01_decibel_v1\\accepted_model.json": "332767cfcfa156d3ae61a7694406cd0097e6a7da93e28e50d33eebe767ba03d1",
+    "D:\\CODEX_PRG\\Breadth\\research\\models\\standard_plus_g01_decibel_v1\\accepted_score.csv": "c5b8b2b0131b03e7578df2c6ae606a4862e9c6408cb7457399005f590bba9f59",
+    "D:\\CODEX_PRG\\Breadth\\research\\models\\standard_plus_g01_decibel_v1\\build_model.py": "92e9805a4f10c887e6578d227ab863916dc2a0a4a8165b46f51eca0b62f8c5dd",
+    "D:\\CODEX_PRG\\Breadth\\research\\models\\standard_plus_g01_decibel_v1\\README.md": "f75ffd543a1d23efad3160c563f6a2340f025da4a4d87603eac9e92bd0c03138",
+    "D:\\CODEX_PRG\\Breadth\\docs\\event-catalog-v3\\catalog.json": "762b4f4375c7ccc5b126320ffb86a797e5b400423ac600fa736e14f20f6f4daa",
+    "D:\\CODEX_PRG\\Breadth\\Breeze\\BreezeRules.json": "f96729a08dff520aa8360272c86cd1a28bc2215889311c89462a61e53c50b2dc",
+    "D:\\CODEX_PRG\\Breadth\\Breeze\\AtrpChart.cs": "033a308ea96a443acaa903a02b192107aceb13cf1abffbbdc24e197f559fbef0",
+    "D:\\CODEX_PRG\\Breadth\\Breeze\\BreadthCalculator.cs": "1401da5b6f3d6c9b06af98bb1141dc01ed7047b392f2eb22187173aff7c3ce48",
+    "D:\\CODEX_PRG\\Breadth\\Breeze\\BreadthChart.cs": "1a54daab2cea6cc042bd75c57f590ea79a15754c2a6ba92e9fae108414981a22",
+    "D:\\CODEX_PRG\\Breadth\\Breeze\\BreezeClientExtension.cs": "407d3d5188041bb5a07f395281259702ccec5f63afda724822b272c46f73fa15",
+    "D:\\CODEX_PRG\\Breadth\\Breeze\\BreezeHelpWindow.cs": "b72136b40c1511c9bf3e61eb6f62a94b89642cc22b78b600dc19c24614810ca6",
+    "D:\\CODEX_PRG\\Breadth\\Breeze\\BreezeLayoutState.cs": "31d50ba87c32c485f46237aaa481125450d009e17917c20703e2b09ac105cbb4",
+    "D:\\CODEX_PRG\\Breadth\\Breeze\\BreezeResearchHelp.cs": "a9d199f62fed5e9a5ca77926a6ab95365769d388da79646078f1849925de23ca",
+    "D:\\CODEX_PRG\\Breadth\\Breeze\\BreezeRuleCatalog.cs": "9074230a93753abeeb8eb1d5cd774dea1ca96efa6b7f81afbacbff0a54ce0347",
+    "D:\\CODEX_PRG\\Breadth\\Breeze\\BreezeWindow.xaml.cs": "0f02f3f0d8946cfdfead4e02e30344dc3ae02f31179c20a31c850a134709c5cb",
+    "D:\\CODEX_PRG\\Breadth\\Breeze\\ChartCursorStyle.cs": "5a325bc88152cd8b2ff3be0f4699b496670602d860e3d06be6afabe4c77d5f4b",
+    "D:\\CODEX_PRG\\Breadth\\Breeze\\ChartDrawingMetrics.cs": "43439eba3bdce78034ab412af5bbeb617e605b3939906fdbfa153ed00798cfc1",
+    "D:\\CODEX_PRG\\Breadth\\Breeze\\ContangoChart.cs": "52205f71f68b7f19398605dd582ea5a2e43584042e31912816c6a8ddf0fe76aa",
+    "D:\\CODEX_PRG\\Breadth\\Breeze\\FuzzyMarketState.cs": "f49f35c4396e95c53b5de66d51efee08f720aea7112bafbd51e4cd7e215516a7",
+    "D:\\CODEX_PRG\\Breadth\\Breeze\\FuzzyStateChart.cs": "5b5076228726e3d4b2fed885bea47578498aa09cdfadc15bd5adf3950a2597ec",
+    "D:\\CODEX_PRG\\Breadth\\Breeze\\FuzzyStatePalette.cs": "c44de73bb327d4e548c643fbf3e010c041ead343a29826c1658d437dabbf8d5f",
+    "D:\\CODEX_PRG\\Breadth\\Breeze\\HoldConfidence.cs": "1c497fda4ab36bb10dc234877de81cebc98da9feb8e67535c2bb7d8e7f56f66c",
+    "D:\\CODEX_PRG\\Breadth\\Breeze\\HumanLanguage.cs": "5b8179c81e3c5266c5ce3f46ee6cabfb38540089a11a2c14aa0ee123452ba6a7",
+    "D:\\CODEX_PRG\\Breadth\\Breeze\\ModelPositionSizing.cs": "febc341cf53eb69f8c0fda77ff064a82a1423c6d80b89b9882634a5df2fe30c6",
+    "D:\\CODEX_PRG\\Breadth\\Breeze\\MyRsiChart.cs": "b30eea4c93e005ae9e8a5b4e738344323c023c73cf1367d94cc77af32c357bc2",
+    "D:\\CODEX_PRG\\Breadth\\Breeze\\ResearchHoldConfidence.cs": "de2c8b222ae6c31cf165c6c4e2948f31d9d77849621b1c99b6609718dc94b8dc",
+    "D:\\CODEX_PRG\\Breadth\\Breeze\\SentimentChart.cs": "a42b010ea600f83f445eb460f11dc72083c357e25dd39c92d757549622220831",
+    "D:\\CODEX_PRG\\Breadth\\Breeze\\SentimentIndicators.cs": "628efbc9d19a8289fe93bfb6d702ad8709175d2e7cf608af4d570ae9f71caa24",
+    "D:\\CODEX_PRG\\Breadth\\Breeze\\TechnicalIndicators.cs": "a9adfc63a9e6e5b3e495777bbeebde1c686a6b4ba65d77675f50ed9a8e60fb1b",
+    "D:\\CODEX_PRG\\Breadth\\Breeze\\TitanicChart.cs": "99aa75fa0fb0c79bbb10ad18b119bbe2bb44607f52963b5c57258c9eab3cae2a",
+    "D:\\CODEX_PRG\\Breadth\\Breeze\\TitanicSyndrome.cs": "b80b1f15aae7b8ca3530ff7815195068562d601871c76773adf0eecc7f6963b1",
+    "D:\\CODEX_PRG\\Breadth\\Breeze\\TradingEnsembleChart.cs": "889762027bc01e5dc1314c44bfc575411484518c32511c8e9c2dd8612f568361",
+    "D:\\CODEX_PRG\\Breadth\\Breeze\\TradingEnsembleData.cs": "d8ea9df3761efefc039573f56319298423e3620250cf5bfa34fecf4a4674dbdb",
+    "D:\\CODEX_PRG\\Breadth\\Breeze\\TradingEnsembleInference.cs": "99d9b0f816a695a25580e03d9699385025d94b83a7dedd5cd67d68f5534af9d4",
+    "D:\\CODEX_PRG\\Breadth\\Breeze\\VixTermStructure.cs": "84a45b5c5571a20695b7219f05e9f3769bf40c28eef35936d191dbed6b96dde2",
+    "D:\\CODEX_PRG\\Breadth\\Breeze\\ZweigBreadth.cs": "b44af83ed9c71e1d11a877f41589784ae0c149a646fb07caa2f21ae9fd01d9d1",
+    "D:\\CODEX_PRG\\Breadth\\Breeze\\ZweigChart.cs": "d51777d9cfaa39402503ac0272f7af7a4fb7bc2a0f3fbf117729ccfe028e4635",
+    "D:\\CODEX_PRG\\Breadth\\Breeze\\BreezeWindow.xaml": "37d107bf599a99d8096e5a5f8c2c8e93b18ffecf5d4bc00be71bcd3afe9432d3",
+    "D:\\CODEX_PRG\\Breadth\\research\\artifacts\\podhvat_candidate_experiment_v1\\selected_models.json": "d37ffaa3beb577db9b3fae5123a8591ea632b8d15c84114720b5fd8e33197328",
+    "D:\\CODEX_PRG\\Breadth\\research\\artifacts\\podhvat_candidate_experiment_v1\\protocol.json": "da2bd996f7db5af3a34895379529d966299ee087efc5cd97044541abff89e432",
+    "D:\\CODEX_PRG\\Breadth\\research\\artifacts\\podhvat_candidate_experiment_v1\\specification.md": "233c6fd2a1633867056f6a352f855ae8187332c6f5b60c11933a25b08694e05d",
+    "D:\\CODEX_PRG\\Breadth\\research\\artifacts\\podhvat_candidate_experiment_v1\\walkforward_paths.csv": "1d096212151fc87cb8621b10640f16f1d1b01b0cc4235e32a3a9581c2d43e4e8",
+    "D:\\CODEX_PRG\\Breadth\\research\\artifacts\\podhvat_candidate_experiment_v1\\walkforward_summary.csv": "797513bcc9276930bd6213272e9c24b7ce33378cdc541b7974ac2414c5b08e72",
+    "D:\\CODEX_PRG\\Breadth\\research\\artifacts\\podhvat_candidate_experiment_v1\\full_history_comparison.csv": "ba2b06caded2ca309819898cedb6de75819e013d50f6d78427ce0bdbbae10382",
+    "D:\\CODEX_PRG\\Breadth\\research\\artifacts\\podhvat_candidate_experiment_v1\\detectors_podhvat.py": "decebe26d3b94b7526340c77a5ae546124ab0765cd9820ba2d5fd21e7ac21dfb",
+    "D:\\CODEX_PRG\\Breadth\\research\\artifacts\\event_hypotheses_xhigh_v1\\baseline\\data\\Breeze\\hold_confidence.csv": "4d2948894b7164a86969ba9a5b4454fcd7676ca3fb0d67bff110921afdd917f4",
+    "D:\\CODEX_PRG\\Breadth\\research\\artifacts\\event_hypotheses_xhigh_v1\\baseline\\data\\Breeze\\nasdaq100_sma100.csv": "9ddbd0f9d2ee85fb27e37343450d8818a3cb88e07ad8f9c2a9c704242b54b3be",
+    "D:\\CODEX_PRG\\Breadth\\research\\artifacts\\event_hypotheses_xhigh_v1\\baseline\\data\\Breeze\\sentiment_indicators.csv": "b6c3c30722f51a4ff5a90ee6647ace85cc8762820125bbbc3a99b3447645b5da",
+    "D:\\CODEX_PRG\\Breadth\\research\\artifacts\\event_hypotheses_xhigh_v1\\baseline\\data\\Breeze\\sp500_sma100.csv": "5eb5587d4860a846eb96be8d39aad63ba5aecf55930356a34de31af553672dc0",
+    "D:\\CODEX_PRG\\Breadth\\research\\artifacts\\event_hypotheses_xhigh_v1\\baseline\\data\\Breeze\\sp500_sma200.csv": "64fdf506965ab66d335659ee96d85204dd1cf9c30893d6d3facfffd2275714b6",
+    "D:\\CODEX_PRG\\Breadth\\research\\artifacts\\event_hypotheses_xhigh_v1\\baseline\\data\\Breeze\\sp500_sma50.csv": "475b50ea0bd23459819c060ce763fb20bf2238b3eaebf0f180056400a4d5d00f",
+    "D:\\CODEX_PRG\\Breadth\\research\\artifacts\\event_hypotheses_xhigh_v1\\baseline\\data\\Breeze\\SPY.csv": "3deb47fe4e446bcaf9cff7e5b52ecc91b9146e6d26a6fa365123c5ca9e717439",
+    "D:\\CODEX_PRG\\Breadth\\research\\artifacts\\event_hypotheses_xhigh_v1\\baseline\\data\\Breeze\\spy_ema_myrsi_agc.csv": "dee5c37c40ec5acfb57c3e2d8d589a7b3de77b74c66868154b7013206b44f04b",
+    "D:\\CODEX_PRG\\Breadth\\research\\artifacts\\event_hypotheses_xhigh_v1\\baseline\\data\\Breeze\\titanic_sentiment.csv": "40087e734d4d8b88374d4083d57a509165709a1b89c9ea8b0e90bbbfb44e3194",
+    "D:\\CODEX_PRG\\Breadth\\research\\artifacts\\event_hypotheses_xhigh_v1\\baseline\\data\\Breeze\\zweig_breadth_thrust.csv": "2035e2b638855c59af0f12a509395508b8a677a540ae116fa559eda417c61d3b",
+    "D:\\CODEX_PRG\\Breadth\\research\\artifacts\\breadth_candidate_experiment_v1\\detectors_breadth.py": "3d58beb5975a0e9d65eb59061c9b8000b1f2c2b63f14f3c21a5dafc1925e1465",
+    "D:\\CODEX_PRG\\Breadth\\research\\artifacts\\sentiment_detector_experiment_v2\\detectors.py": "0ed60765f6c5ea8208ce25f8b9ab62709bdbcf7bc2ea925f3dc16b7f6ab471a9",
+    "D:\\CODEX_PRG\\Breadth\\research\\artifacts\\sentiment_detector_experiment_v2\\calibration.py": "a563a316426ad0e982ddd99576b8ffabbf64d7171f3772c0ff23b6293de1310d"
+  }
+}

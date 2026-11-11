@@ -1,5 +1,14 @@
 namespace BreezeVL;
 
+internal enum TradingActiveMode
+{
+    ProportionalEnsembles = 0,
+    IndependentDeciles = 1,
+    QuantumEnsembles = 2
+}
+
+internal readonly record struct TradingActivePosition(double Value, double Percentage);
+
 internal sealed record TradingEnsemblePoint(
     DateTime Date,
     double EnsemblePercent,
@@ -15,7 +24,11 @@ internal sealed record TradingEnsembleSeries(
     IReadOnlyList<TradingEnsemblePoint> Points,
     IReadOnlyList<TradingForecastPoint> Forecasts,
     int ModelCount = 0,
-    string Warning = "");
+    string Warning = "",
+    IReadOnlyDictionary<int, int>? ArchitectureCounts = null,
+    DateTime? ValidFromDate = null,
+    double Last125BenchmarkPercent = double.NaN,
+    IReadOnlyDictionary<int, double>? BenchmarkPercentByLookback = null);
 
 internal sealed record TradingPackageStatus(
     string PackageName,

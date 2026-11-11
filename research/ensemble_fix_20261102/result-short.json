@@ -1,0 +1,896 @@
+[
+  {
+    "Key": "Encog-ZZ1",
+    "Count": 1200,
+    "SourceMeanForecast": 0.5975483504195771,
+    "SourceStr": -15.140625901876144,
+    "DllStr": -15.140625901876144,
+    "DifferentBinary125": 0,
+    "CompatibleDllStr": -15.140625901876144,
+    "CompatibleDifferentBinaryAll": 0,
+    "DllMissingBench": 0,
+    "FeatureDiff": {
+      "model_cnn_fear_greed": {
+        "Max": 0,
+        "Count": 0,
+        "SourceLast": -0.58,
+        "DllLast": -0.58
+      },
+      "risk_measure": {
+        "Max": 0,
+        "Count": 0,
+        "SourceLast": -0.5238,
+        "DllLast": -0.5238
+      },
+      "model_panic_euphoria": {
+        "Max": 0,
+        "Count": 0,
+        "SourceLast": -0.02100000000000002,
+        "DllLast": -0.02100000000000002
+      },
+      "myRSI_rep": {
+        "Max": 0,
+        "Count": 0,
+        "SourceLast": -0.5562963948550202,
+        "DllLast": -0.5562963948550202
+      },
+      "trendScore": {
+        "Max": 0,
+        "Count": 0,
+        "SourceLast": -1,
+        "DllLast": -1
+      },
+      "aroonUp": {
+        "Max": 0,
+        "Count": 0,
+        "SourceLast": 0.08333333333333329,
+        "DllLast": 0.08333333333333329
+      },
+      "aroonDown": {
+        "Max": 0,
+        "Count": 0,
+        "SourceLast": 1,
+        "DllLast": 1
+      },
+      "dIMinus": {
+        "Max": 0,
+        "Count": 0,
+        "SourceLast": 1,
+        "DllLast": 1
+      },
+      "dIPlus": {
+        "Max": 0,
+        "Count": 0,
+        "SourceLast": -0.5091229745815264,
+        "DllLast": -0.5091229745815264
+      },
+      "correlationAngle_rep": {
+        "Max": 0,
+        "Count": 0,
+        "SourceLast": 0.857929522188787,
+        "DllLast": 0.857929522188787
+      },
+      "correlationTrend": {
+        "Max": 0,
+        "Count": 0,
+        "SourceLast": -0.9041252521198777,
+        "DllLast": -0.9041252521198777
+      },
+      "hurst": {
+        "Max": 0,
+        "Count": 0,
+        "SourceLast": 0.05057274244543508,
+        "DllLast": 0.05057274244543508
+      },
+      "cmf": {
+        "Max": 0,
+        "Count": 0,
+        "SourceLast": -0.6124131375200292,
+        "DllLast": -0.6124131375200292
+      },
+      "decibel": {
+        "Max": 0,
+        "Count": 0,
+        "SourceLast": 0.08328660325068404,
+        "DllLast": 0.08328660325068404
+      },
+      "jocker": {
+        "Max": 0,
+        "Count": 0,
+        "SourceLast": -0.5171878422242598,
+        "DllLast": -0.5171878422242598
+      },
+      "marketBreadth": {
+        "Max": 0,
+        "Count": 0,
+        "SourceLast": 0.38124961853068273,
+        "DllLast": 0.38124961853068273
+      }
+    },
+    "SourceProfit": {
+      "Proportional": {
+        "GrossPercent": 265.13463333333334,
+        "ExecutedUnits": 881,
+        "FirstTrade": "2018-07-17T00:00:00",
+        "FinalQuantity": 7
+      },
+      "Deciles": {
+        "GrossPercent": 326.9064433333334,
+        "ExecutedUnits": 924,
+        "FirstTrade": "2018-07-17T00:00:00",
+        "FinalQuantity": 10
+      },
+      "AllOrNothing": {
+        "GrossPercent": 340.1583333333336,
+        "ExecutedUnits": 850,
+        "FirstTrade": "2018-07-17T00:00:00",
+        "FinalQuantity": 10
+      }
+    },
+    "DllProfit": {
+      "Proportional": {
+        "GrossPercent": 265.13463333333334,
+        "ExecutedUnits": 881,
+        "FirstTrade": "2018-07-17T00:00:00",
+        "FinalQuantity": 7
+      },
+      "Deciles": {
+        "GrossPercent": 326.9064433333334,
+        "ExecutedUnits": 924,
+        "FirstTrade": "2018-07-17T00:00:00",
+        "FinalQuantity": 10
+      },
+      "AllOrNothing": {
+        "GrossPercent": 340.1583333333336,
+        "ExecutedUnits": 850,
+        "FirstTrade": "2018-07-17T00:00:00",
+        "FinalQuantity": 10
+      }
+    }
+  },
+  {
+    "Key": "Encog-ZZ2",
+    "Count": 529,
+    "SourceMeanForecast": 0.5418986855190953,
+    "SourceStr": 299.3264265665018,
+    "DllStr": 299.3264265665018,
+    "DifferentBinary125": 0,
+    "CompatibleDllStr": 299.3264265665018,
+    "CompatibleDifferentBinaryAll": 0,
+    "DllMissingBench": 0,
+    "FeatureDiff": {
+      "model_cnn_fear_greed": {
+        "Max": 0,
+        "Count": 0,
+        "SourceLast": -0.58,
+        "DllLast": -0.58
+      },
+      "risk_measure": {
+        "Max": 0,
+        "Count": 0,
+        "SourceLast": -0.5238,
+        "DllLast": -0.5238
+      },
+      "model_panic_euphoria": {
+        "Max": 0,
+        "Count": 0,
+        "SourceLast": -0.02100000000000002,
+        "DllLast": -0.02100000000000002
+      },
+      "myRSI_rep": {
+        "Max": 0,
+        "Count": 0,
+        "SourceLast": -0.5562963948550202,
+        "DllLast": -0.5562963948550202
+      },
+      "trendScore": {
+        "Max": 0,
+        "Count": 0,
+        "SourceLast": -1,
+        "DllLast": -1
+      },
+      "aroonUp": {
+        "Max": 0,
+        "Count": 0,
+        "SourceLast": 0.08333333333333329,
+        "DllLast": 0.08333333333333329
+      },
+      "aroonDown": {
+        "Max": 0,
+        "Count": 0,
+        "SourceLast": 1,
+        "DllLast": 1
+      },
+      "dIMinus": {
+        "Max": 0,
+        "Count": 0,
+        "SourceLast": 1,
+        "DllLast": 1
+      },
+      "dIPlus": {
+        "Max": 0,
+        "Count": 0,
+        "SourceLast": -0.5091229745815264,
+        "DllLast": -0.5091229745815264
+      },
+      "correlationAngle_rep": {
+        "Max": 0,
+        "Count": 0,
+        "SourceLast": 0.857929522188787,
+        "DllLast": 0.857929522188787
+      },
+      "correlationTrend": {
+        "Max": 0,
+        "Count": 0,
+        "SourceLast": -0.9041252521198777,
+        "DllLast": -0.9041252521198777
+      },
+      "hurst": {
+        "Max": 0,
+        "Count": 0,
+        "SourceLast": 0.05057274244543508,
+        "DllLast": 0.05057274244543508
+      },
+      "cmf": {
+        "Max": 0,
+        "Count": 0,
+        "SourceLast": -0.6124131375200292,
+        "DllLast": -0.6124131375200292
+      },
+      "decibel": {
+        "Max": 0,
+        "Count": 0,
+        "SourceLast": 0.08328660325068404,
+        "DllLast": 0.08328660325068404
+      },
+      "jocker": {
+        "Max": 0,
+        "Count": 0,
+        "SourceLast": -0.5171878422242598,
+        "DllLast": -0.5171878422242598
+      },
+      "marketBreadth": {
+        "Max": 0,
+        "Count": 0,
+        "SourceLast": 0.38124961853068273,
+        "DllLast": 0.38124961853068273
+      }
+    },
+    "SourceProfit": {
+      "Proportional": {
+        "GrossPercent": 221.59652999999997,
+        "ExecutedUnits": 1191,
+        "FirstTrade": "2018-07-17T00:00:00",
+        "FinalQuantity": 7
+      },
+      "Deciles": {
+        "GrossPercent": 286.36946666666677,
+        "ExecutedUnits": 1464,
+        "FirstTrade": "2018-07-17T00:00:00",
+        "FinalQuantity": 10
+      },
+      "AllOrNothing": {
+        "GrossPercent": 304.07333333333344,
+        "ExecutedUnits": 1410,
+        "FirstTrade": "2018-07-17T00:00:00",
+        "FinalQuantity": 10
+      }
+    },
+    "DllProfit": {
+      "Proportional": {
+        "GrossPercent": 221.59652999999997,
+        "ExecutedUnits": 1191,
+        "FirstTrade": "2018-07-17T00:00:00",
+        "FinalQuantity": 7
+      },
+      "Deciles": {
+        "GrossPercent": 286.36946666666677,
+        "ExecutedUnits": 1464,
+        "FirstTrade": "2018-07-17T00:00:00",
+        "FinalQuantity": 10
+      },
+      "AllOrNothing": {
+        "GrossPercent": 304.07333333333344,
+        "ExecutedUnits": 1410,
+        "FirstTrade": "2018-07-17T00:00:00",
+        "FinalQuantity": 10
+      }
+    }
+  },
+  {
+    "Key": "Torch-ZZ1",
+    "Count": 879,
+    "SourceMeanForecast": 0.5995757140760782,
+    "SourceStr": -116.89565326596075,
+    "DllStr": -116.89565326596075,
+    "DifferentBinary125": 0,
+    "CompatibleDllStr": -116.89565326596075,
+    "CompatibleDifferentBinaryAll": 0,
+    "DllMissingBench": 0,
+    "FeatureDiff": {
+      "model_cnn_fear_greed": {
+        "Max": 0,
+        "Count": 0,
+        "SourceLast": -0.58,
+        "DllLast": -0.58
+      },
+      "risk_measure": {
+        "Max": 0,
+        "Count": 0,
+        "SourceLast": -0.5238,
+        "DllLast": -0.5238
+      },
+      "model_panic_euphoria": {
+        "Max": 0,
+        "Count": 0,
+        "SourceLast": -0.02100000000000002,
+        "DllLast": -0.02100000000000002
+      },
+      "myRSI_rep": {
+        "Max": 0,
+        "Count": 0,
+        "SourceLast": -0.5562963948550202,
+        "DllLast": -0.5562963948550202
+      },
+      "trendScore": {
+        "Max": 0,
+        "Count": 0,
+        "SourceLast": -1,
+        "DllLast": -1
+      },
+      "aroonUp": {
+        "Max": 0,
+        "Count": 0,
+        "SourceLast": 0.08333333333333329,
+        "DllLast": 0.08333333333333329
+      },
+      "aroonDown": {
+        "Max": 0,
+        "Count": 0,
+        "SourceLast": 1,
+        "DllLast": 1
+      },
+      "dIMinus": {
+        "Max": 0,
+        "Count": 0,
+        "SourceLast": 1,
+        "DllLast": 1
+      },
+      "dIPlus": {
+        "Max": 0,
+        "Count": 0,
+        "SourceLast": -0.5091229745815264,
+        "DllLast": -0.5091229745815264
+      },
+      "correlationAngle_rep": {
+        "Max": 0,
+        "Count": 0,
+        "SourceLast": 0.857929522188787,
+        "DllLast": 0.857929522188787
+      },
+      "correlationTrend": {
+        "Max": 0,
+        "Count": 0,
+        "SourceLast": -0.9041252521198777,
+        "DllLast": -0.9041252521198777
+      },
+      "hurst": {
+        "Max": 0,
+        "Count": 0,
+        "SourceLast": 0.05057274244543508,
+        "DllLast": 0.05057274244543508
+      },
+      "cmf": {
+        "Max": 0,
+        "Count": 0,
+        "SourceLast": -0.6124131375200292,
+        "DllLast": -0.6124131375200292
+      },
+      "decibel": {
+        "Max": 0,
+        "Count": 0,
+        "SourceLast": 0.08328660325068404,
+        "DllLast": 0.08328660325068404
+      },
+      "jocker": {
+        "Max": 0,
+        "Count": 0,
+        "SourceLast": -0.5171878422242598,
+        "DllLast": -0.5171878422242598
+      },
+      "marketBreadth": {
+        "Max": 0,
+        "Count": 0,
+        "SourceLast": 0.38124961853068273,
+        "DllLast": 0.38124961853068273
+      }
+    },
+    "SourceProfit": {
+      "Proportional": {
+        "GrossPercent": 272.48652666666646,
+        "ExecutedUnits": 861,
+        "FirstTrade": "2018-07-17T00:00:00",
+        "FinalQuantity": 7
+      },
+      "Deciles": {
+        "GrossPercent": 326.72866666666664,
+        "ExecutedUnits": 926,
+        "FirstTrade": "2018-07-17T00:00:00",
+        "FinalQuantity": 10
+      },
+      "AllOrNothing": {
+        "GrossPercent": 328.40166666666676,
+        "ExecutedUnits": 790,
+        "FirstTrade": "2018-07-17T00:00:00",
+        "FinalQuantity": 10
+      }
+    },
+    "DllProfit": {
+      "Proportional": {
+        "GrossPercent": 272.48652666666646,
+        "ExecutedUnits": 861,
+        "FirstTrade": "2018-07-17T00:00:00",
+        "FinalQuantity": 7
+      },
+      "Deciles": {
+        "GrossPercent": 326.72866666666664,
+        "ExecutedUnits": 926,
+        "FirstTrade": "2018-07-17T00:00:00",
+        "FinalQuantity": 10
+      },
+      "AllOrNothing": {
+        "GrossPercent": 328.40166666666676,
+        "ExecutedUnits": 790,
+        "FirstTrade": "2018-07-17T00:00:00",
+        "FinalQuantity": 10
+      }
+    }
+  },
+  {
+    "Key": "Torch-ZZ2",
+    "Count": 745,
+    "SourceMeanForecast": 0.6442464997381645,
+    "SourceStr": 190.8969551701089,
+    "DllStr": 190.8969551701089,
+    "DifferentBinary125": 0,
+    "CompatibleDllStr": 190.8969551701089,
+    "CompatibleDifferentBinaryAll": 0,
+    "DllMissingBench": 0,
+    "FeatureDiff": {
+      "model_cnn_fear_greed": {
+        "Max": 0,
+        "Count": 0,
+        "SourceLast": -0.58,
+        "DllLast": -0.58
+      },
+      "risk_measure": {
+        "Max": 0,
+        "Count": 0,
+        "SourceLast": -0.5238,
+        "DllLast": -0.5238
+      },
+      "model_panic_euphoria": {
+        "Max": 0,
+        "Count": 0,
+        "SourceLast": -0.02100000000000002,
+        "DllLast": -0.02100000000000002
+      },
+      "myRSI_rep": {
+        "Max": 0,
+        "Count": 0,
+        "SourceLast": -0.5562963948550202,
+        "DllLast": -0.5562963948550202
+      },
+      "trendScore": {
+        "Max": 0,
+        "Count": 0,
+        "SourceLast": -1,
+        "DllLast": -1
+      },
+      "aroonUp": {
+        "Max": 0,
+        "Count": 0,
+        "SourceLast": 0.08333333333333329,
+        "DllLast": 0.08333333333333329
+      },
+      "aroonDown": {
+        "Max": 0,
+        "Count": 0,
+        "SourceLast": 1,
+        "DllLast": 1
+      },
+      "dIMinus": {
+        "Max": 0,
+        "Count": 0,
+        "SourceLast": 1,
+        "DllLast": 1
+      },
+      "dIPlus": {
+        "Max": 0,
+        "Count": 0,
+        "SourceLast": -0.5091229745815264,
+        "DllLast": -0.5091229745815264
+      },
+      "correlationAngle_rep": {
+        "Max": 0,
+        "Count": 0,
+        "SourceLast": 0.857929522188787,
+        "DllLast": 0.857929522188787
+      },
+      "correlationTrend": {
+        "Max": 0,
+        "Count": 0,
+        "SourceLast": -0.9041252521198777,
+        "DllLast": -0.9041252521198777
+      },
+      "hurst": {
+        "Max": 0,
+        "Count": 0,
+        "SourceLast": 0.05057274244543508,
+        "DllLast": 0.05057274244543508
+      },
+      "cmf": {
+        "Max": 0,
+        "Count": 0,
+        "SourceLast": -0.6124131375200292,
+        "DllLast": -0.6124131375200292
+      },
+      "decibel": {
+        "Max": 0,
+        "Count": 0,
+        "SourceLast": 0.08328660325068404,
+        "DllLast": 0.08328660325068404
+      },
+      "jocker": {
+        "Max": 0,
+        "Count": 0,
+        "SourceLast": -0.5171878422242598,
+        "DllLast": -0.5171878422242598
+      },
+      "marketBreadth": {
+        "Max": 0,
+        "Count": 0,
+        "SourceLast": 0.38124961853068273,
+        "DllLast": 0.38124961853068273
+      }
+    },
+    "SourceProfit": {
+      "Proportional": {
+        "GrossPercent": 249.43404666666652,
+        "ExecutedUnits": 994,
+        "FirstTrade": "2018-07-17T00:00:00",
+        "FinalQuantity": 8
+      },
+      "Deciles": {
+        "GrossPercent": 310.76692333333347,
+        "ExecutedUnits": 1248,
+        "FirstTrade": "2018-07-17T00:00:00",
+        "FinalQuantity": 10
+      },
+      "AllOrNothing": {
+        "GrossPercent": 325.03833333333336,
+        "ExecutedUnits": 1190,
+        "FirstTrade": "2018-07-17T00:00:00",
+        "FinalQuantity": 10
+      }
+    },
+    "DllProfit": {
+      "Proportional": {
+        "GrossPercent": 249.43404666666652,
+        "ExecutedUnits": 994,
+        "FirstTrade": "2018-07-17T00:00:00",
+        "FinalQuantity": 8
+      },
+      "Deciles": {
+        "GrossPercent": 310.76692333333347,
+        "ExecutedUnits": 1248,
+        "FirstTrade": "2018-07-17T00:00:00",
+        "FinalQuantity": 10
+      },
+      "AllOrNothing": {
+        "GrossPercent": 325.03833333333336,
+        "ExecutedUnits": 1190,
+        "FirstTrade": "2018-07-17T00:00:00",
+        "FinalQuantity": 10
+      }
+    }
+  },
+  {
+    "Key": "Torch-ZZ1-J",
+    "Count": 600,
+    "SourceMeanForecast": 0.5237073035596405,
+    "SourceStr": -24.519971139971425,
+    "DllStr": -24.519971139971425,
+    "DifferentBinary125": 0,
+    "CompatibleDllStr": -24.519971139971425,
+    "CompatibleDifferentBinaryAll": 0,
+    "DllMissingBench": 0,
+    "FeatureDiff": {
+      "model_cnn_fear_greed": {
+        "Max": 0,
+        "Count": 0,
+        "SourceLast": -0.58,
+        "DllLast": -0.58
+      },
+      "risk_measure": {
+        "Max": 0,
+        "Count": 0,
+        "SourceLast": -0.5238,
+        "DllLast": -0.5238
+      },
+      "model_panic_euphoria": {
+        "Max": 0,
+        "Count": 0,
+        "SourceLast": -0.02100000000000002,
+        "DllLast": -0.02100000000000002
+      },
+      "myRSI_rep": {
+        "Max": 0,
+        "Count": 0,
+        "SourceLast": -0.5562963948550202,
+        "DllLast": -0.5562963948550202
+      },
+      "trendScore": {
+        "Max": 0,
+        "Count": 0,
+        "SourceLast": -1,
+        "DllLast": -1
+      },
+      "aroonUp": {
+        "Max": 0,
+        "Count": 0,
+        "SourceLast": 0.08333333333333329,
+        "DllLast": 0.08333333333333329
+      },
+      "aroonDown": {
+        "Max": 0,
+        "Count": 0,
+        "SourceLast": 1,
+        "DllLast": 1
+      },
+      "dIMinus": {
+        "Max": 0,
+        "Count": 0,
+        "SourceLast": 1,
+        "DllLast": 1
+      },
+      "dIPlus": {
+        "Max": 0,
+        "Count": 0,
+        "SourceLast": -0.5091229745815264,
+        "DllLast": -0.5091229745815264
+      },
+      "correlationAngle_rep": {
+        "Max": 0,
+        "Count": 0,
+        "SourceLast": 0.857929522188787,
+        "DllLast": 0.857929522188787
+      },
+      "correlationTrend": {
+        "Max": 0,
+        "Count": 0,
+        "SourceLast": -0.9041252521198777,
+        "DllLast": -0.9041252521198777
+      },
+      "hurst": {
+        "Max": 0,
+        "Count": 0,
+        "SourceLast": 0.05057274244543508,
+        "DllLast": 0.05057274244543508
+      },
+      "cmf": {
+        "Max": 0,
+        "Count": 0,
+        "SourceLast": -0.6124131375200292,
+        "DllLast": -0.6124131375200292
+      },
+      "decibel": {
+        "Max": 0,
+        "Count": 0,
+        "SourceLast": 0.08328660325068404,
+        "DllLast": 0.08328660325068404
+      },
+      "jocker": {
+        "Max": 0,
+        "Count": 0,
+        "SourceLast": -0.5171878422242598,
+        "DllLast": -0.5171878422242598
+      },
+      "marketBreadth": {
+        "Max": 0,
+        "Count": 0,
+        "SourceLast": 0.38124961853068273,
+        "DllLast": 0.38124961853068273
+      }
+    },
+    "SourceProfit": {
+      "Proportional": {
+        "GrossPercent": 271.4773666666666,
+        "ExecutedUnits": 676,
+        "FirstTrade": "2018-07-17T00:00:00",
+        "FinalQuantity": 6
+      },
+      "Deciles": {
+        "GrossPercent": 330.99483333333336,
+        "ExecutedUnits": 903,
+        "FirstTrade": "2018-07-17T00:00:00",
+        "FinalQuantity": 9
+      },
+      "AllOrNothing": {
+        "GrossPercent": 313.42,
+        "ExecutedUnits": 770,
+        "FirstTrade": "2018-07-17T00:00:00",
+        "FinalQuantity": 10
+      }
+    },
+    "DllProfit": {
+      "Proportional": {
+        "GrossPercent": 271.4773666666666,
+        "ExecutedUnits": 676,
+        "FirstTrade": "2018-07-17T00:00:00",
+        "FinalQuantity": 6
+      },
+      "Deciles": {
+        "GrossPercent": 330.99483333333336,
+        "ExecutedUnits": 903,
+        "FirstTrade": "2018-07-17T00:00:00",
+        "FinalQuantity": 9
+      },
+      "AllOrNothing": {
+        "GrossPercent": 313.42,
+        "ExecutedUnits": 770,
+        "FirstTrade": "2018-07-17T00:00:00",
+        "FinalQuantity": 10
+      }
+    }
+  },
+  {
+    "Key": "Torch-ZZ2-J",
+    "Count": 586,
+    "SourceMeanForecast": 0.515903437361733,
+    "SourceStr": -105.38579111446009,
+    "DllStr": -105.38579111446009,
+    "DifferentBinary125": 0,
+    "CompatibleDllStr": -105.38579111446009,
+    "CompatibleDifferentBinaryAll": 0,
+    "DllMissingBench": 0,
+    "FeatureDiff": {
+      "model_cnn_fear_greed": {
+        "Max": 0,
+        "Count": 0,
+        "SourceLast": -0.58,
+        "DllLast": -0.58
+      },
+      "risk_measure": {
+        "Max": 0,
+        "Count": 0,
+        "SourceLast": -0.5238,
+        "DllLast": -0.5238
+      },
+      "model_panic_euphoria": {
+        "Max": 0,
+        "Count": 0,
+        "SourceLast": -0.02100000000000002,
+        "DllLast": -0.02100000000000002
+      },
+      "myRSI_rep": {
+        "Max": 0,
+        "Count": 0,
+        "SourceLast": -0.5562963948550202,
+        "DllLast": -0.5562963948550202
+      },
+      "trendScore": {
+        "Max": 0,
+        "Count": 0,
+        "SourceLast": -1,
+        "DllLast": -1
+      },
+      "aroonUp": {
+        "Max": 0,
+        "Count": 0,
+        "SourceLast": 0.08333333333333329,
+        "DllLast": 0.08333333333333329
+      },
+      "aroonDown": {
+        "Max": 0,
+        "Count": 0,
+        "SourceLast": 1,
+        "DllLast": 1
+      },
+      "dIMinus": {
+        "Max": 0,
+        "Count": 0,
+        "SourceLast": 1,
+        "DllLast": 1
+      },
+      "dIPlus": {
+        "Max": 0,
+        "Count": 0,
+        "SourceLast": -0.5091229745815264,
+        "DllLast": -0.5091229745815264
+      },
+      "correlationAngle_rep": {
+        "Max": 0,
+        "Count": 0,
+        "SourceLast": 0.857929522188787,
+        "DllLast": 0.857929522188787
+      },
+      "correlationTrend": {
+        "Max": 0,
+        "Count": 0,
+        "SourceLast": -0.9041252521198777,
+        "DllLast": -0.9041252521198777
+      },
+      "hurst": {
+        "Max": 0,
+        "Count": 0,
+        "SourceLast": 0.05057274244543508,
+        "DllLast": 0.05057274244543508
+      },
+      "cmf": {
+        "Max": 0,
+        "Count": 0,
+        "SourceLast": -0.6124131375200292,
+        "DllLast": -0.6124131375200292
+      },
+      "decibel": {
+        "Max": 0,
+        "Count": 0,
+        "SourceLast": 0.08328660325068404,
+        "DllLast": 0.08328660325068404
+      },
+      "jocker": {
+        "Max": 0,
+        "Count": 0,
+        "SourceLast": -0.5171878422242598,
+        "DllLast": -0.5171878422242598
+      },
+      "marketBreadth": {
+        "Max": 0,
+        "Count": 0,
+        "SourceLast": 0.38124961853068273,
+        "DllLast": 0.38124961853068273
+      }
+    },
+    "SourceProfit": {
+      "Proportional": {
+        "GrossPercent": 206.80109666666658,
+        "ExecutedUnits": 594,
+        "FirstTrade": "2018-07-17T00:00:00",
+        "FinalQuantity": 6
+      },
+      "Deciles": {
+        "GrossPercent": 276.5413000000001,
+        "ExecutedUnits": 866,
+        "FirstTrade": "2018-07-17T00:00:00",
+        "FinalQuantity": 8
+      },
+      "AllOrNothing": {
+        "GrossPercent": 300.96333333333337,
+        "ExecutedUnits": 850,
+        "FirstTrade": "2018-07-17T00:00:00",
+        "FinalQuantity": 10
+      }
+    },
+    "DllProfit": {
+      "Proportional": {
+        "GrossPercent": 206.80109666666658,
+        "ExecutedUnits": 594,
+        "FirstTrade": "2018-07-17T00:00:00",
+        "FinalQuantity": 6
+      },
+      "Deciles": {
+        "GrossPercent": 276.5413000000001,
+        "ExecutedUnits": 866,
+        "FirstTrade": "2018-07-17T00:00:00",
+        "FinalQuantity": 8
+      },
+      "AllOrNothing": {
+        "GrossPercent": 300.96333333333337,
+        "ExecutedUnits": 850,
+        "FirstTrade": "2018-07-17T00:00:00",
+        "FinalQuantity": 10
+      }
+    }
+  }
+]

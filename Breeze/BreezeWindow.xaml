@@ -140,7 +140,24 @@
                 <TextBlock x:Name="CursorIndicatorsText" Grid.Row="1" VerticalAlignment="Center"
                            Text="EMA and MyRSI_rep + AGC values will appear here"
                            TextWrapping="NoWrap" Margin="0,1,12,0"/>
+                <TextBlock x:Name="TradingCursorValuesText" Grid.Row="1" VerticalAlignment="Center"
+                           TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"
+                           Visibility="Collapsed" Margin="0,1,12,0"/>
                 <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
+                    <StackPanel x:Name="TradingPerformancePeriodControls" Orientation="Horizontal"
+                                Visibility="Collapsed" Margin="0,0,8,0">
+                        <RepeatButton Content="−" Delay="350" Interval="100" Width="26" Height="22"
+                                      Background="#C2EDCB" BorderBrush="#86DC97" Margin="0,0,2,0"
+                                      ToolTip="Reduce the recent-performance period by 10 trading bars"
+                                      Click="DecreaseTradingPerformanceBarsClick"/>
+                        <TextBlock x:Name="TradingPerformanceBarsText" Text="150" Width="42"
+                                   Background="#E2F6E6" TextAlignment="Center" VerticalAlignment="Center"
+                                   ToolTip="Recent-performance period in trading bars"/>
+                        <RepeatButton Content="+" Delay="350" Interval="100" Width="26" Height="22"
+                                      Background="#C2EDCB" BorderBrush="#86DC97" Margin="2,0,0,0"
+                                      ToolTip="Increase the recent-performance period by 10 trading bars"
+                                      Click="IncreaseTradingPerformanceBarsClick"/>
+                    </StackPanel>
                     <RepeatButton Content="−" Delay="350" Interval="100" Width="26" Height="22" Margin="0,0,2,0"
                             ToolTip="Show 20 fewer bars" Click="DecreaseVisibleBarsClick"/>
                     <TextBlock x:Name="VisibleBarsText" Text="200 bars" Width="60"
@@ -557,13 +574,13 @@
                                     </Border>
                                 </Popup>
                             </Grid>
-                            <CheckBox x:Name="TradingShowTorchZz1" Content="ZZ1" IsChecked="False" Margin="0,0,8,0"
+                            <CheckBox x:Name="TradingShowTorchZz1" Content="ZZ1" IsChecked="True" Margin="0,0,8,0"
                                       VerticalAlignment="Center" Checked="TradingEnsembleOptionsChanged" Unchecked="TradingEnsembleOptionsChanged"/>
-                            <CheckBox x:Name="TradingShowTorchZz2" Content="ZZ2" IsChecked="False" Margin="0,0,8,0"
+                            <CheckBox x:Name="TradingShowTorchZz2" Content="ZZ2" IsChecked="True" Margin="0,0,8,0"
                                       VerticalAlignment="Center" Checked="TradingEnsembleOptionsChanged" Unchecked="TradingEnsembleOptionsChanged"/>
-                            <CheckBox x:Name="TradingShowTorchZz1Jordan" Content="ZZ1__J" IsChecked="False" Margin="0,0,8,0"
+                            <CheckBox x:Name="TradingShowTorchZz1Jordan" Content="ZZ1__J" IsChecked="True" Margin="0,0,8,0"
                                       VerticalAlignment="Center" Checked="TradingEnsembleOptionsChanged" Unchecked="TradingEnsembleOptionsChanged"/>
-                            <CheckBox x:Name="TradingShowTorchZz2Jordan" Content="ZZ2__J" IsChecked="False" Margin="0,0,12,0"
+                            <CheckBox x:Name="TradingShowTorchZz2Jordan" Content="ZZ2__J" IsChecked="True" Margin="0,0,12,0"
                                       VerticalAlignment="Center" Checked="TradingEnsembleOptionsChanged" Unchecked="TradingEnsembleOptionsChanged"/>
                             <Grid Width="136" Height="24" Margin="0,0,8,0" ToolTip="Корневая директория ансамблей Encog">
                                 <TextBox x:Name="TradingEncogDirectory" Text="D:\model_ensemble_Encog" IsReadOnly="True"
@@ -592,9 +609,9 @@
                                     </Border>
                                 </Popup>
                             </Grid>
-                            <CheckBox x:Name="TradingShowEncogZz1" Content="ZZ1" IsChecked="False" Margin="0,0,8,0"
+                            <CheckBox x:Name="TradingShowEncogZz1" Content="ZZ1" IsChecked="True" Margin="0,0,8,0"
                                       VerticalAlignment="Center" Checked="TradingEnsembleOptionsChanged" Unchecked="TradingEnsembleOptionsChanged"/>
-                            <CheckBox x:Name="TradingShowEncogZz2" Content="ZZ2" IsChecked="False" Margin="0,0,12,0"
+                            <CheckBox x:Name="TradingShowEncogZz2" Content="ZZ2" IsChecked="True" Margin="0,0,12,0"
                                       VerticalAlignment="Center" Checked="TradingEnsembleOptionsChanged" Unchecked="TradingEnsembleOptionsChanged"/>
                             <RepeatButton Content="−" Delay="350" Interval="100" Width="23" Height="22" Padding="0"
                                           Click="DecreaseTradingForecastClick"/>
@@ -607,12 +624,56 @@
                             <CheckBox x:Name="TradingShowEma" Content="EMA" IsChecked="False" Margin="0,0,12,0"
                                       ToolTip="EMA 20/50/100/200" VerticalAlignment="Center"
                                       Checked="TradingEnsembleOptionsChanged" Unchecked="TradingEnsembleOptionsChanged"/>
-                            <CheckBox x:Name="TradingShowActiveEnsembles" Content="Ensembles" IsChecked="False"
-                                      ToolTip="Нижняя панель: количество активных ансамблей вместо активных децилей" VerticalAlignment="Center"
-                                      Checked="TradingEnsembleOptionsChanged" Unchecked="TradingEnsembleOptionsChanged"/>
+                            <ComboBox x:Name="TradingActiveMode" Width="158" Height="24" SelectedIndex="1"
+                                      VerticalContentAlignment="Center" SelectionChanged="TradingEnsembleOptionsChanged"
+                                      ToolTip="Режим нижней панели и расчёта профита: пропорциональный ансамбль 0–10, независимые децили или квантовый ансамбль 0/10 по порогу 50%">
+                                <ComboBoxItem Content="Ансамбли 0–10"/>
+                                <ComboBoxItem Content="Активные децили"/>
+                                <ComboBoxItem Content="Ансамбли 0/10"/>
+                            </ComboBox>
                           </WrapPanel>
                         </Border>
-                        <local:TradingEnsembleChart x:Name="TradingEnsembleChart" Grid.Row="1"/>
+                        <Grid Grid.Row="1">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition x:Name="TradingAnalysisColumn" Width="0.25*" MinWidth="0"/>
+                                <ColumnDefinition Width="5"/>
+                                <ColumnDefinition x:Name="TradingChartColumn" Width="0.75*" MinWidth="0"/>
+                            </Grid.ColumnDefinitions>
+                            <Border x:Name="TradingAnalysisPanel" Grid.Column="0" Margin="5,4,2,4" Padding="12,10"
+                                    Background="#F6F9FC" BorderBrush="#C7D3DF" BorderThickness="1"
+                                    CornerRadius="4">
+                                <DockPanel>
+                                    <Grid DockPanel.Dock="Top" Margin="0,0,0,8">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Button x:Name="CopyTradingEnsemblesButton" Grid.Column="0"
+                                                Width="25" Height="24" Margin="0,0,7,0" Padding="0"
+                                                Background="Transparent" BorderBrush="#AAB8C5"
+                                                ToolTip="Скопировать весь отчёт об активных ансамблях"
+                                                Click="CopyTradingEnsemblesClick">
+                                            <TextBlock Text="&#xE8C8;" FontFamily="Segoe MDL2 Assets"
+                                                       FontSize="13" Foreground="#25303D"
+                                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Button>
+                                        <TextBlock x:Name="TradingAnalysisTitle" Grid.Column="1" Text="Активные ансамбли: Last — · Stop —"
+                                                   FontSize="15" FontWeight="SemiBold" Foreground="#25303D"
+                                                   VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                                    </Grid>
+                                    <ScrollViewer VerticalScrollBarVisibility="Auto"
+                                                  HorizontalScrollBarVisibility="Disabled">
+                                        <StackPanel x:Name="TradingAnalysisCards"/>
+                                    </ScrollViewer>
+                                </DockPanel>
+                            </Border>
+                            <GridSplitter x:Name="TradingAnalysisSplitter" Grid.Column="1"
+                                          Width="5" HorizontalAlignment="Stretch"
+                                          ResizeDirection="Columns" ResizeBehavior="PreviousAndNext"
+                                          Background="#D7CFBB"
+                                          DragCompleted="LayoutSplitterDragCompleted"/>
+                            <local:TradingEnsembleChart x:Name="TradingEnsembleChart" Grid.Column="2"/>
+                        </Grid>
                     </Grid>
                 </TabItem>
                 <TabItem x:Name="ZweigTab">

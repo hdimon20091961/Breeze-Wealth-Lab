@@ -14,7 +14,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "docs/event-catalog-v1"
-REPRO = ROOT / "artifacts/breeze_ai_reprocessed_20261012"
+REPRO = ROOT / "research/artifacts/breeze_ai_reprocessed_20261012"
 FAMILIES = {
     "T": "Тренд и контекст снижения",
     "E": "Цена и пересечения EMA",
@@ -35,29 +35,29 @@ KINDS = {
 # Only these images were opened separately during this catalogue task.
 # A cursor date is NOT automatically the date of the event being narrated.
 VISUAL_REVIEWS = {
-    "artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_099_00-41-30.jpg": {
+    "research/artifacts/breeze_ai_reprocessed_20261012/hold_frames/hold_099_00-41-30.jpg": {
         "cursor_date": "2019-12-04", "events": ["B07"],
         "note": "Открыт полный кадр Nasdaq SMA100 и SPY; виден широкий участок до кризиса 2020. Дата курсора не подтверждена как дата дивергенции; событие требует разметки по данным.",
     },
-    "artifacts/Contango_1/anchor_frames/anchor_073_01-03-01.jpg": {
+    "research/artifacts/Contango_1/anchor_frames/anchor_073_01-03-01.jpg": {
         "cursor_date": "2025-02-21", "events": ["C08", "R08"],
         "note": "На курсоре красная свеча ниже EMA20; MyRSI 14/8=0.688, 10/8=0.639; ZW Density=30, Titanic ACTIVE d2. Относительная сила тела требует числового сравнения с прошлым.",
     },
-    "artifacts/Podhvat_1/anchor_frames/anchor_008_00-08-08.jpg": {
+    "research/artifacts/Podhvat_1/anchor_frames/anchor_008_00-08-08.jpg": {
         "cursor_date": "2024-09-11", "events": ["C06", "P03"],
         "note": "На курсоре возвратный зелёный бар в эпизоде подхвата; EMA20/50/100/200=551.1/547.2/537.5/515.9, ATRP1=2.78%. Проверка всей последовательности по числовым данным ещё не выполнена.",
     },
 }
 CONTACT_SHEETS_REVIEWED = [
-    "artifacts/Breeze_AI_2/frames/contact_sheet_02.jpg",
-    "artifacts/Contango_1/hold_frames/contact_sheet_04.jpg",
-    "artifacts/Contango_1/anchor_frames/contact_sheet_04.jpg",
-    "artifacts/Podhvat_1/hold_frames/contact_sheet_01.jpg",
-    "artifacts/Podhvat_1/anchor_frames/contact_sheet_01.jpg",
-    "artifacts/Podhvat_1/anchor_frames/contact_sheet_02.jpg",
-    "artifacts/breeze_ai_reprocessed_20261012/hold_frames/contact_sheet_04.jpg",
-    "artifacts/breeze_ai_reprocessed_20261012/hold_frames/contact_sheet_05.jpg",
-    "artifacts/breeze_ai_reprocessed_20261012/hold_frames/contact_sheet_06.jpg",
+    "research/artifacts/Breeze_AI_2/frames/contact_sheet_02.jpg",
+    "research/artifacts/Contango_1/hold_frames/contact_sheet_04.jpg",
+    "research/artifacts/Contango_1/anchor_frames/contact_sheet_04.jpg",
+    "research/artifacts/Podhvat_1/hold_frames/contact_sheet_01.jpg",
+    "research/artifacts/Podhvat_1/anchor_frames/contact_sheet_01.jpg",
+    "research/artifacts/Podhvat_1/anchor_frames/contact_sheet_02.jpg",
+    "research/artifacts/breeze_ai_reprocessed_20261012/hold_frames/contact_sheet_04.jpg",
+    "research/artifacts/breeze_ai_reprocessed_20261012/hold_frames/contact_sheet_05.jpg",
+    "research/artifacts/breeze_ai_reprocessed_20261012/hold_frames/contact_sheet_06.jpg",
 ]
 
 

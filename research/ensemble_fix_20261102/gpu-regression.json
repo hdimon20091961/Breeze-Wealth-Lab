@@ -1,0 +1,26 @@
+[
+  {
+    "key": "GPU-ZZ1",
+    "ModelCount": 600,
+    "Last125BenchmarkPercent": 15.22122655122624,
+    "HistoricalBars": 2266,
+    "Forecasts": 2,
+    "Identical": true
+  },
+  {
+    "key": "GPU-ZZ2",
+    "ModelCount": 319,
+    "Last125BenchmarkPercent": 166.8392297357811,
+    "HistoricalBars": 2266,
+    "Forecasts": 2,
+    "Identical": true
+  },
+  {
+    "key": "GPU-ZZ3",
+    "ModelCount": 900,
+    "Last125BenchmarkPercent": -107.52279461279427,
+    "HistoricalBars": 2266,
+    "Forecasts": 2,
+    "Identical": true
+  }
+]

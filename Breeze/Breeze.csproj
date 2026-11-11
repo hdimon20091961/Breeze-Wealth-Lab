@@ -8,7 +8,7 @@
     <PlatformTarget>x64</PlatformTarget>
     <AssemblyName>Breeze</AssemblyName>
     <RootNamespace>BreezeVL</RootNamespace>
-    <Version>0.11.8</Version>
+    <Version>0.11.33</Version>
     <DefineConstants>$(DefineConstants);EVENT_MODEL_TEST;RULES2_ENGINE_ONLY</DefineConstants>
     <WealthLabInstallDir Condition="'$(WealthLabInstallDir)' == ''">C:\Program Files\Quantacula, LLC\WealthLab 8</WealthLabInstallDir>
   </PropertyGroup>
@@ -49,12 +49,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="BreezeHelp.html" />
-    <None Include="BreezeHelp.standalone.html"
-          Link="BreezeHelp.html"
-          CopyToOutputDirectory="PreserveNewest"
-          CopyToPublishDirectory="PreserveNewest"
-          Condition="Exists('BreezeHelp.standalone.html')" />
+    <EmbeddedResource Include="BreezeHelp.html"
+                      CopyToOutputDirectory="PreserveNewest"
+                      CopyToPublishDirectory="PreserveNewest" />
     <EmbeddedResource Include="BreezeRules.json" />
     <EmbeddedResource Include="BreezeEventCatalog.json" />
     <None Update="BreezeEventCatalog.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />

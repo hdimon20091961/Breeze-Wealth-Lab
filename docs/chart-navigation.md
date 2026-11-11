@@ -1,5 +1,7 @@
 # Breeze synchronized chart navigation
 
+On Trading Ensemble, the bottom pane compares two series on the same execution date. Orange `Без люстры` is the ensemble position without chandelier protection or re-entry delay; blue `С люстрой` is the actually retained position after chandelier fills and the re-entry rule. The cursor strip is ordered as `date → Без люстры P% → С люстрой P% → Stop → package values`. A value is never borrowed from an earlier date for the `Last` annotation. Hovering inside either line's hit area for 400 ms opens its Russian explanation; the popup has no automatic timeout and closes immediately on leaving that line.
+
 ## Market Breeze 0.11.0 — approved 29 October 2026
 
 Rules1 and Rules2 ribbons share the master dates and viewport. Both remain
@@ -10,12 +12,15 @@ scores are grey and preserve the previous target. Switching the model and pane
 collapse/restore must preserve dates, viewport and pinned cursor.
 
 Trading Ensemble titles now use 12-point normal text, with a left-hand collapse
-button (▼ expanded, ▶ collapsed). Each collapsed pane occupies one 26-pixel
+button (▼ expanded, ▲ collapsed). Each collapsed pane occupies one 26-pixel
 header. Remaining panes share the released height in their saved proportions.
-Expanded weights and four collapse flags persist independently. Dividers resize
-adjacent expanded panes and do not begin a horizontal pan. All four headers
-remain usable when every pane is collapsed. These values supersede the old
-14-point semibold title requirement below.
+Expanded weights and four collapse flags persist independently. All three gray
+divider strips remain visible around collapsed headers. Dragging either strip
+beside a collapsed middle pane resizes the nearest expanded panes above and
+below without reopening the collapsed pane; the compact header moves with the
+boundary. Dividers do not begin horizontal panning. All four headers remain
+usable when every pane is collapsed. These values supersede the old 14-point
+semibold title requirement below.
 
 Tab headers have equal compact widths and wrap without expanding to fill a
 whole row. The upper toolbar and the Fuzzy legend wrap when space is limited.
@@ -197,15 +202,18 @@ the original TorchSharp4GPU ZZ1/ZZ2/ZZ3 (`trading_package_Jordan_ZZ1` through
 (`trading_package_J`, `trading_package_zz2_J`), and Encog ZZ1/ZZ2
 (`trading_package`, `trading_package_zz2`). TorchSharp/Jordan and Encog use
 three separate selectable root directories. The three original GPU selectors
-retain their checked defaults; the six added selectors are off by default.
-Checking the six added selectors replaces the former numeric `ALL 6` mode. The calculation uses
+and all six added selectors are checked by default. Clearing individual selectors
+replaces the former numeric `ALL 6` mode. The calculation uses
 the same feature formulas, per-model classification, Bench ordering, and
 ten-decile grouping as WealthLab проторговка. A broken model is skipped with a
 warning; a missing/broken package is disabled without stopping the other five.
 It does not create or read a derived ensemble/decile cache.
 The main `Calculate 12 years` pass loads SPY but does not run package inference.
-Inference starts once, asynchronously, when the Trading Ensemble tab is first
-opened after SPY is ready; returning to the tab does not rerun it. There is no
+Every successful Recalculate invalidates ensembles created from the previous
+market-data generation. Inference starts asynchronously when the Trading Ensemble
+tab is open and only after all required latest inputs are ready; stale sentiment,
+breadth, or sector inputs produce an explicit waiting message instead of being
+silently replaced by zero. A failed or cancelled calculation can be retried. There is no
 manual recalculate button. The compact read-only working-directory field opens
 a real, lazily populated tree of ready drives and their folders. Expanding a
 node enumerates only its immediate children; never recursively scan an entire
@@ -213,21 +221,24 @@ drive merely to populate the selector.
 Navigation, package visibility, EMA visibility, and the active-series mode are
 view-only and never rerun inference. Ensemble and decile panes always retain
 the green dashed 50% reference. Scoring classification is disabled and has no
-toolbar control. The unchecked-by-default `Ensembles` option changes only the
-fourth pane: unchecked, it sums selected packages' deciles at or above 50 and
-uses the available decile count as the percentage denominator; checked, it
-counts selected packages whose Ensemble % is at or above 50 and uses all nine
-defined packages as the percentage denominator. The title switches between
-`Active Deciles` and `Active Ensembles`. Ensemble mode uses the fixed vertical
-range 0..9. Decile mode retains the exact visible finite range without padding;
-a constant series is centered without inventing false neighboring values. The
-latest finite value is shown as `Last: N (P.P%)`, with one decimal place. The
+toolbar control. A three-position combo changes the fourth pane and the profit
+calculation without rerunning inference. `Active Deciles` is the default and sums
+each selected package's deciles at or above 50. `Ensembles 0–10` converts every
+selected package to the proportional 0..10 position used by reference mode 0,
+then averages available packages. `Ensembles 0/10` assigns each package either
+all ten units when Ensemble % is at least 50, or zero units below 50, then averages
+available packages. Both ensemble modes use the fixed vertical range 0..10;
+the title switches between `Без люстры / С люстрой · Децили`, `Без люстры / С люстрой · Ансамбли`, and
+`Без люстры / С люстрой · Ансамбли 0/10`. Decile mode uses the physical range from zero to
+`10 × selected packages`; both ensemble modes use 0..10. Therefore line height is
+directly comparable with the displayed percentage. The last annotation shows both
+values as `Без люстры: N (P.P%) · С люстрой: N (P.P%)` for the latest real SPY date. The
 missing future slot is not treated as a zero count.
 Trading-ensemble pane titles are drawn inside their panes in the same visual
 style as the Contango chart titles. Its white toolbar contains the three compact
 TorchSharp4GPU/TorchSharp/Encog directory selectors followed by their 3/4/2 package
-selectors, the unlabeled `− value +` Forecast control, and short `EMA` and `Ensembles`
-checkbox labels. The duplicate local S&P 500 selector, working-directory
+selectors, the unlabeled `− value +` Forecast control, short `EMA`, and the
+three-position trading-mode combo. The duplicate local S&P 500 selector, working-directory
 caption, and local green calculation status are intentionally absent; the global
 price selector and the window's top status line remain authoritative.
 The chart surface is white, and every one of its four panes is a separate ivory
@@ -256,10 +267,44 @@ three-pixel white separation from both neighboring pane frames; the interaction
 must not rely on an invisible hit target. Package
 names are not duplicated as a legend above the chart. Ensemble curves retain
 package colors, while the ten decile ranks use the shared red-to-blue ten-color
-palette. On this tab only, the shared bottom strip hides the two cursor-value
-rows. It retains the complete standard navigation group without modification:
-minus, visible-bar count, plus, history slider, and date range. Leaving the tab
-restores the two cursor-value rows.
+palette. On this tab only, the shared bottom strip replaces the two general
+cursor-value rows with one compact Trading Ensemble row. It shows the shared
+cursor date, exact-date percentages without and with the chandelier, the active Chandelier stop
+with two decimals, and every selected package's Ensemble % value with one decimal
+and the package's line color (without percent signs). It retains the complete standard
+navigation group without modification: minus, visible-bar count, plus, history
+slider, and date range. Leaving the tab restores the two general cursor-value rows.
+Trading Ensemble permanently applies a 3.75% Chandelier to every open virtual
+position. The stop is based on the highest High since entry and can only rise.
+The black dot dated `D` is the maximum protective `StopForBar` prepared after
+`D-1`; it must never be calculated from the still-unknown High of candle `D`.
+A hollow black circle in a separate future slot to the right of the latest candle
+is the stop already calculated after the latest close for the next trading
+session. When the latest bar is the entry day, this projected order uses that
+bar's High. It is not active inside the already completed entry bar and does not
+change completed-history profit accounting.
+A black cross marks actual execution on `D`. Normally it coincides with the stop;
+when `Open[D]` gaps below the level, the cross is drawn at `Open[D]`, because that
+is the simulated fill. The active dot remains visible on the execution date so
+the order that caused the exit is explicit. After execution, the complete SPY
+trading bar `D+1` is skipped; if the ensemble still requests a position, re-entry
+is allowed only on the following trading bar, and that new trade's first stop
+becomes active one further bar later. Profit accounting remains position-by-position,
+but the display caches only the maximum stop and maximum execution per date, so
+navigation never creates redundant lower markers. The price-pane `Last / Stop`
+annotation is right-aligned; the left heading shows `Без люстры / С люстрой / Stop`.
+Absent positions display an em dash. Cursor movement, zoom, panning and resizing
+select these cached dated maxima and never rerun the trading simulation or neural
+inference.
+The same Trading Ensemble surface draws one light-green 50%-opacity vertical
+band through all four plot panes at the start of the recent-performance window.
+A dedicated light-green minus/value/plus group appears in the shared bottom
+strip before the standard visible-bar group. It defaults to 150 SPY trading
+intervals on every new application start, changes in steps of 10, and is not
+stored in the layout file. Changing it moves the band and updates the displayed
+period dates and `Str%` column from already calculated model results; it must not
+restart a provider request or neural-network inference. Calendar-day subtraction
+is forbidden.
 
 All custom candlestick panes derive body width from the current horizontal slot:
 the body occupies one half of a slot, so the body and the empty interval are
@@ -412,16 +457,30 @@ Horizontal ranges are shared. Vertical scales and left/right axes remain chart-s
 17. Trading Ensemble shows three internal horizontal guides and integer scale
     labels on both sides of every pane. The four ivory panes have independent
     thin frames on a white chart surface. Each of its three horizontal dividers
-    is visibly filled with `#D7CFBB`, sits inside a white gutter, resizes only
-    the adjacent panes, and never pans the shared time viewport.
+    is visibly filled with `#D7CFBB` and remains present around collapsed
+    headers. Beside a collapsed pane it resizes the nearest expanded panes on
+    either side without reopening the pane. Expanded headers use ▼, collapsed
+    headers use ▲, and divider dragging never pans the shared time viewport.
 18. The Trading Ensemble directory button opens a folder tree that can browse
     beyond the default path without a recursive whole-drive enumeration.
-19. With `Ensembles` off, the fourth pane is `Active Deciles` and `Last` contains
-    the count plus its percentage of available selected-package deciles. With it
-    on, the pane is `Active Ensembles`, uses the fixed 0..9 scale, counts selected
-    package Ensemble % values at or above 50, and reports the percentage of all
-    nine defined packages. Toggling must not rerun inference or alter the shared
-    viewport. The green 50 guides remain visible in both percentage panes.
+19. The three-position trading-mode combo defaults to the decile mode; the lower
+    pane contains separate orange `Без люстры` and blue `С люстрой` lines. The orange value
+    dated `D` comes from the signal formed on the preceding loaded SPY trading bar;
+    it is not shifted by a calendar-day guess. `Last` contains both
+    exact-date counts plus their percentages of available selected-package deciles.
+    `Ensembles 0–10` shows the mean proportional position on a fixed 0..10 scale.
+    `Ensembles 0/10` switches each available package between 0 and 10 at the 50%
+    barrier and shows their mean. The same mode drives each package's Profit row,
+    while source `Str%` remains unchanged. Switching must not rerun inference or
+    alter the shared viewport. The left header shows the latest exact-date values as
+    `Ансамбли: Без люстры P.P% · С люстрой P.P% · Stop NN.NN`, without a redundant Price
+    field. A new SPY candle always belongs to the real timeline; only dates strictly
+    later than the latest SPY candle can occupy the forecast slot. Hovering inside
+    either line's 12-pixel hit area for 400 ms shows what that line means. The popup
+    stays open without a timeout while the pointer remains inside the hit area and
+    closes immediately when it leaves. The green 50 guides remain visible.
+    The trading-mode description in the efficiency card wraps by words and reflows
+    whenever the left analysis column is resized; it must never be clipped or ellipsized.
 20. Every Trading Ensemble pane matches the Contango axis treatment: a dark
     right-axis line, 10-point labels in the same color, and right padding before
     the last bar. Its S&P header contains both `S&P 500 (SPY)` and the latest

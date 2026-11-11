@@ -6,7 +6,7 @@ const require = createRequire(import.meta.url);
 const { SpreadsheetFile, Workbook } = require("@oai/artifact-tool");
 
 const root = String.raw`D:\CODEX_PRG\Breadth`;
-const research = path.join(root, "artifacts", "Podhvat_1", "research");
+const research = path.join(root, "research", "artifacts", "Podhvat_1", "research");
 const outputPath = path.join(research, "podhvat_combined_analysis.xlsx");
 
 function parseCsv(text) {
@@ -116,7 +116,7 @@ overview.getRange("A18:B22").values = [
   ["Data control", "Status"],
   ["Fresh ATRP export", "Included"],
   ["ATRP export vs ATRP_1", "Exact match (max abs diff 0.0)"],
-  ["Snapshot folder", "artifacts/Podhvat_1/market_data"],
+  ["Snapshot folder", "research/artifacts/Podhvat_1/market_data"],
   ["Event rows", null],
 ];
 overview.getRange("A18:B18").format = { fill: "#4472C4", font: { color: "#FFFFFF", bold: true } };

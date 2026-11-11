@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <UseWPF>true</UseWPF>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+    <NoWarn>CS8632</NoWarn>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <PlatformTarget>x64</PlatformTarget>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="Program.cs" />
+    <Compile Include="..\ensemble_parity_20261102\Strategy.cs" Link="Strategy.cs" />
+    <Compile Include="..\ensemble_parity_20261102\AuditHistory.cs" Link="AuditHistory.cs" />
+    <Reference Include="WealthLab.Core" HintPath="C:\Program Files\Quantacula, LLC\WealthLab 8\WealthLab.Core.dll" Private="true" />
+    <Reference Include="WealthLab.TASC" HintPath="C:\Program Files\Quantacula, LLC\WealthLab 8\WealthLab.TASC.dll" Private="true" />
+    <Reference Include="WealthLab.AdvancedSmoothers" HintPath="C:\Program Files\Quantacula, LLC\WealthLab 8\WealthLab.AdvancedSmoothers.dll" Private="true" />
+    <Reference Include="WealthLab.DataExtensions" HintPath="C:\Program Files\Quantacula, LLC\WealthLab 8\WealthLab.DataExtensions.dll" Private="true" />
+    <Reference Include="Indicators.JohnEhlers_8Wealth" HintPath="C:\Program Files\Quantacula, LLC\WealthLab 8\Indicators.JohnEhlers_8Wealth.dll" Private="true" />
+    <Reference Include="TorchSharp" HintPath="C:\Program Files\Quantacula, LLC\WealthLab 8\TorchSharp.dll" Private="true" />
+    <Reference Include="encog-core-cs" HintPath="C:\Program Files\Quantacula, LLC\WealthLab 8\encog-core-cs.dll" Private="true" />
+    <Reference Include="System.Drawing.Common" HintPath="C:\Program Files\Quantacula, LLC\WealthLab 8\System.Drawing.Common.dll" Private="true" />
+  </ItemGroup>
+</Project>

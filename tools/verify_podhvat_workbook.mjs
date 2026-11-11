@@ -2,7 +2,7 @@ import { createRequire } from "node:module";
 const require = createRequire(import.meta.url);
 const { FileBlob, SpreadsheetFile } = require("@oai/artifact-tool");
 
-const file = String.raw`D:\CODEX_PRG\Breadth\artifacts\Podhvat_1\research\podhvat_combined_analysis.xlsx`;
+const file = String.raw`D:\CODEX_PRG\Breadth\research\artifacts\Podhvat_1\research\podhvat_combined_analysis.xlsx`;
 const wb = await SpreadsheetFile.importXlsx(await FileBlob.load(file));
 const overview = await wb.inspect({ kind: "table,formula", sheetId: "Overview", range: "A1:H24", maxChars: 5000, tableMaxRows: 24, tableMaxCols: 8 });
 console.log(overview.ndjson);

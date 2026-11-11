@@ -1,0 +1,129 @@
+{
+  "id": "standard_plus_g01_decibel_v1",
+  "accepted_by_user_date_moscow": "2026-10-25",
+  "scope": "accepted baseline for subsequent research; runtime DLL deployment not performed",
+  "base": {
+    "id": "frozen_standard_75",
+    "snapshot": "D:\\CODEX_PRG\\Breadth\\research\\artifacts\\event_hypotheses_xhigh_v1\\baseline",
+    "rules_sha256": "f96729a08dff520aa8360272c86cd1a28bc2215889311c89462a61e53c50b2dc"
+  },
+  "composition": "clip(clip(50 + sum(original 75 Standard weighted events),0,100) + G01 * weight(Decibel state, schedule),0,100)",
+  "event": "G01 variant A from sentiment_detector_experiment_v2; unchanged detector and thresholds",
+  "regime": "Decibel vs median of preceding 252 bars, equality low",
+  "schedule": [
+    {
+      "year": 2020,
+      "weights_low_high": [
+        -20,
+        0.0
+      ],
+      "trained_through": "2019-10-01"
+    },
+    {
+      "year": 2021,
+      "weights_low_high": [
+        -20,
+        0.0
+      ],
+      "trained_through": "2020-10-01"
+    },
+    {
+      "year": 2022,
+      "weights_low_high": [
+        -20,
+        0.0
+      ],
+      "trained_through": "2021-10-01"
+    },
+    {
+      "year": 2023,
+      "weights_low_high": [
+        -20,
+        10
+      ],
+      "trained_through": "2022-09-30"
+    },
+    {
+      "year": 2024,
+      "weights_low_high": [
+        -20,
+        10
+      ],
+      "trained_through": "2023-09-29"
+    },
+    {
+      "year": 2025,
+      "weights_low_high": [
+        -20,
+        10
+      ],
+      "trained_through": "2024-10-01"
+    },
+    {
+      "year": 2026,
+      "weights_low_high": [
+        -20,
+        10
+      ],
+      "trained_through": "2025-10-01"
+    }
+  ],
+  "before_2020": "zero supplement; original base preserved",
+  "continuation_from_2026": "retain last accepted weights [-20,+10]; no automatic refit or retrospective replacement",
+  "score_series_sha256": "c5b8b2b0131b03e7578df2c6ae606a4862e9c6408cb7457399005f590bba9f59",
+  "reproduces_tested_G01_decibel_path": true,
+  "metrics_2bps": {
+    "full": {
+      "base": {
+        "profit": 7414.51296,
+        "profit_pct_initial": 247.150432,
+        "max_dd_pct": 8.926394888970915,
+        "max_dd_money": 722.7286600000007,
+        "sharpe": 1.2930068863111586,
+        "position_changes": 316.0,
+        "costs": 259.78704,
+        "min_cash": 806.1946200000002,
+        "exposure_pct": 87.37793851717902
+      },
+      "accepted": {
+        "profit": 7730.420379999998,
+        "profit_pct_initial": 257.6806793333333,
+        "max_dd_pct": 8.871090396967698,
+        "max_dd_money": 716.067219999999,
+        "sharpe": 1.3412101698436816,
+        "position_changes": 324.0,
+        "costs": 269.17962,
+        "min_cash": 806.1946200000002,
+        "exposure_pct": 86.90777576853527
+      }
+    },
+    "2020_2026": {
+      "base": {
+        "profit": 6038.701679999998,
+        "profit_pct_initial": 201.29005599999994,
+        "max_dd_pct": 12.798973917090759,
+        "max_dd_money": 722.7286600000007,
+        "sharpe": 1.3082705701738175,
+        "position_changes": 208.0,
+        "costs": 204.59832,
+        "min_cash": -295.25203999999985,
+        "exposure_pct": 87.9088785046729
+      },
+      "accepted": {
+        "profit": 6354.609099999998,
+        "profit_pct_initial": 211.82030333333327,
+        "max_dd_pct": 12.798973917090759,
+        "max_dd_money": 716.0672199999981,
+        "sharpe": 1.371024860536811,
+        "position_changes": 216.0,
+        "costs": 213.9909,
+        "min_cash": -295.25203999999985,
+        "exposure_pct": 87.14953271028037
+      }
+    }
+  },
+  "priority_next_sources": [
+    "широтыS&P.mp4",
+    "широтыS&P2.mp4"
+  ]
+}

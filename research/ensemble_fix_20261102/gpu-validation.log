@@ -1,0 +1,13 @@
+BARS 2262 2017-10-31..2026-10-30; Bench125=37.71000000
+HISTORY MODEL_CNN_FEAR_GREED: 6995 raw, 2262 aligned, missing exact dates=5
+HISTORY RISK_MEASURE: 6705 raw, 2262 aligned, missing exact dates=0
+HISTORY MODEL_PANIC_EUPHORIA_DAY: 6995 raw, 2262 aligned, missing exact dates=5
+HISTORY $NASDAQ_NEWHI: 6748 raw, 2262 aligned, missing exact dates=0
+HISTORY $NASDAQ_NEWLO: 6748 raw, 2262 aligned, missing exact dates=0
+HISTORY XLV: 6748 raw, 2262 aligned, missing exact dates=0
+HISTORY XLU: 6748 raw, 2262 aligned, missing exact dates=0
+HISTORY XLE: 6748 raw, 2262 aligned, missing exact dates=0
+HISTORY XLP: 6749 raw, 2262 aligned, missing exact dates=0
+PASS GPU-ZZ1: history, deciles, Str% and forecast scenarios unchanged (600 models)
+PASS GPU-ZZ2: history, deciles, Str% and forecast scenarios unchanged (319 models)
+PASS GPU-ZZ3: history, deciles, Str% and forecast scenarios unchanged (900 models)

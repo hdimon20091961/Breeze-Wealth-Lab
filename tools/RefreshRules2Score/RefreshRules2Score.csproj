@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <DefineConstants>$(DefineConstants);RULES2_ENGINE_ONLY</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="..\..\Rules2ResearchStrategy.cs" Link="Rules2Engine.cs" />
+    <Compile Include="..\..\Breeze\ScoringModels.cs" Link="ScoringModels.cs" />
+    <Compile Include="..\..\Breeze\Rules2HoldConfidence.cs" Link="Rules2HoldConfidence.cs" />
+    <Compile Include="..\..\Breeze\ModelPositionSizing.cs" Link="ModelPositionSizing.cs" />
+    <Compile Include="..\..\Breeze\ScorePalette.cs" Link="ScorePalette.cs" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,205 @@
+[
+  {
+    "Family": "Encog",
+    "Folder": "trading_package",
+    "Count": 1200,
+    "Parameters": {
+      "param_x6": {
+        "40": 1200
+      },
+      "param_x6/1": {
+        "40": 1200
+      },
+      "param_x8": {
+        "28": 1200
+      },
+      "param_x10": {
+        "120": 1200
+      },
+      "param_x13": {
+        "3": 1200
+      },
+      "param_x14/1": {
+        "64": 1200
+      }
+    },
+    "ActiveFeatures": {
+      "model_cnn_fear_greed": 281,
+      "trendScore": 339,
+      "correlationAngle_rep": 298,
+      "cmf": 717,
+      "aroonUp": 616,
+      "aroonDown": 616,
+      "decibel": 292,
+      "marketBreadth": 488,
+      "myRSI_rep": 455,
+      "dIMinus": 301,
+      "dIPlus": 301,
+      "correlationTrend": 294,
+      "risk_measure": 521,
+      "hurst": 431,
+      "jocker": 539,
+      "model_panic_euphoria": 428
+    },
+    "MissingBench": 1200
+  },
+  {
+    "Family": "Encog",
+    "Folder": "trading_package_zz2",
+    "Count": 529,
+    "Parameters": {
+      "param_x6": {
+        "40": 529
+      },
+      "param_x6/1": {
+        "40": 529
+      },
+      "param_x8": {
+        "28": 529
+      },
+      "param_x10": {
+        "120": 529
+      },
+      "param_x13": {
+        "3": 529
+      },
+      "param_x14/1": {
+        "64": 529
+      }
+    },
+    "ActiveFeatures": {
+      "risk_measure": 338,
+      "correlationAngle_rep": 163,
+      "correlationTrend": 145,
+      "cmf": 305,
+      "model_panic_euphoria": 319,
+      "trendScore": 132,
+      "hurst": 280,
+      "decibel": 140,
+      "dIMinus": 86,
+      "dIPlus": 86,
+      "marketBreadth": 199,
+      "myRSI_rep": 169,
+      "aroonUp": 305,
+      "aroonDown": 305,
+      "model_cnn_fear_greed": 135
+    },
+    "MissingBench": 529
+  },
+  {
+    "Family": "Torch",
+    "Folder": "trading_package",
+    "Count": 879,
+    "Parameters": {
+      "param_x6": {
+        "48": 879
+      },
+      "param_x6/1": {
+        "48": 879
+      },
+      "param_x8": {
+        "48": 879
+      },
+      "param_x10": {
+        "80": 879
+      },
+      "param_x13": {
+        "20": 879
+      },
+      "param_x14/1": {
+        "64": 879
+      }
+    },
+    "ActiveFeatures": {
+      "": 879
+    },
+    "MissingBench": 0
+  },
+  {
+    "Family": "Torch",
+    "Folder": "trading_package_zz2",
+    "Count": 745,
+    "Parameters": {
+      "param_x6": {
+        "48": 745
+      },
+      "param_x6/1": {
+        "48": 745
+      },
+      "param_x8": {
+        "48": 745
+      },
+      "param_x10": {
+        "80": 745
+      },
+      "param_x13": {
+        "20": 745
+      },
+      "param_x14/1": {
+        "64": 745
+      }
+    },
+    "ActiveFeatures": {
+      "": 745
+    },
+    "MissingBench": 0
+  },
+  {
+    "Family": "Torch",
+    "Folder": "trading_package_J",
+    "Count": 600,
+    "Parameters": {
+      "param_x6": {
+        "48": 600
+      },
+      "param_x6/1": {
+        "48": 600
+      },
+      "param_x8": {
+        "48": 600
+      },
+      "param_x10": {
+        "80": 600
+      },
+      "param_x13": {
+        "20": 600
+      },
+      "param_x14/1": {
+        "64": 600
+      }
+    },
+    "ActiveFeatures": {
+      "": 600
+    },
+    "MissingBench": 0
+  },
+  {
+    "Family": "Torch",
+    "Folder": "trading_package_zz2_J",
+    "Count": 586,
+    "Parameters": {
+      "param_x6": {
+        "48": 586
+      },
+      "param_x6/1": {
+        "48": 586
+      },
+      "param_x8": {
+        "48": 586
+      },
+      "param_x10": {
+        "80": 586
+      },
+      "param_x13": {
+        "20": 586
+      },
+      "param_x14/1": {
+        "64": 586
+      }
+    },
+    "ActiveFeatures": {
+      "": 586
+    },
+    "MissingBench": 0
+  }
+]

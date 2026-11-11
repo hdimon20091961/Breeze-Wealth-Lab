@@ -54,13 +54,18 @@ internal sealed record VixCurveStatePoint(
     public bool BroadFrontInversion { get; init; }
     public bool SpotStress { get; init; }
     public bool PriceStress { get; init; }
+    public double? VixHighRisePct { get; init; }
+    public bool VixShockFrontInversion { get; init; }
     public bool TransitionConfirmationApplied { get; init; }
     public string AdjustmentExplanation { get; init; } = string.Empty;
 }
 
 internal sealed record VixCurveStateSeries(IReadOnlyList<VixCurveStatePoint> Points);
 
-internal sealed record VixMarketStressContext(double SpyReturnPct, double Atrp1);
+internal sealed record VixMarketStressContext(
+    double SpyReturnPct,
+    double Atrp1,
+    double? VixHighRisePct = null);
 
 internal static class VixCurveStateClassifier
 {
@@ -87,6 +92,7 @@ internal static class VixCurveStateClassifier
         int adjustedFalling = 0;
         int ignoredMinorInversions = 0;
         double largestIgnoredInversion = 0.0;
+        bool vixHighShock = marketStress?.VixHighRisePct is >= 10.0;
         var pairChanges = new List<double>();
         for (int index = 1; index < points.Count; index++)
         {
@@ -103,6 +109,8 @@ internal static class VixCurveStateClassifier
             double tolerance = index <= 2 ? FrontTolerancePct : TailTolerancePct;
             if (changePct > 0.000001)
                 adjustedRising++;
+            else if (index == 1 && vixHighShock && changePct < -0.000001)
+                adjustedFalling++;
             else if (changePct < -tolerance)
                 adjustedFalling++;
             else if (changePct < -0.000001)
@@ -159,6 +167,7 @@ internal static class VixCurveStateClassifier
             100.0 * (1.0 - points[1].Price / points[0].Price) > FrontTolerancePct &&
             100.0 * (1.0 - points[2].Price / points[0].Price) > FrontTolerancePct;
         bool frontInversion = pairChanges.Take(2).Any(change => change < -FrontTolerancePct);
+        bool vixShockFrontInversion = vixHighShock && pairChanges.FirstOrDefault() < -0.000001;
         bool priceStress = marketStress is not null && marketStress.SpyReturnPct < 0.0 &&
             marketStress.Atrp1 >= 2.0 && spotAboveFront >= 3 && frontInversion;
         var explanations = new List<string>();
@@ -179,6 +188,16 @@ internal static class VixCurveStateClassifier
         {
             explanations.Add($"геометрия контанго восстановилась, но рыночный стресс ещё сохраняется: " +
                 $"spot VIX выше ближайшего фьючерса на {spotToM1:0.00}%");
+            if (state == VixCurveState.StrongContango)
+            {
+                state = VixCurveState.Contango;
+                regimeScore = Math.Min(regimeScore, 0.599999);
+            }
+        }
+        if (vixShockFrontInversion)
+        {
+            explanations.Add($"VIX вырос от предыдущего закрытия до максимума дня на " +
+                $"{marketStress!.VixHighRisePct:0.00}%; снижение M1→M2 учтено без допуска {FrontTolerancePct:0.0}%");
             if (state == VixCurveState.StrongContango)
             {
                 state = VixCurveState.Contango;
@@ -230,6 +249,8 @@ internal static class VixCurveStateClassifier
             BroadFrontInversion = broadFrontInversion,
             SpotStress = spotStress,
             PriceStress = priceStress,
+            VixHighRisePct = marketStress?.VixHighRisePct,
+            VixShockFrontInversion = vixShockFrontInversion,
             AdjustmentExplanation = string.Join("; ", explanations)
         };
     }
@@ -468,7 +489,8 @@ internal sealed class VixTermStructureStore
             else if (targetState == VixCurveState.Contango)
             {
                 strongCandidateRun = 0;
-                if (previousState == VixCurveState.StrongContango && !point.SpotStress && !point.PriceStress)
+                if (previousState == VixCurveState.StrongContango && !point.SpotStress &&
+                    !point.PriceStress && !point.VixShockFrontInversion)
                 {
                     weakGreenCandidateRun++;
                     if (weakGreenCandidateRun < 2)
@@ -557,7 +579,7 @@ internal sealed class VixTermStructureStore
         string temporaryPath = outputPath + ".tmp";
         using (var writer = new StreamWriter(temporaryPath, false, new UTF8Encoding(false)))
         {
-            writer.WriteLine("Date,State,LegacyState,M0_VIX,M1_Price,M2_Price,M0ToM1Pct,M1ToM2Pct,Price30,Price60,Contango30To60Pct,RisingPairs,FallingPairs,PairCount,RisingPairShare,CurveSlope30DayPct,CurveRegimeScore,LegacyCurveRegimeScore,SpotToM1Pct,IgnoredMinorInversions,LargestIgnoredInversionPct,MaximumTailDrawdownPct,BroadFrontInversion,SpotStress,PriceStress,TransitionConfirmationApplied,AdjustmentExplanation,SVXYBuyCandidate,SVXYRecommendation,SVXYBarsSinceCandidate");
+            writer.WriteLine("Date,State,LegacyState,M0_VIX,M1_Price,M2_Price,M0ToM1Pct,M1ToM2Pct,Price30,Price60,Contango30To60Pct,RisingPairs,FallingPairs,PairCount,RisingPairShare,CurveSlope30DayPct,CurveRegimeScore,LegacyCurveRegimeScore,SpotToM1Pct,IgnoredMinorInversions,LargestIgnoredInversionPct,MaximumTailDrawdownPct,BroadFrontInversion,SpotStress,PriceStress,VixHighRisePct,VixShockFrontInversion,TransitionConfirmationApplied,AdjustmentExplanation,SVXYBuyCandidate,SVXYRecommendation,SVXYBarsSinceCandidate");
             foreach (VixCurveStatePoint point in series.Points)
             {
                 cancellationToken.ThrowIfCancellationRequested();
@@ -604,6 +626,9 @@ internal sealed class VixTermStructureStore
                 writer.Write(point.SpotStress ? "1" : "0");
                 writer.Write(',');
                 writer.Write(point.PriceStress ? "1" : "0");
+                WriteNullable(writer, point.VixHighRisePct);
+                writer.Write(',');
+                writer.Write(point.VixShockFrontInversion ? "1" : "0");
                 writer.Write(',');
                 writer.Write(point.TransitionConfirmationApplied ? "1" : "0");
                 writer.Write(',');

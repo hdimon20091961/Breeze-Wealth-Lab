@@ -1,7 +1,95 @@
 {
-  "schema_version": "1.1.0",
-  "catalog_version": "1.1.0",
-  "updated": "2026-10-22",
+  "schema_version": "1.2.0",
+  "catalog_version": "1.2.0",
+  "updated": "2026-10-26",
+  "detector_descriptions_ru": {
+    "T01": "EMA20 > EMA50 > EMA100 > EMA200. Только порядок уровней; цена, наклоны и расстояния не входят в условие.",
+    "T02": "Для EMA20, EMA50, EMA100 и EMA200 сравнивается сегодняшнее значение со значением предыдущего торгового дня. Результат — число выросших EMA, делённое на 4: 0; 0,25; 0,50; 0,75; 1. Все четыре растут только при значении 1.",
+    "T03": "Бычий порядок EMA, рост всех четырёх EMA за день, закрытие выше EMA20, все четыре широты не ниже 50%, ATRP(1) не выше 2%. Число подряд выполненных дней делится на 5 и ограничивается единицей.",
+    "T04": "EMA20 падает, а EMA50/100/200 растут; либо EMA20 и EMA50 падают, а EMA100 и EMA200 растут. Сравнение с предыдущим торговым днём.",
+    "T05": "Сумма положительных расстояний между соседними EMA и положительного расстояния от EMA20 до закрытия делится на цену закрытия и на 10%; результат ограничивается единицей.",
+    "T06": "Бычий порядок EMA; расстояние EMA20 − EMA200 составляет не более 2% цены закрытия.",
+    "T07": "Цена закрытия ниже каждой из EMA20, EMA50, EMA100 и EMA200.",
+    "T08": "Падение от максимума закрытий за последние 252 торговых дня делится на 20%; результат ограничивается единицей.",
+    "T09": "Число начал нисходящих волн за последние 20 баров делится на 3. Волна начинается при падении не менее 1%; новая волна возможна после отскока не менее 1%.",
+    "T10": "Падение от максимального закрытия в загруженной истории делится на 20%. Это максимум доступной истории, а не гарантированный исторический максимум инструмента.",
+    "E01": "Доля EMA20/50/100/200, которые цена пересекла вниз на закрытии. На каждом из двух дней цена сравнивается с EMA этого же дня.",
+    "E02": "Доля EMA20/50/100/200, ниже которых был минимум дня, но на уровне или выше которых день закрылся.",
+    "E03": "Вчера закрытие было не ниже обеих EMA20 и EMA50, сегодня — ниже обеих.",
+    "E04": "После пробоя EMA20 прошло не более четырёх баров; закрытие удерживается не ниже EMA50. Возврат закрытия на EMA20 или выше завершает состояние.",
+    "E05": "Доля EMA20/50/100/200, которые цена пересекла вверх на закрытии.",
+    "E06": "Число пересечений EMA вверх минус число пересечений вниз, делённое на 4. Проверяются пары 20/50, 50/100, 100/200 и 50/200.",
+    "E07": "Закрытие пересекло EMA100 вниз после положения между EMA100 и EMA50; в предшествующие 20 баров уже было закрытие ниже EMA100.",
+    "R01": "Проверяются MyRSI_rep(14,8) + AGC(77) и MyRSI_rep(10,8) + AGC(77). Нижнее насыщение: значение ≤ −0,999. Результат 0,5 означает насыщение одной серии, 1 — обеих. Само по себе насыщение не является сигналом покупки.",
+    "R02": "Для MyRSI_rep(14,8) и MyRSI_rep(10,8), обеих с AGC(77), проверяется значение ≥ +0,999. Результат — доля серий в верхнем насыщении. Это не самостоятельный сигнал продажи.",
+    "R03": "Доля двух серий MyRSI_rep с AGC(77), которые вышли вверх из нижнего насыщения: вчера ≤ −0,999, сегодня > −0,999.",
+    "R04": "Доля двух серий MyRSI_rep с AGC(77), которые вышли вниз из верхнего насыщения: вчера ≥ +0,999, сегодня < +0,999.",
+    "R05": "Число пересечений нуля вверх минус число пересечений нуля вниз, делённое на 2; используются обе серии MyRSI_rep с AGC(77).",
+    "R06": "Быстрый MyRSI_rep(10,8) с AGC(77) выше нуля, медленный MyRSI_rep(14,8) с AGC(77) ещё не выше нуля. Отдельно сохраняется задержка пересечений.",
+    "R07": "+1, если обе серии MyRSI_rep с AGC(77) в верхнем насыщении; −1, если обе в нижнем; иначе 0.",
+    "R08": "Обе серии MyRSI_rep с AGC(77) вчера были ≥ +0,999, а сегодня обе ниже +0,999.",
+    "B01": "Среднее значение четырёх рядов широты делится на 100. Отдельные значения рядов сохраняются.",
+    "B02": "Средняя степень нижнего насыщения трёх широт: SMA50 — диапазон 3–8%, SMA100 — 7–12%, SMA200 — 10–20%. Каждая степень ограничена диапазоном 0…1.",
+    "B03": "Для широты S&P 500 выше SMA200 рассчитывается (15 − широта) / 10; результат ограничен диапазоном 0…1.",
+    "B04": "Доля четырёх рядов широты, закрытие которых выше закрытия предыдущего торгового дня.",
+    "B05": "Доля четырёх рядов широты с закрытием выше открытия по их собственным дневным свечам.",
+    "B06": "Вчера был выход MyRSI из нижнего насыщения либо зелёное восстановление после падающего бара. Сегодня растут минимум два ряда широты, а цена закрытия не ниже вчерашней.",
+    "B07": "Цена обновила максимум закрытий за 20 баров. Результат — доля рядов широты, уступающих своим значениям на предыдущем 20-барном пике цены.",
+    "B08": "Цена тестирует или пробивает прошлый минимум закрытий с допуском 0,5%. Прошлый минимум был 3–20 баров назад, между минимумами был отскок минимум 1%. Результат — доля улучшившихся рядов широты.",
+    "B09": "Доля рядов широты, которые снижались от дня −10 до дня −5, затем не снижались до текущего дня и не обновляли минимум последние три бара.",
+    "B10": "Широта SMA50 ниже 50%, широта SMA200 не ниже 50% и растёт относительно предыдущего дня.",
+    "B11": "Среднее положительное дневное изменение четырёх рядов широты делится на 10 процентных пунктов; отрицательные изменения заменяются нулём, результат ограничивается единицей.",
+    "B12": "Широта Nasdaq растёт, а среди трёх широт S&P растут менее двух. Проверяется только текущее наблюдение.",
+    "B13": "Широта SMA200 не ниже 60%; размах её значений за 10 баров не превышает 5 процентных пунктов, цена за эти 10 баров выросла.",
+    "B14": "При текущей просадке не менее 3% в прошлых 252 барах ищется завершённая 20-барная коррекция близкой глубины с допуском 2 процентных пункта. Среднее ухудшение широты делится на 20 процентных пунктов.",
+    "P01": "Изменение от открытия до закрытия в процентах делится на 2 с сохранением знака; результат ограничен диапазоном −1…+1.",
+    "P02": "Зелёная свеча, минимум ниже минимума предыдущего дня, нижняя тень составляет не менее 40% полного диапазона свечи.",
+    "P03": "ATRP(1) делится на медиану ATRP(1) предыдущих 20 баров, затем вычитается 1; результат ограничен диапазоном 0…1. Это всплеск волатильности без направления.",
+    "P04": "Минимум текущего дня выше максимума максимумов предыдущих пяти баров: полный ценовой разрыв вверх.",
+    "P05": "Серия из двух или трёх одноцветных свечей. Изменение от открытия первой до закрытия последней делится на 3% с сохранением знака и ограничивается диапазоном −1…+1.",
+    "P06": "Тело не больше 20% диапазона свечи, нижняя тень не меньше 40%, широта SMA50 ниже 20% и растёт. Свеча с нулевым диапазоном не образует фигуру.",
+    "V01": "Для двух ближайших реальных фьючерсов VIX рассчитывается гиперболический тангенс от 100 × (второй / первый − 1) / 5. Интерполяция 30/60 дней здесь не используется.",
+    "V02": "Число растущих соседних пар фьючерсов VIX минус число падающих пар делится на общее число пар. Берутся реальные контракты со сроком до 180 дней.",
+    "V03": "Спред двух ближайших фьючерсов VIX отрицателен, а средний спред остальных соседних пар не ниже −0,5%.",
+    "V04": "Вчера ближайший спред VIX был неотрицательным, сегодня стал отрицательным. Дни смены ближайшего контракта исключены.",
+    "V05": "Вчера ближайший спред VIX был неположительным, сегодня стал положительным. Дни смены ближайшего контракта исключены.",
+    "V06": "Отношение текущего VIX к ближайшему фьючерсу минус 1 делится на 0,2; результат ограничен диапазоном −1…+1.",
+    "V07": "До экспирации ближайшего фьючерса VIX осталось не более трёх календарных дней. Это контекстный признак.",
+    "V08": "Вчера VIX был не ниже 30, сегодня VIX снизился. Исходное значение VIX сохраняется отдельно.",
+    "Z01": "Доля режимов Zweig Working, Strong и Classic, давших новый сигнал сегодня.",
+    "Z02": "Плотность Zweig Working делится на 30. Дополнительно сохраняются плотность Strong и возраст обоих сигналов.",
+    "Z03": "Плотности обоих режимов Zweig Working и Strong положительны одновременно.",
+    "Z04": "Плотность Zweig Working положительна, минимум два ряда широты падают, есть пробой EMA на закрытии и нарушен бычий порядок средних.",
+    "I01": "Сегодня Titanic активен, вчера был неактивен: первый день сигнала.",
+    "I02": "Наблюдаемая непрерывная серия Titanic достигла семи торговых дней или больше.",
+    "I03": "Сегодня Titanic неактивен; последняя активная серия закончилась не более 20 баров назад.",
+    "C01": "Хотя бы один MyRSI в верхнем насыщении либо выходит из него; бычий порядок EMA, все четыре EMA растут за день, закрытие не ниже EMA20.",
+    "C02": "Просадка не меньше 5%, зелёная свеча, растут минимум два ряда широты, обе серии MyRSI в нижнем насыщении.",
+    "C03": "Сегодня или вчера хотя бы одна серия MyRSI вышла из нижнего насыщения; сегодня зелёная свеча и растут минимум два ряда широты.",
+    "C04": "Недавно пробиты EMA20/50; в пределах пяти баров закрытия удерживают EMA100, цена подходила к ней на расстояние до 1%, цена и медленный MyRSI растут, нижнего насыщения нет.",
+    "C05": "Первая зелёная свеча после 1–3 баров снижения EMA20; прошлое закрытие ниже EMA20, EMA50 удержана весь эпизод, перед эпизодом был бычий порядок EMA.",
+    "C06": "Зелёная свеча пересекла EMA20 вверх; за последние 10 баров было закрытие ниже EMA50, все закрытия не ниже EMA100, минимум подходил к EMA100 на расстояние до 1%.",
+    "C07": "Сегодня возник C05 или C06, предыдущий такой подхват был 8–10 баров назад.",
+    "C08": "Вчера бычий порядок EMA, цена выше EMA20, обе серии MyRSI в верхнем насыщении. Сегодня обе вышли вниз из насыщения, закрытие пересекло EMA20 вниз, красное тело больше двух медианных тел предыдущих 20 баров.",
+    "C09": "Закрытие ниже EMA20, ближайший спред VIX положителен, VIX растёт.",
+    "C10": "За предыдущие 10 баров был C02 или C03; цена растёт, VIX падает, ближайший спред ещё отрицателен, но улучшается. Смена контракта исключена.",
+    "C11": "Полный разрыв цены вверх, возврат минимум над одну EMA, рост минимум трёх рядов широты и возврат контанго.",
+    "C12": "B08 положителен, просадка не меньше 5%, обе серии MyRSI в нижнем насыщении, ближайший спред VIX отрицателен. Зелёная свеча учитывается отдельно.",
+    "U01": "Сегодня медленный MyRSI_rep(14,8) с AGC(77) повторно вышел вверх из нижнего насыщения. Предыдущий выход был 5–15 торговых баров назад; между выходами был новый заход в насыщение. Сегодня зелёное тело не меньше медианного за предыдущие 20 баров. Разность широты SMA200 на двух выходах сохраняется отдельно.",
+    "U02": "Вчера бычий порядок, цена выше всех EMA, ближайший спред VIX положителен, плотность Zweig Working равна 30. Сегодня цена пробила обе EMA20/50 вниз и началась бэквордация.",
+    "U03": "Стандартная месячная экспирация SPX в третью пятницу с переносом на предыдущий торговый день, если пятница нерабочая. Календарный исследовательский признак с нулевым весом модели.",
+    "T01B": "EMA20 < EMA50 < EMA100 < EMA200. Только порядок уровней, ежедневно, без цены, наклонов и расстояний.",
+    "T02B": "Каждая EMA20/50/100/200 ниже своего значения предыдущего торгового дня; порядок уровней не используется.",
+    "T03B": "Медвежий порядок, все четыре EMA падают, Close ниже EMA20, четыре широты не выше зеркальных порогов, ATRP не выше границы. Сила min(целый возраст/k,1).",
+    "T03_1": "Бычий порядок, все четыре EMA растут, Close выше EMA20, четыре широты не ниже порогов, ATRP не выше границы. Значение 1 при возрасте не меньше k, иначе 0.",
+    "T03_1B": "Медвежий порядок, все четыре EMA падают, Close ниже EMA20, четыре широты не выше зеркальных порогов, ATRP не выше границы. Значение 1 при возрасте не меньше k, иначе 0.",
+    "T04_1": "EMA20 падает; EMA50 растёт; EMA100 растёт; EMA200 растёт. Сравнение со своим предыдущим торговым днём; порядок уровней не используется.",
+    "T04_2": "EMA20 растёт; EMA50 падает; EMA100 растёт; EMA200 растёт. Сравнение со своим предыдущим торговым днём; порядок уровней не используется.",
+    "T04_3": "EMA20 падает; EMA50 падает; EMA100 растёт; EMA200 растёт. Сравнение со своим предыдущим торговым днём; порядок уровней не используется.",
+    "T04_4": "EMA20 растёт; EMA50 падает; EMA100 падает; EMA200 падает. Сравнение со своим предыдущим торговым днём; порядок уровней не используется.",
+    "T04_5": "EMA20 падает; EMA50 растёт; EMA100 падает; EMA200 падает. Сравнение со своим предыдущим торговым днём; порядок уровней не используется.",
+    "T04_6": "EMA20 растёт; EMA50 растёт; EMA100 падает; EMA200 падает. Сравнение со своим предыдущим торговым днём; порядок уровней не используется."
+  },
   "status": "runtime_connected",
   "purpose": "Single human-readable catalogue of Breeze market rules and their independent use in Breeze scoring and TorchSharp threshold correction.",
   "invariants": [
@@ -130,10 +218,10 @@
           "start": "00:01:11",
           "end": "00:01:54"
         },
-        "meaning": "Порядок средних и положение цены — основа структуры роста.",
-        "proposed_definition": "Хранить отдельно E20>E50>E100>E200 и C>E20; степень порядка — доля правильных соседних пар и их нормированные расстояния.",
-        "lifecycle": "Ежедневно; дополнительно начало/нарушение и длина серии.",
-        "unresolved": "Допуск равенства и нормировка расстояний; не смешивать порядок с наклонами."
+        "meaning": "Только строгий бычий порядок уровней EMA.",
+        "proposed_definition": "EMA20>EMA50>EMA100>EMA200.",
+        "lifecycle": "Только ежедневное состояние 0/1.",
+        "unresolved": "Наклоны, расстояния, цена и длина серии в это правило не входят."
       }
     },
     {
@@ -187,8 +275,8 @@
         },
         "meaning": "Сегодняшнее значение каждой EMA выше вчерашнего.",
         "proposed_definition": "Вектор ΔE20,ΔE50,ΔE100,ΔE200 и число положительных наклонов; базовый лаг 1 день, без замены пятидневным наклоном.",
-        "lifecycle": "Ежедневно и число подряд дней.",
-        "unresolved": "Нормировка наклона; многодневный наклон — отдельный вариант, не исходное определение."
+        "lifecycle": "Ежедневное состояние; все четыре растут при значении 1.",
+        "unresolved": "Только сравнение с предыдущим торговым днём; порядок EMA не используется."
       }
     },
     {
@@ -295,9 +383,9 @@
           "start": "00:04:08",
           "end": "00:04:55"
         },
-        "meaning": "Порядок ещё правильный, но сначала EMA20, затем EMA50 становятся падающими.",
+        "meaning": "Объединение T04/1 и T04/3; только однодневные направления, без порядка уровней.",
         "proposed_definition": "Отдельные конфигурации: ΔE20<0 при ΔE50,100,200>0; ΔE20,50<0 при ΔE100,200>0. Не объединять с полным разворотом тренда.",
-        "lifecycle": "Ежедневно; начало и длительность конфигурации.",
+        "lifecycle": "Только ежедневное состояние 0/1.",
         "unresolved": "Равенство нулю и минимально значимый наклон."
       }
     },
@@ -4318,6 +4406,654 @@
         "proposed_definition": "Скорректированная третья пятница месяца: если она не торговая, используется предыдущий торговый день. Признак равен 1 только в день экспирации.",
         "lifecycle": "Календарное событие текущего дня; праздничный перенос определяется только по уже известному торговому календарю.",
         "unresolved": "Исследовательский признак с весом 0 во всех профилях. Ненулевой вес допустим только после независимого walk-forward подтверждения; не смешивать с VIX DTE и календарём расчёта VX."
+      }
+    }
+  ],
+  "additional_states": [
+    {
+      "number": 131,
+      "id": "T01B",
+      "names": {
+        "ru": "Медвежий порядок EMA",
+        "code": "T01B"
+      },
+      "classification": {
+        "family": "T",
+        "kind": "state"
+      },
+      "detector": {
+        "implemented_formula": "E20<E50<E100<E200",
+        "output": "daily state, 0..1",
+        "calculation_status": "implemented",
+        "display_direction": -1
+      },
+      "breeze": {
+        "enabled": true,
+        "frozen": false,
+        "weight_unit": "score_points",
+        "weights": {
+          "soft": 0,
+          "standard": 0,
+          "hard": 0
+        },
+        "lifecycle": "daily cached detector, separate from frozen scoring vector"
+      },
+      "torchsharp": {
+        "enabled": false,
+        "weight_threshold_pp": 0,
+        "weight_status": "not_calibrated",
+        "value_source": "T01B",
+        "application": "dynamic_ensemble_threshold",
+        "activation": {
+          "mode": "while_source_nonzero",
+          "duration_bars": null,
+          "duration_candidates": [],
+          "retrigger": "not_applicable",
+          "cancellation": "source_value_returns_to_zero",
+          "status": "default_not_calibrated"
+        },
+        "note": "Детектор включён в Market Setup; ненулевой вклад TorchSharp не откалиброван."
+      },
+      "documentation": {
+        "source": "EMA T01–T04, 26.10.2026",
+        "source_time": {
+          "start": "00:00:32",
+          "end": "00:15:31"
+        },
+        "meaning": "EMA20 < EMA50 < EMA100 < EMA200. Только порядок уровней, ежедневно, без цены, наклонов и расстояний.",
+        "proposed_definition": "EMA20 < EMA50 < EMA100 < EMA200. Только порядок уровней, ежедневно, без цены, наклонов и расстояний.",
+        "lifecycle": "Только ежедневное состояние 0/1.",
+        "unresolved": "HLC3 используется только для результатов на 3/5/10 баров. Веса не назначаются по малым или неустойчивым выборкам."
+      }
+    },
+    {
+      "number": 132,
+      "id": "T02B",
+      "names": {
+        "ru": "Все четыре EMA падают",
+        "code": "T02B"
+      },
+      "classification": {
+        "family": "T",
+        "kind": "state"
+      },
+      "detector": {
+        "implemented_formula": "All four one-bar EMA slopes <0",
+        "output": "daily state, 0..1",
+        "calculation_status": "implemented",
+        "display_direction": -1
+      },
+      "breeze": {
+        "enabled": true,
+        "frozen": false,
+        "weight_unit": "score_points",
+        "weights": {
+          "soft": 0,
+          "standard": 0,
+          "hard": 0
+        },
+        "lifecycle": "daily cached detector, separate from frozen scoring vector"
+      },
+      "torchsharp": {
+        "enabled": false,
+        "weight_threshold_pp": 0,
+        "weight_status": "not_calibrated",
+        "value_source": "T02B",
+        "application": "dynamic_ensemble_threshold",
+        "activation": {
+          "mode": "while_source_nonzero",
+          "duration_bars": null,
+          "duration_candidates": [],
+          "retrigger": "not_applicable",
+          "cancellation": "source_value_returns_to_zero",
+          "status": "default_not_calibrated"
+        },
+        "note": "Детектор включён в Market Setup; ненулевой вклад TorchSharp не откалиброван."
+      },
+      "documentation": {
+        "source": "EMA T01–T04, 26.10.2026",
+        "source_time": {
+          "start": "00:00:32",
+          "end": "00:15:31"
+        },
+        "meaning": "Каждая EMA20/50/100/200 ниже своего значения предыдущего торгового дня; порядок уровней не используется.",
+        "proposed_definition": "Каждая EMA20/50/100/200 ниже своего значения предыдущего торгового дня; порядок уровней не используется.",
+        "lifecycle": "Только ежедневное состояние 0/1.",
+        "unresolved": "HLC3 используется только для результатов на 3/5/10 баров. Веса не назначаются по малым или неустойчивым выборкам."
+      }
+    },
+    {
+      "number": 133,
+      "id": "T03B",
+      "names": {
+        "ru": "Устойчивое снижение — сила состояния",
+        "code": "T03B"
+      },
+      "classification": {
+        "family": "T",
+        "kind": "state"
+      },
+      "detector": {
+        "implemented_formula": "Bear order + all slopes falling + C<E20 + configured breadth ceilings + ATRP cap; observed age/k capped at 1",
+        "output": "daily state, 0..1",
+        "calculation_status": "implemented",
+        "display_direction": -1,
+        "parameters": {
+          "atrp_max_percent": 2,
+          "breadth_thresholds": [
+            50,
+            50,
+            50,
+            50
+          ],
+          "confirmation_bars": 5
+        }
+      },
+      "breeze": {
+        "enabled": true,
+        "frozen": false,
+        "weight_unit": "score_points",
+        "weights": {
+          "soft": 0,
+          "standard": 0,
+          "hard": 0
+        },
+        "lifecycle": "daily cached detector, separate from frozen scoring vector"
+      },
+      "torchsharp": {
+        "enabled": false,
+        "weight_threshold_pp": 0,
+        "weight_status": "not_calibrated",
+        "value_source": "T03B",
+        "application": "dynamic_ensemble_threshold",
+        "activation": {
+          "mode": "while_source_nonzero",
+          "duration_bars": null,
+          "duration_candidates": [],
+          "retrigger": "not_applicable",
+          "cancellation": "source_value_returns_to_zero",
+          "status": "default_not_calibrated"
+        },
+        "note": "Детектор включён в Market Setup; ненулевой вклад TorchSharp не откалиброван."
+      },
+      "documentation": {
+        "source": "EMA T01–T04, 26.10.2026",
+        "source_time": {
+          "start": "00:00:32",
+          "end": "00:15:31"
+        },
+        "meaning": "Медвежий порядок, все четыре EMA падают, Close ниже EMA20, четыре широты не выше зеркальных порогов, ATRP не выше границы. Сила min(целый возраст/k,1).",
+        "proposed_definition": "Медвежий порядок, все четыре EMA падают, Close ниже EMA20, четыре широты не выше зеркальных порогов, ATRP не выше границы. Сила min(целый возраст/k,1).",
+        "lifecycle": "Целочисленный возраст прошедших дней; нарушение сбрасывает возраст, сила отдельно.",
+        "unresolved": "HLC3 используется только для результатов на 3/5/10 баров. Веса не назначаются по малым или неустойчивым выборкам."
+      }
+    },
+    {
+      "number": 134,
+      "id": "T03_1",
+      "names": {
+        "ru": "T03/1 — Подтверждённый устойчивый рост",
+        "code": "T03_1"
+      },
+      "classification": {
+        "family": "T",
+        "kind": "state"
+      },
+      "detector": {
+        "implemented_formula": "Bull order + all slopes rising + C>E20 + configured breadth floors + ATRP cap; observed age>=k",
+        "output": "daily state, 0..1",
+        "calculation_status": "implemented",
+        "display_direction": 1,
+        "parameters": {
+          "atrp_max_percent": 2,
+          "breadth_thresholds": [
+            50,
+            50,
+            50,
+            50
+          ],
+          "confirmation_bars": 5
+        }
+      },
+      "breeze": {
+        "enabled": true,
+        "frozen": false,
+        "weight_unit": "score_points",
+        "weights": {
+          "soft": 0,
+          "standard": 0,
+          "hard": 0
+        },
+        "lifecycle": "daily cached detector, separate from frozen scoring vector"
+      },
+      "torchsharp": {
+        "enabled": false,
+        "weight_threshold_pp": 0,
+        "weight_status": "not_calibrated",
+        "value_source": "T03_1",
+        "application": "dynamic_ensemble_threshold",
+        "activation": {
+          "mode": "while_source_nonzero",
+          "duration_bars": null,
+          "duration_candidates": [],
+          "retrigger": "not_applicable",
+          "cancellation": "source_value_returns_to_zero",
+          "status": "default_not_calibrated"
+        },
+        "note": "Детектор включён в Market Setup; ненулевой вклад TorchSharp не откалиброван."
+      },
+      "documentation": {
+        "source": "EMA T01–T04, 26.10.2026",
+        "source_time": {
+          "start": "00:00:32",
+          "end": "00:15:31"
+        },
+        "meaning": "Бычий порядок, все четыре EMA растут, Close выше EMA20, четыре широты не ниже порогов, ATRP не выше границы. Значение 1 при возрасте не меньше k, иначе 0.",
+        "proposed_definition": "Бычий порядок, все четыре EMA растут, Close выше EMA20, четыре широты не ниже порогов, ATRP не выше границы. Значение 1 при возрасте не меньше k, иначе 0.",
+        "lifecycle": "Целочисленный возраст прошедших дней; нарушение сбрасывает возраст, сила отдельно.",
+        "unresolved": "HLC3 используется только для результатов на 3/5/10 баров. Веса не назначаются по малым или неустойчивым выборкам."
+      }
+    },
+    {
+      "number": 135,
+      "id": "T03_1B",
+      "names": {
+        "ru": "T03/1 — Подтверждённое устойчивое снижение",
+        "code": "T03_1B"
+      },
+      "classification": {
+        "family": "T",
+        "kind": "state"
+      },
+      "detector": {
+        "implemented_formula": "Bear order + all slopes falling + C<E20 + configured breadth ceilings + ATRP cap; observed age>=k",
+        "output": "daily state, 0..1",
+        "calculation_status": "implemented",
+        "display_direction": -1,
+        "parameters": {
+          "atrp_max_percent": 2,
+          "breadth_thresholds": [
+            50,
+            50,
+            50,
+            50
+          ],
+          "confirmation_bars": 5
+        }
+      },
+      "breeze": {
+        "enabled": true,
+        "frozen": false,
+        "weight_unit": "score_points",
+        "weights": {
+          "soft": 0,
+          "standard": 0,
+          "hard": 0
+        },
+        "lifecycle": "daily cached detector, separate from frozen scoring vector"
+      },
+      "torchsharp": {
+        "enabled": false,
+        "weight_threshold_pp": 0,
+        "weight_status": "not_calibrated",
+        "value_source": "T03_1B",
+        "application": "dynamic_ensemble_threshold",
+        "activation": {
+          "mode": "while_source_nonzero",
+          "duration_bars": null,
+          "duration_candidates": [],
+          "retrigger": "not_applicable",
+          "cancellation": "source_value_returns_to_zero",
+          "status": "default_not_calibrated"
+        },
+        "note": "Детектор включён в Market Setup; ненулевой вклад TorchSharp не откалиброван."
+      },
+      "documentation": {
+        "source": "EMA T01–T04, 26.10.2026",
+        "source_time": {
+          "start": "00:00:32",
+          "end": "00:15:31"
+        },
+        "meaning": "Медвежий порядок, все четыре EMA падают, Close ниже EMA20, четыре широты не выше зеркальных порогов, ATRP не выше границы. Значение 1 при возрасте не меньше k, иначе 0.",
+        "proposed_definition": "Медвежий порядок, все четыре EMA падают, Close ниже EMA20, четыре широты не выше зеркальных порогов, ATRP не выше границы. Значение 1 при возрасте не меньше k, иначе 0.",
+        "lifecycle": "Целочисленный возраст прошедших дней; нарушение сбрасывает возраст, сила отдельно.",
+        "unresolved": "HLC3 используется только для результатов на 3/5/10 баров. Веса не назначаются по малым или неустойчивым выборкам."
+      }
+    },
+    {
+      "number": 136,
+      "id": "T04_1",
+      "names": {
+        "ru": "T04/1 — ↓ / ↑ / ↑ / ↑",
+        "code": "T04_1"
+      },
+      "classification": {
+        "family": "T",
+        "kind": "state"
+      },
+      "detector": {
+        "implemented_formula": "EMA slopes: -,+,+,+",
+        "output": "daily state, 0..1",
+        "calculation_status": "implemented",
+        "display_direction": 1
+      },
+      "breeze": {
+        "enabled": true,
+        "frozen": false,
+        "weight_unit": "score_points",
+        "weights": {
+          "soft": 0,
+          "standard": 0,
+          "hard": 0
+        },
+        "lifecycle": "daily cached detector, separate from frozen scoring vector"
+      },
+      "torchsharp": {
+        "enabled": false,
+        "weight_threshold_pp": 0,
+        "weight_status": "not_calibrated",
+        "value_source": "T04_1",
+        "application": "dynamic_ensemble_threshold",
+        "activation": {
+          "mode": "while_source_nonzero",
+          "duration_bars": null,
+          "duration_candidates": [],
+          "retrigger": "not_applicable",
+          "cancellation": "source_value_returns_to_zero",
+          "status": "default_not_calibrated"
+        },
+        "note": "Детектор включён в Market Setup; ненулевой вклад TorchSharp не откалиброван."
+      },
+      "documentation": {
+        "source": "EMA T01–T04, 26.10.2026",
+        "source_time": {
+          "start": "00:00:32",
+          "end": "00:15:31"
+        },
+        "meaning": "EMA20 падает; EMA50 растёт; EMA100 растёт; EMA200 растёт. Сравнение со своим предыдущим торговым днём; порядок уровней не используется.",
+        "proposed_definition": "EMA20 падает; EMA50 растёт; EMA100 растёт; EMA200 растёт. Сравнение со своим предыдущим торговым днём; порядок уровней не используется.",
+        "lifecycle": "Только ежедневное состояние 0/1.",
+        "unresolved": "HLC3 используется только для результатов на 3/5/10 баров. Веса не назначаются по малым или неустойчивым выборкам."
+      }
+    },
+    {
+      "number": 137,
+      "id": "T04_2",
+      "names": {
+        "ru": "T04/2 — ↑ / ↓ / ↑ / ↑",
+        "code": "T04_2"
+      },
+      "classification": {
+        "family": "T",
+        "kind": "state"
+      },
+      "detector": {
+        "implemented_formula": "EMA slopes: +,-,+,+",
+        "output": "daily state, 0..1",
+        "calculation_status": "implemented",
+        "display_direction": 1
+      },
+      "breeze": {
+        "enabled": true,
+        "frozen": false,
+        "weight_unit": "score_points",
+        "weights": {
+          "soft": 0,
+          "standard": 0,
+          "hard": 0
+        },
+        "lifecycle": "daily cached detector, separate from frozen scoring vector"
+      },
+      "torchsharp": {
+        "enabled": false,
+        "weight_threshold_pp": 0,
+        "weight_status": "not_calibrated",
+        "value_source": "T04_2",
+        "application": "dynamic_ensemble_threshold",
+        "activation": {
+          "mode": "while_source_nonzero",
+          "duration_bars": null,
+          "duration_candidates": [],
+          "retrigger": "not_applicable",
+          "cancellation": "source_value_returns_to_zero",
+          "status": "default_not_calibrated"
+        },
+        "note": "Детектор включён в Market Setup; ненулевой вклад TorchSharp не откалиброван."
+      },
+      "documentation": {
+        "source": "EMA T01–T04, 26.10.2026",
+        "source_time": {
+          "start": "00:00:32",
+          "end": "00:15:31"
+        },
+        "meaning": "EMA20 растёт; EMA50 падает; EMA100 растёт; EMA200 растёт. Сравнение со своим предыдущим торговым днём; порядок уровней не используется.",
+        "proposed_definition": "EMA20 растёт; EMA50 падает; EMA100 растёт; EMA200 растёт. Сравнение со своим предыдущим торговым днём; порядок уровней не используется.",
+        "lifecycle": "Только ежедневное состояние 0/1.",
+        "unresolved": "HLC3 используется только для результатов на 3/5/10 баров. Веса не назначаются по малым или неустойчивым выборкам."
+      }
+    },
+    {
+      "number": 138,
+      "id": "T04_3",
+      "names": {
+        "ru": "T04/3 — ↓ / ↓ / ↑ / ↑",
+        "code": "T04_3"
+      },
+      "classification": {
+        "family": "T",
+        "kind": "state"
+      },
+      "detector": {
+        "implemented_formula": "EMA slopes: -,-,+,+",
+        "output": "daily state, 0..1",
+        "calculation_status": "implemented",
+        "display_direction": 1
+      },
+      "breeze": {
+        "enabled": true,
+        "frozen": false,
+        "weight_unit": "score_points",
+        "weights": {
+          "soft": 0,
+          "standard": 0,
+          "hard": 0
+        },
+        "lifecycle": "daily cached detector, separate from frozen scoring vector"
+      },
+      "torchsharp": {
+        "enabled": false,
+        "weight_threshold_pp": 0,
+        "weight_status": "not_calibrated",
+        "value_source": "T04_3",
+        "application": "dynamic_ensemble_threshold",
+        "activation": {
+          "mode": "while_source_nonzero",
+          "duration_bars": null,
+          "duration_candidates": [],
+          "retrigger": "not_applicable",
+          "cancellation": "source_value_returns_to_zero",
+          "status": "default_not_calibrated"
+        },
+        "note": "Детектор включён в Market Setup; ненулевой вклад TorchSharp не откалиброван."
+      },
+      "documentation": {
+        "source": "EMA T01–T04, 26.10.2026",
+        "source_time": {
+          "start": "00:00:32",
+          "end": "00:15:31"
+        },
+        "meaning": "EMA20 падает; EMA50 падает; EMA100 растёт; EMA200 растёт. Сравнение со своим предыдущим торговым днём; порядок уровней не используется.",
+        "proposed_definition": "EMA20 падает; EMA50 падает; EMA100 растёт; EMA200 растёт. Сравнение со своим предыдущим торговым днём; порядок уровней не используется.",
+        "lifecycle": "Только ежедневное состояние 0/1.",
+        "unresolved": "HLC3 используется только для результатов на 3/5/10 баров. Веса не назначаются по малым или неустойчивым выборкам."
+      }
+    },
+    {
+      "number": 139,
+      "id": "T04_4",
+      "names": {
+        "ru": "T04/4 — ↑ / ↓ / ↓ / ↓",
+        "code": "T04_4"
+      },
+      "classification": {
+        "family": "T",
+        "kind": "state"
+      },
+      "detector": {
+        "implemented_formula": "EMA slopes: +,-,-,-",
+        "output": "daily state, 0..1",
+        "calculation_status": "implemented",
+        "display_direction": -1
+      },
+      "breeze": {
+        "enabled": true,
+        "frozen": false,
+        "weight_unit": "score_points",
+        "weights": {
+          "soft": 0,
+          "standard": 0,
+          "hard": 0
+        },
+        "lifecycle": "daily cached detector, separate from frozen scoring vector"
+      },
+      "torchsharp": {
+        "enabled": false,
+        "weight_threshold_pp": 0,
+        "weight_status": "not_calibrated",
+        "value_source": "T04_4",
+        "application": "dynamic_ensemble_threshold",
+        "activation": {
+          "mode": "while_source_nonzero",
+          "duration_bars": null,
+          "duration_candidates": [],
+          "retrigger": "not_applicable",
+          "cancellation": "source_value_returns_to_zero",
+          "status": "default_not_calibrated"
+        },
+        "note": "Детектор включён в Market Setup; ненулевой вклад TorchSharp не откалиброван."
+      },
+      "documentation": {
+        "source": "EMA T01–T04, 26.10.2026",
+        "source_time": {
+          "start": "00:00:32",
+          "end": "00:15:31"
+        },
+        "meaning": "EMA20 растёт; EMA50 падает; EMA100 падает; EMA200 падает. Сравнение со своим предыдущим торговым днём; порядок уровней не используется.",
+        "proposed_definition": "EMA20 растёт; EMA50 падает; EMA100 падает; EMA200 падает. Сравнение со своим предыдущим торговым днём; порядок уровней не используется.",
+        "lifecycle": "Только ежедневное состояние 0/1.",
+        "unresolved": "HLC3 используется только для результатов на 3/5/10 баров. Веса не назначаются по малым или неустойчивым выборкам."
+      }
+    },
+    {
+      "number": 140,
+      "id": "T04_5",
+      "names": {
+        "ru": "T04/5 — ↓ / ↑ / ↓ / ↓",
+        "code": "T04_5"
+      },
+      "classification": {
+        "family": "T",
+        "kind": "state"
+      },
+      "detector": {
+        "implemented_formula": "EMA slopes: -,+,-,-",
+        "output": "daily state, 0..1",
+        "calculation_status": "implemented",
+        "display_direction": -1
+      },
+      "breeze": {
+        "enabled": true,
+        "frozen": false,
+        "weight_unit": "score_points",
+        "weights": {
+          "soft": 0,
+          "standard": 0,
+          "hard": 0
+        },
+        "lifecycle": "daily cached detector, separate from frozen scoring vector"
+      },
+      "torchsharp": {
+        "enabled": false,
+        "weight_threshold_pp": 0,
+        "weight_status": "not_calibrated",
+        "value_source": "T04_5",
+        "application": "dynamic_ensemble_threshold",
+        "activation": {
+          "mode": "while_source_nonzero",
+          "duration_bars": null,
+          "duration_candidates": [],
+          "retrigger": "not_applicable",
+          "cancellation": "source_value_returns_to_zero",
+          "status": "default_not_calibrated"
+        },
+        "note": "Детектор включён в Market Setup; ненулевой вклад TorchSharp не откалиброван."
+      },
+      "documentation": {
+        "source": "EMA T01–T04, 26.10.2026",
+        "source_time": {
+          "start": "00:00:32",
+          "end": "00:15:31"
+        },
+        "meaning": "EMA20 падает; EMA50 растёт; EMA100 падает; EMA200 падает. Сравнение со своим предыдущим торговым днём; порядок уровней не используется.",
+        "proposed_definition": "EMA20 падает; EMA50 растёт; EMA100 падает; EMA200 падает. Сравнение со своим предыдущим торговым днём; порядок уровней не используется.",
+        "lifecycle": "Только ежедневное состояние 0/1.",
+        "unresolved": "HLC3 используется только для результатов на 3/5/10 баров. Веса не назначаются по малым или неустойчивым выборкам."
+      }
+    },
+    {
+      "number": 141,
+      "id": "T04_6",
+      "names": {
+        "ru": "T04/6 — ↑ / ↑ / ↓ / ↓",
+        "code": "T04_6"
+      },
+      "classification": {
+        "family": "T",
+        "kind": "state"
+      },
+      "detector": {
+        "implemented_formula": "EMA slopes: +,+,-,-",
+        "output": "daily state, 0..1",
+        "calculation_status": "implemented",
+        "display_direction": -1
+      },
+      "breeze": {
+        "enabled": true,
+        "frozen": false,
+        "weight_unit": "score_points",
+        "weights": {
+          "soft": 0,
+          "standard": 0,
+          "hard": 0
+        },
+        "lifecycle": "daily cached detector, separate from frozen scoring vector"
+      },
+      "torchsharp": {
+        "enabled": false,
+        "weight_threshold_pp": 0,
+        "weight_status": "not_calibrated",
+        "value_source": "T04_6",
+        "application": "dynamic_ensemble_threshold",
+        "activation": {
+          "mode": "while_source_nonzero",
+          "duration_bars": null,
+          "duration_candidates": [],
+          "retrigger": "not_applicable",
+          "cancellation": "source_value_returns_to_zero",
+          "status": "default_not_calibrated"
+        },
+        "note": "Детектор включён в Market Setup; ненулевой вклад TorchSharp не откалиброван."
+      },
+      "documentation": {
+        "source": "EMA T01–T04, 26.10.2026",
+        "source_time": {
+          "start": "00:00:32",
+          "end": "00:15:31"
+        },
+        "meaning": "EMA20 растёт; EMA50 растёт; EMA100 падает; EMA200 падает. Сравнение со своим предыдущим торговым днём; порядок уровней не используется.",
+        "proposed_definition": "EMA20 растёт; EMA50 растёт; EMA100 падает; EMA200 падает. Сравнение со своим предыдущим торговым днём; порядок уровней не используется.",
+        "lifecycle": "Только ежедневное состояние 0/1.",
+        "unresolved": "HLC3 используется только для результатов на 3/5/10 баров. Веса не назначаются по малым или неустойчивым выборкам."
       }
     }
   ]

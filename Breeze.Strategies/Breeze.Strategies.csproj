@@ -6,7 +6,7 @@
     <PlatformTarget>x64</PlatformTarget>
     <AssemblyName>Breeze.Strategies</AssemblyName>
     <RootNamespace>BreezeHoldPosition.Strategies</RootNamespace>
-    <Version>0.11.8</Version>
+    <Version>0.11.33</Version>
     <WealthLabInstallDir Condition="'$(WealthLabInstallDir)' == ''">C:\Program Files\Quantacula, LLC\WealthLab 8</WealthLabInstallDir>
   </PropertyGroup>
 

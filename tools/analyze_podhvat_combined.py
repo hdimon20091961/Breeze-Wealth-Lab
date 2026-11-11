@@ -10,7 +10,7 @@ import pandas as pd
 
 ROOT = Path(r"D:\CODEX_PRG\Breadth")
 SOURCE = Path(r"D:\fear_greed_close\Breeze")
-PACKAGE = ROOT / "artifacts" / "Podhvat_1"
+PACKAGE = ROOT / "research" / "artifacts" / "Podhvat_1"
 OUT = PACKAGE / "research"
 SNAPSHOT = PACKAGE / "market_data"
 

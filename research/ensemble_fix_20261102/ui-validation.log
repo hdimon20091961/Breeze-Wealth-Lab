@@ -1,0 +1,3 @@
+Default DataSets: real Wealth-Lab identifiers, provider, aliases and missing-source checks passed.
+Real ensemble Profit: production DLL matches the reference ledger for all six packages in both trading modes.
+RulesSwitchUI passed: full window layouts at 100/125%, shared navigation, pinned cursor, model selection, bold runs, missing data and collapse/restore.

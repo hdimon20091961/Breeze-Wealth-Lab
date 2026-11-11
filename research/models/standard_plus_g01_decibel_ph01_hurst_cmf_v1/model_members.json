@@ -1,0 +1,1050 @@
+{
+  "model_id": "standard_plus_g01_decibel_ph01_hurst_cmf_v1",
+  "counts": {
+    "catalogue_entries": 105,
+    "selected_scoring_rules_including_zero": 77,
+    "scoring_rules_with_nonzero_configured_weight": 34,
+    "original_standard_rules": 75,
+    "original_standard_nonzero": 32,
+    "accepted_overlay_rules": 2,
+    "selected_original_rules_with_zero_weight": 43,
+    "retained_research_entries_outside_scoring": 28,
+    "all_entries_without_nonzero_configured_weight": 71
+  },
+  "members": [
+    {
+      "id": "T01",
+      "name": "Бычий порядок EMA",
+      "selected_for_scoring": true,
+      "configured_weight_nonzero": false,
+      "current_score_weight": 0,
+      "status": "frozen_standard_rule",
+      "definition_catalogue": "D:\\CODEX_PRG\\Breadth\\docs\\event-catalog-v4\\catalog.json",
+      "weight_unit": "score_points"
+    },
+    {
+      "id": "T02",
+      "name": "Все четыре EMA растут",
+      "selected_for_scoring": true,
+      "configured_weight_nonzero": false,
+      "current_score_weight": 0,
+      "status": "frozen_standard_rule",
+      "definition_catalogue": "D:\\CODEX_PRG\\Breadth\\docs\\event-catalog-v4\\catalog.json",
+      "weight_unit": "score_points"
+    },
+    {
+      "id": "T03",
+      "name": "Устойчивый рост с широкой поддержкой",
+      "selected_for_scoring": true,
+      "configured_weight_nonzero": true,
+      "current_score_weight": 15.0,
+      "status": "frozen_standard_rule",
+      "definition_catalogue": "D:\\CODEX_PRG\\Breadth\\docs\\event-catalog-v4\\catalog.json",
+      "weight_unit": "score_points"
+    },
+    {
+      "id": "T04",
+      "name": "Быстрые EMA падают, медленные растут",
+      "selected_for_scoring": true,
+      "configured_weight_nonzero": false,
+      "current_score_weight": 0,
+      "status": "frozen_standard_rule",
+      "definition_catalogue": "D:\\CODEX_PRG\\Breadth\\docs\\event-catalog-v4\\catalog.json",
+      "weight_unit": "score_points"
+    },
+    {
+      "id": "T05",
+      "name": "Растянутый веер EMA",
+      "selected_for_scoring": true,
+      "configured_weight_nonzero": true,
+      "current_score_weight": 5.0,
+      "status": "frozen_standard_rule",
+      "definition_catalogue": "D:\\CODEX_PRG\\Breadth\\docs\\event-catalog-v4\\catalog.json",
+      "weight_unit": "score_points"
+    },
+    {
+      "id": "T06",
+      "name": "Сжатый бычий веер",
+      "selected_for_scoring": true,
+      "configured_weight_nonzero": true,
+      "current_score_weight": 10.0,
+      "status": "frozen_standard_rule",
+      "definition_catalogue": "D:\\CODEX_PRG\\Breadth\\docs\\event-catalog-v4\\catalog.json",
+      "weight_unit": "score_points"
+    },
+    {
+      "id": "T07",
+      "name": "Цена ниже всех EMA и нарушенный порядок",
+      "selected_for_scoring": true,
+      "configured_weight_nonzero": true,
+      "current_score_weight": -10.0,
+      "status": "frozen_standard_rule",
+      "definition_catalogue": "D:\\CODEX_PRG\\Breadth\\docs\\event-catalog-v4\\catalog.json",
+      "weight_unit": "score_points"
+    },
+    {
+      "id": "T08",
+      "name": "Глубина, скорость и длительность снижения",
+      "selected_for_scoring": true,
+      "configured_weight_nonzero": true,
+      "current_score_weight": 5.0,
+      "status": "frozen_standard_rule",
+      "definition_catalogue": "D:\\CODEX_PRG\\Breadth\\docs\\event-catalog-v4\\catalog.json",
+      "weight_unit": "score_points"
+    },
+    {
+      "id": "T09",
+      "name": "Многоволновое снижение",
+      "selected_for_scoring": true,
+      "configured_weight_nonzero": true,
+      "current_score_weight": -10.0,
+      "status": "frozen_standard_rule",
+      "definition_catalogue": "D:\\CODEX_PRG\\Breadth\\docs\\event-catalog-v4\\catalog.json",
+      "weight_unit": "score_points"
+    },
+    {
+      "id": "T10",
+      "name": "Падение от недавнего исторического максимума",
+      "selected_for_scoring": true,
+      "configured_weight_nonzero": false,
+      "current_score_weight": 0,
+      "status": "frozen_standard_rule",
+      "definition_catalogue": "D:\\CODEX_PRG\\Breadth\\docs\\event-catalog-v4\\catalog.json",
+      "weight_unit": "score_points"
+    },
+    {
+      "id": "E01",
+      "name": "Пробой EMA на закрытии",
+      "selected_for_scoring": true,
+      "configured_weight_nonzero": true,
+      "current_score_weight": -5.0,
+      "status": "frozen_standard_rule",
+      "definition_catalogue": "D:\\CODEX_PRG\\Breadth\\docs\\event-catalog-v4\\catalog.json",
+      "weight_unit": "score_points"
+    },
+    {
+      "id": "E02",
+      "name": "Прокол средней тенью с удержанием закрытия",
+      "selected_for_scoring": true,
+      "configured_weight_nonzero": true,
+      "current_score_weight": 5.0,
+      "status": "frozen_standard_rule",
+      "definition_catalogue": "D:\\CODEX_PRG\\Breadth\\docs\\event-catalog-v4\\catalog.json",
+      "weight_unit": "score_points"
+    },
+    {
+      "id": "E03",
+      "name": "За день пробиты EMA20 и EMA50",
+      "selected_for_scoring": true,
+      "configured_weight_nonzero": false,
+      "current_score_weight": 0,
+      "status": "frozen_standard_rule",
+      "definition_catalogue": "D:\\CODEX_PRG\\Breadth\\docs\\event-catalog-v4\\catalog.json",
+      "weight_unit": "score_points"
+    },
+    {
+      "id": "E04",
+      "name": "После пробоя EMA20 EMA50 пока удержана",
+      "selected_for_scoring": true,
+      "configured_weight_nonzero": false,
+      "current_score_weight": 0,
+      "status": "frozen_standard_rule",
+      "definition_catalogue": "D:\\CODEX_PRG\\Breadth\\docs\\event-catalog-v4\\catalog.json",
+      "weight_unit": "score_points"
+    },
+    {
+      "id": "E05",
+      "name": "Возврат над пробитой EMA",
+      "selected_for_scoring": true,
+      "configured_weight_nonzero": true,
+      "current_score_weight": 10.0,
+      "status": "frozen_standard_rule",
+      "definition_catalogue": "D:\\CODEX_PRG\\Breadth\\docs\\event-catalog-v4\\catalog.json",
+      "weight_unit": "score_points"
+    },
+    {
+      "id": "E06",
+      "name": "Пересечения самих EMA",
+      "selected_for_scoring": true,
+      "configured_weight_nonzero": true,
+      "current_score_weight": 10.0,
+      "status": "frozen_standard_rule",
+      "definition_catalogue": "D:\\CODEX_PRG\\Breadth\\docs\\event-catalog-v4\\catalog.json",
+      "weight_unit": "score_points"
+    },
+    {
+      "id": "E07",
+      "name": "Неудачное восстановление между EMA100 и EMA50",
+      "selected_for_scoring": true,
+      "configured_weight_nonzero": false,
+      "current_score_weight": 0,
+      "status": "frozen_standard_rule",
+      "definition_catalogue": "D:\\CODEX_PRG\\Breadth\\docs\\event-catalog-v4\\catalog.json",
+      "weight_unit": "score_points"
+    },
+    {
+      "id": "R01",
+      "name": "Нижнее насыщение MyRSI",
+      "selected_for_scoring": true,
+      "configured_weight_nonzero": true,
+      "current_score_weight": 10.0,
+      "status": "frozen_standard_rule",
+      "definition_catalogue": "D:\\CODEX_PRG\\Breadth\\docs\\event-catalog-v4\\catalog.json",
+      "weight_unit": "score_points"
+    },
+    {
+      "id": "R02",
+      "name": "Верхнее насыщение MyRSI",
+      "selected_for_scoring": true,
+      "configured_weight_nonzero": false,
+      "current_score_weight": 0,
+      "status": "frozen_standard_rule",
+      "definition_catalogue": "D:\\CODEX_PRG\\Breadth\\docs\\event-catalog-v4\\catalog.json",
+      "weight_unit": "score_points"
+    },
+    {
+      "id": "R03",
+      "name": "Отрыв MyRSI от -1 вверх",
+      "selected_for_scoring": true,
+      "configured_weight_nonzero": true,
+      "current_score_weight": 15.0,
+      "status": "frozen_standard_rule",
+      "definition_catalogue": "D:\\CODEX_PRG\\Breadth\\docs\\event-catalog-v4\\catalog.json",
+      "weight_unit": "score_points"
+    },
+    {
+      "id": "R04",
+      "name": "Отрыв MyRSI от +1 вниз",
+      "selected_for_scoring": true,
+      "configured_weight_nonzero": false,
+      "current_score_weight": 0,
+      "status": "frozen_standard_rule",
+      "definition_catalogue": "D:\\CODEX_PRG\\Breadth\\docs\\event-catalog-v4\\catalog.json",
+      "weight_unit": "score_points"
+    },
+    {
+      "id": "R05",
+      "name": "Переход RSI через ноль",
+      "selected_for_scoring": true,
+      "configured_weight_nonzero": false,
+      "current_score_weight": 0,
+      "status": "frozen_standard_rule",
+      "definition_catalogue": "D:\\CODEX_PRG\\Breadth\\docs\\event-catalog-v4\\catalog.json",
+      "weight_unit": "score_points"
+    },
+    {
+      "id": "R06",
+      "name": "Опережение быстрого RSI относительно медленного",
+      "selected_for_scoring": true,
+      "configured_weight_nonzero": false,
+      "current_score_weight": 0,
+      "status": "frozen_standard_rule",
+      "definition_catalogue": "D:\\CODEX_PRG\\Breadth\\docs\\event-catalog-v4\\catalog.json",
+      "weight_unit": "score_points"
+    },
+    {
+      "id": "R07",
+      "name": "Одновременное насыщение двух RSI",
+      "selected_for_scoring": true,
+      "configured_weight_nonzero": false,
+      "current_score_weight": 0,
+      "status": "frozen_standard_rule",
+      "definition_catalogue": "D:\\CODEX_PRG\\Breadth\\docs\\event-catalog-v4\\catalog.json",
+      "weight_unit": "score_points"
+    },
+    {
+      "id": "R08",
+      "name": "Одновременный выход обоих RSI из верхней зоны",
+      "selected_for_scoring": true,
+      "configured_weight_nonzero": false,
+      "current_score_weight": 0,
+      "status": "frozen_standard_rule",
+      "definition_catalogue": "D:\\CODEX_PRG\\Breadth\\docs\\event-catalog-v4\\catalog.json",
+      "weight_unit": "score_points"
+    },
+    {
+      "id": "B01",
+      "name": "Уровни четырёх широт",
+      "selected_for_scoring": true,
+      "configured_weight_nonzero": true,
+      "current_score_weight": 15.0,
+      "status": "frozen_standard_rule",
+      "definition_catalogue": "D:\\CODEX_PRG\\Breadth\\docs\\event-catalog-v4\\catalog.json",
+      "weight_unit": "score_points"
+    },
+    {
+      "id": "B02",
+      "name": "Совместный экстремум низкой широты",
+      "selected_for_scoring": true,
+      "configured_weight_nonzero": true,
+      "current_score_weight": 20.0,
+      "status": "frozen_standard_rule",
+      "definition_catalogue": "D:\\CODEX_PRG\\Breadth\\docs\\event-catalog-v4\\catalog.json",
+      "weight_unit": "score_points"
+    },
+    {
+      "id": "B03",
+      "name": "Особенно слабая медленная широта",
+      "selected_for_scoring": true,
+      "configured_weight_nonzero": true,
+      "current_score_weight": 5.0,
+      "status": "frozen_standard_rule",
+      "definition_catalogue": "D:\\CODEX_PRG\\Breadth\\docs\\event-catalog-v4\\catalog.json",
+      "weight_unit": "score_points"
+    },
+    {
+      "id": "B04",
+      "name": "Широта растёт относительно вчера",
+      "selected_for_scoring": true,
+      "configured_weight_nonzero": false,
+      "current_score_weight": 0,
+      "status": "frozen_standard_rule",
+      "definition_catalogue": "D:\\CODEX_PRG\\Breadth\\docs\\event-catalog-v4\\catalog.json",
+      "weight_unit": "score_points"
+    },
+    {
+      "id": "B05",
+      "name": "Растущие свечи нескольких широт",
+      "selected_for_scoring": true,
+      "configured_weight_nonzero": false,
+      "current_score_weight": 0,
+      "status": "frozen_standard_rule",
+      "definition_catalogue": "D:\\CODEX_PRG\\Breadth\\docs\\event-catalog-v4\\catalog.json",
+      "weight_unit": "score_points"
+    },
+    {
+      "id": "B06",
+      "name": "Запаздывающее подтверждение широтой",
+      "selected_for_scoring": true,
+      "configured_weight_nonzero": false,
+      "current_score_weight": 0,
+      "status": "frozen_standard_rule",
+      "definition_catalogue": "D:\\CODEX_PRG\\Breadth\\docs\\event-catalog-v4\\catalog.json",
+      "weight_unit": "score_points"
+    },
+    {
+      "id": "B07",
+      "name": "Истончение у ценового максимума",
+      "selected_for_scoring": true,
+      "configured_weight_nonzero": true,
+      "current_score_weight": -10.0,
+      "status": "frozen_standard_rule",
+      "definition_catalogue": "D:\\CODEX_PRG\\Breadth\\docs\\event-catalog-v4\\catalog.json",
+      "weight_unit": "score_points"
+    },
+    {
+      "id": "B08",
+      "name": "Новый минимум цены без нового минимума широты",
+      "selected_for_scoring": true,
+      "configured_weight_nonzero": true,
+      "current_score_weight": 10.0,
+      "status": "frozen_standard_rule",
+      "definition_catalogue": "D:\\CODEX_PRG\\Breadth\\docs\\event-catalog-v4\\catalog.json",
+      "weight_unit": "score_points"
+    },
+    {
+      "id": "B09",
+      "name": "Широтное блюдце и прекращение обновления минимумов",
+      "selected_for_scoring": true,
+      "configured_weight_nonzero": true,
+      "current_score_weight": 5.0,
+      "status": "frozen_standard_rule",
+      "definition_catalogue": "D:\\CODEX_PRG\\Breadth\\docs\\event-catalog-v4\\catalog.json",
+      "weight_unit": "score_points"
+    },
+    {
+      "id": "B10",
+      "name": "Слабая быстрая широта при сильной медленной",
+      "selected_for_scoring": true,
+      "configured_weight_nonzero": false,
+      "current_score_weight": 0,
+      "status": "frozen_standard_rule",
+      "definition_catalogue": "D:\\CODEX_PRG\\Breadth\\docs\\event-catalog-v4\\catalog.json",
+      "weight_unit": "score_points"
+    },
+    {
+      "id": "B11",
+      "name": "Одновременный импульс широты",
+      "selected_for_scoring": true,
+      "configured_weight_nonzero": false,
+      "current_score_weight": 0,
+      "status": "frozen_standard_rule",
+      "definition_catalogue": "D:\\CODEX_PRG\\Breadth\\docs\\event-catalog-v4\\catalog.json",
+      "weight_unit": "score_points"
+    },
+    {
+      "id": "B12",
+      "name": "Широта Nasdaq начинает восстанавливаться раньше",
+      "selected_for_scoring": true,
+      "configured_weight_nonzero": false,
+      "current_score_weight": 0,
+      "status": "frozen_standard_rule",
+      "definition_catalogue": "D:\\CODEX_PRG\\Breadth\\docs\\event-catalog-v4\\catalog.json",
+      "weight_unit": "score_points"
+    },
+    {
+      "id": "B13",
+      "name": "Медленная широта на высоком плато при росте цены",
+      "selected_for_scoring": true,
+      "configured_weight_nonzero": false,
+      "current_score_weight": 0,
+      "status": "frozen_standard_rule",
+      "definition_catalogue": "D:\\CODEX_PRG\\Breadth\\docs\\event-catalog-v4\\catalog.json",
+      "weight_unit": "score_points"
+    },
+    {
+      "id": "B14",
+      "name": "Похожая ценовая коррекция при гораздо более слабом участии",
+      "selected_for_scoring": true,
+      "configured_weight_nonzero": false,
+      "current_score_weight": 0,
+      "status": "frozen_standard_rule",
+      "definition_catalogue": "D:\\CODEX_PRG\\Breadth\\docs\\event-catalog-v4\\catalog.json",
+      "weight_unit": "score_points"
+    },
+    {
+      "id": "P01",
+      "name": "Размер и направление тела свечи",
+      "selected_for_scoring": true,
+      "configured_weight_nonzero": false,
+      "current_score_weight": 0,
+      "status": "frozen_standard_rule",
+      "definition_catalogue": "D:\\CODEX_PRG\\Breadth\\docs\\event-catalog-v4\\catalog.json",
+      "weight_unit": "score_points"
+    },
+    {
+      "id": "P02",
+      "name": "Нижняя тень с новым минимумом и зелёным закрытием",
+      "selected_for_scoring": true,
+      "configured_weight_nonzero": true,
+      "current_score_weight": 10.0,
+      "status": "frozen_standard_rule",
+      "definition_catalogue": "D:\\CODEX_PRG\\Breadth\\docs\\event-catalog-v4\\catalog.json",
+      "weight_unit": "score_points"
+    },
+    {
+      "id": "P03",
+      "name": "True Range, ATRP и всплеск волатильности",
+      "selected_for_scoring": true,
+      "configured_weight_nonzero": true,
+      "current_score_weight": -10.0,
+      "status": "frozen_standard_rule",
+      "definition_catalogue": "D:\\CODEX_PRG\\Breadth\\docs\\event-catalog-v4\\catalog.json",
+      "weight_unit": "score_points"
+    },
+    {
+      "id": "P04",
+      "name": "Разрыв вверх над предыдущими диапазонами",
+      "selected_for_scoring": true,
+      "configured_weight_nonzero": false,
+      "current_score_weight": 0,
+      "status": "frozen_standard_rule",
+      "definition_catalogue": "D:\\CODEX_PRG\\Breadth\\docs\\event-catalog-v4\\catalog.json",
+      "weight_unit": "score_points"
+    },
+    {
+      "id": "P05",
+      "name": "Серия сильных опорных баров",
+      "selected_for_scoring": true,
+      "configured_weight_nonzero": true,
+      "current_score_weight": 5.0,
+      "status": "frozen_standard_rule",
+      "definition_catalogue": "D:\\CODEX_PRG\\Breadth\\docs\\event-catalog-v4\\catalog.json",
+      "weight_unit": "score_points"
+    },
+    {
+      "id": "P06",
+      "name": "Доджи и длинная тень возле низкой широты — с контрпримером",
+      "selected_for_scoring": true,
+      "configured_weight_nonzero": false,
+      "current_score_weight": 0,
+      "status": "frozen_standard_rule",
+      "definition_catalogue": "D:\\CODEX_PRG\\Breadth\\docs\\event-catalog-v4\\catalog.json",
+      "weight_unit": "score_points"
+    },
+    {
+      "id": "V01",
+      "name": "Знак и величина фронтального контанго",
+      "selected_for_scoring": true,
+      "configured_weight_nonzero": true,
+      "current_score_weight": 5.0,
+      "status": "frozen_standard_rule",
+      "definition_catalogue": "D:\\CODEX_PRG\\Breadth\\docs\\event-catalog-v4\\catalog.json",
+      "weight_unit": "score_points"
+    },
+    {
+      "id": "V02",
+      "name": "Широкое контанго или широкая бэквордация",
+      "selected_for_scoring": true,
+      "configured_weight_nonzero": false,
+      "current_score_weight": 0,
+      "status": "frozen_standard_rule",
+      "definition_catalogue": "D:\\CODEX_PRG\\Breadth\\docs\\event-catalog-v4\\catalog.json",
+      "weight_unit": "score_points"
+    },
+    {
+      "id": "V03",
+      "name": "Инвертированный фронт при плоском или положительном дальнем участке",
+      "selected_for_scoring": true,
+      "configured_weight_nonzero": true,
+      "current_score_weight": -5.0,
+      "status": "frozen_standard_rule",
+      "definition_catalogue": "D:\\CODEX_PRG\\Breadth\\docs\\event-catalog-v4\\catalog.json",
+      "weight_unit": "score_points"
+    },
+    {
+      "id": "V04",
+      "name": "Переход контанго в бэквордацию",
+      "selected_for_scoring": true,
+      "configured_weight_nonzero": true,
+      "current_score_weight": -5.0,
+      "status": "frozen_standard_rule",
+      "definition_catalogue": "D:\\CODEX_PRG\\Breadth\\docs\\event-catalog-v4\\catalog.json",
+      "weight_unit": "score_points"
+    },
+    {
+      "id": "V05",
+      "name": "Восстановление кривой после бэквордации",
+      "selected_for_scoring": true,
+      "configured_weight_nonzero": false,
+      "current_score_weight": 0,
+      "status": "frozen_standard_rule",
+      "definition_catalogue": "D:\\CODEX_PRG\\Breadth\\docs\\event-catalog-v4\\catalog.json",
+      "weight_unit": "score_points"
+    },
+    {
+      "id": "V06",
+      "name": "Spot VIX относительно фьючерсов",
+      "selected_for_scoring": true,
+      "configured_weight_nonzero": false,
+      "current_score_weight": 0,
+      "status": "frozen_standard_rule",
+      "definition_catalogue": "D:\\CODEX_PRG\\Breadth\\docs\\event-catalog-v4\\catalog.json",
+      "weight_unit": "score_points"
+    },
+    {
+      "id": "V07",
+      "name": "Близость экспирации меняет смысл фронтального перекоса",
+      "selected_for_scoring": true,
+      "configured_weight_nonzero": true,
+      "current_score_weight": -5.0,
+      "status": "frozen_standard_rule",
+      "definition_catalogue": "D:\\CODEX_PRG\\Breadth\\docs\\event-catalog-v4\\catalog.json",
+      "weight_unit": "score_points"
+    },
+    {
+      "id": "V08",
+      "name": "Уровень VIX, скачок и последующее успокоение",
+      "selected_for_scoring": true,
+      "configured_weight_nonzero": true,
+      "current_score_weight": 10.0,
+      "status": "frozen_standard_rule",
+      "definition_catalogue": "D:\\CODEX_PRG\\Breadth\\docs\\event-catalog-v4\\catalog.json",
+      "weight_unit": "score_points"
+    },
+    {
+      "id": "Z01",
+      "name": "Начало импульса Цвейга по режимам",
+      "selected_for_scoring": true,
+      "configured_weight_nonzero": false,
+      "current_score_weight": 0,
+      "status": "frozen_standard_rule",
+      "definition_catalogue": "D:\\CODEX_PRG\\Breadth\\docs\\event-catalog-v4\\catalog.json",
+      "weight_unit": "score_points"
+    },
+    {
+      "id": "Z02",
+      "name": "Плотность и возраст Цвейга",
+      "selected_for_scoring": true,
+      "configured_weight_nonzero": true,
+      "current_score_weight": 5.0,
+      "status": "frozen_standard_rule",
+      "definition_catalogue": "D:\\CODEX_PRG\\Breadth\\docs\\event-catalog-v4\\catalog.json",
+      "weight_unit": "score_points"
+    },
+    {
+      "id": "Z03",
+      "name": "Совпадение и расхождение режимов Цвейга",
+      "selected_for_scoring": true,
+      "configured_weight_nonzero": true,
+      "current_score_weight": 5.0,
+      "status": "frozen_standard_rule",
+      "definition_catalogue": "D:\\CODEX_PRG\\Breadth\\docs\\event-catalog-v4\\catalog.json",
+      "weight_unit": "score_points"
+    },
+    {
+      "id": "Z04",
+      "name": "Ухудшение рынка внутри активного Цвейга",
+      "selected_for_scoring": true,
+      "configured_weight_nonzero": false,
+      "current_score_weight": 0,
+      "status": "frozen_standard_rule",
+      "definition_catalogue": "D:\\CODEX_PRG\\Breadth\\docs\\event-catalog-v4\\catalog.json",
+      "weight_unit": "score_points"
+    },
+    {
+      "id": "I01",
+      "name": "Первый день Titanic",
+      "selected_for_scoring": true,
+      "configured_weight_nonzero": true,
+      "current_score_weight": -5.0,
+      "status": "frozen_standard_rule",
+      "definition_catalogue": "D:\\CODEX_PRG\\Breadth\\docs\\event-catalog-v4\\catalog.json",
+      "weight_unit": "score_points"
+    },
+    {
+      "id": "I02",
+      "name": "Устойчивый Titanic",
+      "selected_for_scoring": true,
+      "configured_weight_nonzero": false,
+      "current_score_weight": 0,
+      "status": "frozen_standard_rule",
+      "definition_catalogue": "D:\\CODEX_PRG\\Breadth\\docs\\event-catalog-v4\\catalog.json",
+      "weight_unit": "score_points"
+    },
+    {
+      "id": "I03",
+      "name": "Предшествующий Titanic уже закончился",
+      "selected_for_scoring": true,
+      "configured_weight_nonzero": false,
+      "current_score_weight": 0,
+      "status": "frozen_standard_rule",
+      "definition_catalogue": "D:\\CODEX_PRG\\Breadth\\docs\\event-catalog-v4\\catalog.json",
+      "weight_unit": "score_points"
+    },
+    {
+      "id": "C01",
+      "name": "Сильный RSI при сохранном бычьем тренде",
+      "selected_for_scoring": true,
+      "configured_weight_nonzero": true,
+      "current_score_weight": 10.0,
+      "status": "frozen_standard_rule",
+      "definition_catalogue": "D:\\CODEX_PRG\\Breadth\\docs\\event-catalog-v4\\catalog.json",
+      "weight_unit": "score_points"
+    },
+    {
+      "id": "C02",
+      "name": "Цена и широты разворачиваются раньше обоих RSI",
+      "selected_for_scoring": true,
+      "configured_weight_nonzero": false,
+      "current_score_weight": 0,
+      "status": "frozen_standard_rule",
+      "definition_catalogue": "D:\\CODEX_PRG\\Breadth\\docs\\event-catalog-v4\\catalog.json",
+      "weight_unit": "score_points"
+    },
+    {
+      "id": "C03",
+      "name": "Отрыв RSI с подтверждением широтой и ценой",
+      "selected_for_scoring": true,
+      "configured_weight_nonzero": false,
+      "current_score_weight": 0,
+      "status": "frozen_standard_rule",
+      "definition_catalogue": "D:\\CODEX_PRG\\Breadth\\docs\\event-catalog-v4\\catalog.json",
+      "weight_unit": "score_points"
+    },
+    {
+      "id": "C04",
+      "name": "Отскок от EMA100 без достижения RSI=-1",
+      "selected_for_scoring": true,
+      "configured_weight_nonzero": false,
+      "current_score_weight": 0,
+      "status": "frozen_standard_rule",
+      "definition_catalogue": "D:\\CODEX_PRG\\Breadth\\docs\\event-catalog-v4\\catalog.json",
+      "weight_unit": "score_points"
+    },
+    {
+      "id": "C05",
+      "name": "Неглубокий подхват EMA20/50",
+      "selected_for_scoring": true,
+      "configured_weight_nonzero": true,
+      "current_score_weight": 10.0,
+      "status": "frozen_standard_rule",
+      "definition_catalogue": "D:\\CODEX_PRG\\Breadth\\docs\\event-catalog-v4\\catalog.json",
+      "weight_unit": "score_points"
+    },
+    {
+      "id": "C06",
+      "name": "Глубокий подхват EMA50/100",
+      "selected_for_scoring": true,
+      "configured_weight_nonzero": false,
+      "current_score_weight": 0,
+      "status": "frozen_standard_rule",
+      "definition_catalogue": "D:\\CODEX_PRG\\Breadth\\docs\\event-catalog-v4\\catalog.json",
+      "weight_unit": "score_points"
+    },
+    {
+      "id": "C07",
+      "name": "Повторный подхват примерно через 8–10 дней",
+      "selected_for_scoring": true,
+      "configured_weight_nonzero": false,
+      "current_score_weight": 0,
+      "status": "frozen_standard_rule",
+      "definition_catalogue": "D:\\CODEX_PRG\\Breadth\\docs\\event-catalog-v4\\catalog.json",
+      "weight_unit": "score_points"
+    },
+    {
+      "id": "C08",
+      "name": "Совместный выход RSI из +1, сильный красный бар и EMA20",
+      "selected_for_scoring": true,
+      "configured_weight_nonzero": true,
+      "current_score_weight": -10.0,
+      "status": "frozen_standard_rule",
+      "definition_catalogue": "D:\\CODEX_PRG\\Breadth\\docs\\event-catalog-v4\\catalog.json",
+      "weight_unit": "score_points"
+    },
+    {
+      "id": "C09",
+      "name": "Падение цены при ещё положительном контанго",
+      "selected_for_scoring": true,
+      "configured_weight_nonzero": false,
+      "current_score_weight": 0,
+      "status": "frozen_standard_rule",
+      "definition_catalogue": "D:\\CODEX_PRG\\Breadth\\docs\\event-catalog-v4\\catalog.json",
+      "weight_unit": "score_points"
+    },
+    {
+      "id": "C10",
+      "name": "Рост цены до восстановления контанго",
+      "selected_for_scoring": true,
+      "configured_weight_nonzero": false,
+      "current_score_weight": 0,
+      "status": "frozen_standard_rule",
+      "definition_catalogue": "D:\\CODEX_PRG\\Breadth\\docs\\event-catalog-v4\\catalog.json",
+      "weight_unit": "score_points"
+    },
+    {
+      "id": "C11",
+      "name": "Разрыв вверх, возврат над EMA и широкое восстановление",
+      "selected_for_scoring": true,
+      "configured_weight_nonzero": false,
+      "current_score_weight": 0,
+      "status": "frozen_standard_rule",
+      "definition_catalogue": "D:\\CODEX_PRG\\Breadth\\docs\\event-catalog-v4\\catalog.json",
+      "weight_unit": "score_points"
+    },
+    {
+      "id": "C12",
+      "name": "Двойное дно широты в стрессовом контексте",
+      "selected_for_scoring": true,
+      "configured_weight_nonzero": false,
+      "current_score_weight": 0,
+      "status": "frozen_standard_rule",
+      "definition_catalogue": "D:\\CODEX_PRG\\Breadth\\docs\\event-catalog-v4\\catalog.json",
+      "weight_unit": "score_points"
+    },
+    {
+      "id": "X01",
+      "name": "Продажа на половинном откате красного опорного движения",
+      "selected_for_scoring": false,
+      "configured_weight_nonzero": false,
+      "current_score_weight": 0,
+      "status": "retained_research_entry_zero_score_weight",
+      "definition_catalogue": "D:\\CODEX_PRG\\Breadth\\docs\\event-catalog-v4\\catalog.json"
+    },
+    {
+      "id": "X02",
+      "name": "Покупка на половинной коррекции зелёного опорного бара",
+      "selected_for_scoring": false,
+      "configured_weight_nonzero": false,
+      "current_score_weight": 0,
+      "status": "retained_research_entry_zero_score_weight",
+      "definition_catalogue": "D:\\CODEX_PRG\\Breadth\\docs\\event-catalog-v4\\catalog.json"
+    },
+    {
+      "id": "X03",
+      "name": "Половина составного импульса из нескольких баров",
+      "selected_for_scoring": false,
+      "configured_weight_nonzero": false,
+      "current_score_weight": 0,
+      "status": "retained_research_entry_zero_score_weight",
+      "definition_catalogue": "D:\\CODEX_PRG\\Breadth\\docs\\event-catalog-v4\\catalog.json"
+    },
+    {
+      "id": "U01",
+      "name": "Повторный отрыв RSI от -1 с изменением медленной широты",
+      "selected_for_scoring": true,
+      "configured_weight_nonzero": false,
+      "current_score_weight": 0,
+      "status": "frozen_standard_rule",
+      "definition_catalogue": "D:\\CODEX_PRG\\Breadth\\docs\\event-catalog-v4\\catalog.json",
+      "weight_unit": "score_points"
+    },
+    {
+      "id": "U02",
+      "name": "Вчера благополучие и Цвейг 30, сегодня двойной пробой и бэквордация",
+      "selected_for_scoring": true,
+      "configured_weight_nonzero": false,
+      "current_score_weight": 0,
+      "status": "frozen_standard_rule",
+      "definition_catalogue": "D:\\CODEX_PRG\\Breadth\\docs\\event-catalog-v4\\catalog.json",
+      "weight_unit": "score_points"
+    },
+    {
+      "id": "U03",
+      "name": "Месячная экспирация SPX",
+      "selected_for_scoring": true,
+      "configured_weight_nonzero": false,
+      "current_score_weight": 0,
+      "status": "frozen_standard_rule",
+      "definition_catalogue": "D:\\CODEX_PRG\\Breadth\\docs\\event-catalog-v4\\catalog.json",
+      "weight_unit": "score_points"
+    },
+    {
+      "id": "S1-H01",
+      "name": "Гистерезис риска67/35",
+      "selected_for_scoring": false,
+      "configured_weight_nonzero": false,
+      "current_score_weight": 0,
+      "status": "retained_research_entry_zero_score_weight",
+      "definition_catalogue": "D:\\CODEX_PRG\\Breadth\\docs\\event-catalog-v4\\catalog.json"
+    },
+    {
+      "id": "S1-H02",
+      "name": "Совместное истощение и восстановление Risk/Panic",
+      "selected_for_scoring": false,
+      "configured_weight_nonzero": false,
+      "current_score_weight": 0,
+      "status": "retained_research_entry_zero_score_weight",
+      "definition_catalogue": "D:\\CODEX_PRG\\Breadth\\docs\\event-catalog-v4\\catalog.json"
+    },
+    {
+      "id": "S1-H03",
+      "name": "Противоположное совместное состояние Smart/Dumb",
+      "selected_for_scoring": false,
+      "configured_weight_nonzero": false,
+      "current_score_weight": 0,
+      "status": "retained_research_entry_zero_score_weight",
+      "definition_catalogue": "D:\\CODEX_PRG\\Breadth\\docs\\event-catalog-v4\\catalog.json"
+    },
+    {
+      "id": "S1-H04",
+      "name": "Ослабление оптимизма при сохраняющемся росте цены",
+      "selected_for_scoring": false,
+      "configured_weight_nonzero": false,
+      "current_score_weight": 0,
+      "status": "retained_research_entry_zero_score_weight",
+      "definition_catalogue": "D:\\CODEX_PRG\\Breadth\\docs\\event-catalog-v4\\catalog.json"
+    },
+    {
+      "id": "S1-H05",
+      "name": "Относительная скорость CNN/Dumb",
+      "selected_for_scoring": false,
+      "configured_weight_nonzero": false,
+      "current_score_weight": 0,
+      "status": "retained_research_entry_zero_score_weight",
+      "definition_catalogue": "D:\\CODEX_PRG\\Breadth\\docs\\event-catalog-v4\\catalog.json"
+    },
+    {
+      "id": "S1-G01",
+      "name": "Паника обновляет минимум, цена удерживает опору",
+      "selected_for_scoring": true,
+      "configured_weight_nonzero": true,
+      "current_score_weight": null,
+      "status": "accepted_decibel_overlay",
+      "definition_catalogue": "D:\\CODEX_PRG\\Breadth\\docs\\event-catalog-v4\\catalog.json",
+      "current_weights": [
+        -20,
+        10
+      ],
+      "weight_schedule": "D:\\CODEX_PRG\\Breadth\\research\\models\\standard_plus_g01_decibel_v1\\accepted_model.json",
+      "weight_unit": "score_points"
+    },
+    {
+      "id": "S1-G02",
+      "name": "Восстановление от собственного минимума",
+      "selected_for_scoring": false,
+      "configured_weight_nonzero": false,
+      "current_score_weight": 0,
+      "status": "retained_research_entry_zero_score_weight",
+      "definition_catalogue": "D:\\CODEX_PRG\\Breadth\\docs\\event-catalog-v4\\catalog.json"
+    },
+    {
+      "id": "S1-G03",
+      "name": "Срыв подтверждения восстановления",
+      "selected_for_scoring": false,
+      "configured_weight_nonzero": false,
+      "current_score_weight": 0,
+      "status": "retained_research_entry_zero_score_weight",
+      "definition_catalogue": "D:\\CODEX_PRG\\Breadth\\docs\\event-catalog-v4\\catalog.json"
+    },
+    {
+      "id": "S1-G04",
+      "name": "Охлаждение внутри роста и последующий слом",
+      "selected_for_scoring": false,
+      "configured_weight_nonzero": false,
+      "current_score_weight": 0,
+      "status": "retained_research_entry_zero_score_weight",
+      "definition_catalogue": "D:\\CODEX_PRG\\Breadth\\docs\\event-catalog-v4\\catalog.json"
+    },
+    {
+      "id": "S1-G05",
+      "name": "Переход Smart/Dumb от крайности к участию",
+      "selected_for_scoring": false,
+      "configured_weight_nonzero": false,
+      "current_score_weight": 0,
+      "status": "retained_research_entry_zero_score_weight",
+      "definition_catalogue": "D:\\CODEX_PRG\\Breadth\\docs\\event-catalog-v4\\catalog.json"
+    },
+    {
+      "id": "S1-G06",
+      "name": "Слабый ценовой ответ на повторный оптимизм",
+      "selected_for_scoring": false,
+      "configured_weight_nonzero": false,
+      "current_score_weight": 0,
+      "status": "retained_research_entry_zero_score_weight",
+      "definition_catalogue": "D:\\CODEX_PRG\\Breadth\\docs\\event-catalog-v4\\catalog.json"
+    },
+    {
+      "id": "VB01",
+      "name": "Восстановление широт при продолжающем ухудшении RSI",
+      "selected_for_scoring": false,
+      "configured_weight_nonzero": false,
+      "current_score_weight": 0,
+      "status": "retained_research_entry_zero_score_weight",
+      "definition_catalogue": "D:\\CODEX_PRG\\Breadth\\docs\\event-catalog-v4\\catalog.json"
+    },
+    {
+      "id": "VB02",
+      "name": "Разнесённые подтверждения с памятью опорного эпизода",
+      "selected_for_scoring": false,
+      "configured_weight_nonzero": false,
+      "current_score_weight": 0,
+      "status": "retained_research_entry_zero_score_weight",
+      "definition_catalogue": "D:\\CODEX_PRG\\Breadth\\docs\\event-catalog-v4\\catalog.json"
+    },
+    {
+      "id": "VB03",
+      "name": "Опора затяжного стресса и сравнение следующих волн",
+      "selected_for_scoring": false,
+      "configured_weight_nonzero": false,
+      "current_score_weight": 0,
+      "status": "retained_research_entry_zero_score_weight",
+      "definition_catalogue": "D:\\CODEX_PRG\\Breadth\\docs\\event-catalog-v4\\catalog.json"
+    },
+    {
+      "id": "VB04",
+      "name": "Блюдце как смена фаз, а не готовая дуга",
+      "selected_for_scoring": false,
+      "configured_weight_nonzero": false,
+      "current_score_weight": 0,
+      "status": "retained_research_entry_zero_score_weight",
+      "definition_catalogue": "D:\\CODEX_PRG\\Breadth\\docs\\event-catalog-v4\\catalog.json"
+    },
+    {
+      "id": "VB05",
+      "name": "Вектор участия в сопоставимых коррекциях",
+      "selected_for_scoring": false,
+      "configured_weight_nonzero": false,
+      "current_score_weight": 0,
+      "status": "retained_research_entry_zero_score_weight",
+      "definition_catalogue": "D:\\CODEX_PRG\\Breadth\\docs\\event-catalog-v4\\catalog.json"
+    },
+    {
+      "id": "VB06",
+      "name": "Предупреждение, ценовой ответ и поглощение слабости",
+      "selected_for_scoring": false,
+      "configured_weight_nonzero": false,
+      "current_score_weight": 0,
+      "status": "retained_research_entry_zero_score_weight",
+      "definition_catalogue": "D:\\CODEX_PRG\\Breadth\\docs\\event-catalog-v4\\catalog.json"
+    },
+    {
+      "id": "VB07",
+      "name": "Относительное участие на обоих краях диапазона",
+      "selected_for_scoring": false,
+      "configured_weight_nonzero": false,
+      "current_score_weight": 0,
+      "status": "retained_research_entry_zero_score_weight",
+      "definition_catalogue": "D:\\CODEX_PRG\\Breadth\\docs\\event-catalog-v4\\catalog.json"
+    },
+    {
+      "id": "VB08",
+      "name": "Устойчивость лидирующего восстановления широты",
+      "selected_for_scoring": false,
+      "configured_weight_nonzero": false,
+      "current_score_weight": 0,
+      "status": "retained_research_entry_zero_score_weight",
+      "definition_catalogue": "D:\\CODEX_PRG\\Breadth\\docs\\event-catalog-v4\\catalog.json"
+    },
+    {
+      "id": "PH01",
+      "name": "Подхват с памятью предшествующего роста",
+      "selected_for_scoring": true,
+      "configured_weight_nonzero": true,
+      "current_score_weight": null,
+      "status": "accepted_hurst_cmf_overlay",
+      "definition_catalogue": "D:\\CODEX_PRG\\Breadth\\docs\\event-catalog-v4\\catalog.json",
+      "current_weights": [
+        10,
+        10,
+        -20,
+        -2.5
+      ],
+      "weight_schedule": "D:\\CODEX_PRG\\Breadth\\research\\models\\standard_plus_g01_decibel_ph01_hurst_cmf_v1\\accepted_model.json",
+      "weight_unit": "score_points"
+    },
+    {
+      "id": "PH02",
+      "name": "Повторный тест минимума и отложенное подтверждение EMA20",
+      "selected_for_scoring": false,
+      "configured_weight_nonzero": false,
+      "current_score_weight": 0,
+      "status": "retained_research_entry_zero_score_weight",
+      "definition_catalogue": "D:\\CODEX_PRG\\Breadth\\docs\\event-catalog-v4\\catalog.json"
+    },
+    {
+      "id": "PH03",
+      "name": "Повторный подхват после известного успеха или срыва",
+      "selected_for_scoring": false,
+      "configured_weight_nonzero": false,
+      "current_score_weight": 0,
+      "status": "retained_research_entry_zero_score_weight",
+      "definition_catalogue": "D:\\CODEX_PRG\\Breadth\\docs\\event-catalog-v4\\catalog.json"
+    },
+    {
+      "id": "PH04",
+      "name": "Молодое раскрытие и зрелое торможение веера",
+      "selected_for_scoring": false,
+      "configured_weight_nonzero": false,
+      "current_score_weight": 0,
+      "status": "retained_research_entry_zero_score_weight",
+      "definition_catalogue": "D:\\CODEX_PRG\\Breadth\\docs\\event-catalog-v4\\catalog.json"
+    },
+    {
+      "id": "PH05",
+      "name": "Наблюдаемый срыв ремонта зелёного опорного бара",
+      "selected_for_scoring": false,
+      "configured_weight_nonzero": false,
+      "current_score_weight": 0,
+      "status": "retained_research_entry_zero_score_weight",
+      "definition_catalogue": "D:\\CODEX_PRG\\Breadth\\docs\\event-catalog-v4\\catalog.json"
+    },
+    {
+      "id": "PH06",
+      "name": "Восстановление половины всей нисходящей серии",
+      "selected_for_scoring": false,
+      "configured_weight_nonzero": false,
+      "current_score_weight": 0,
+      "status": "retained_research_entry_zero_score_weight",
+      "definition_catalogue": "D:\\CODEX_PRG\\Breadth\\docs\\event-catalog-v4\\catalog.json"
+    },
+    {
+      "id": "PX01",
+      "name": "Исполнение на середине с учётом гэпа и тени",
+      "selected_for_scoring": false,
+      "configured_weight_nonzero": false,
+      "current_score_weight": 0,
+      "status": "retained_research_entry_zero_score_weight",
+      "definition_catalogue": "D:\\CODEX_PRG\\Breadth\\docs\\event-catalog-v4\\catalog.json"
+    },
+    {
+      "id": "PX02",
+      "name": "Исполнение по причинно известному составному импульсу",
+      "selected_for_scoring": false,
+      "configured_weight_nonzero": false,
+      "current_score_weight": 0,
+      "status": "retained_research_entry_zero_score_weight",
+      "definition_catalogue": "D:\\CODEX_PRG\\Breadth\\docs\\event-catalog-v4\\catalog.json"
+    }
+  ]
+}

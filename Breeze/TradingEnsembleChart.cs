@@ -1,9 +1,11 @@
 using System.Globalization;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Shapes;
+using System.Windows.Threading;
 
 namespace BreezeVL;
 
@@ -15,8 +17,7 @@ internal sealed class TradingEnsembleChart : Border
     private const double PanelInset = 4.0;
     private const double PanelHeaderHeight = TradingPaneLayout.HeaderHeight;
     private const double PanelBottomInset = 8.0;
-    private const double BaseClassificationThreshold = 50.0;
-    private const int TotalEnsembleCount = 9;
+    internal const double BaseClassificationThreshold = 50.0;
     private static readonly Brush PanelBackgroundBrush =
         new SolidColorBrush(Color.FromRgb(255, 252, 244));
     private static readonly Brush PanelBorderBrush =
@@ -34,6 +35,14 @@ internal sealed class TradingEnsembleChart : Border
         new Dictionary<string, TradingEnsembleSeries>(StringComparer.OrdinalIgnoreCase);
     private PriceSeries? _prices;
     private TechnicalIndicatorSeries? _technical;
+    private IReadOnlyDictionary<DateTime, IReadOnlyList<double>> _chandelierStops =
+        new Dictionary<DateTime, IReadOnlyList<double>>();
+    private IReadOnlyDictionary<DateTime, IReadOnlyList<double>> _chandelierExecutions =
+        new Dictionary<DateTime, IReadOnlyList<double>>();
+    private IReadOnlyDictionary<DateTime, TradingActivePosition> _actualActivePositions =
+        new Dictionary<DateTime, TradingActivePosition>();
+    private IReadOnlyDictionary<DateTime, TradingActivePosition> _targetActivePositions =
+        new Dictionary<DateTime, TradingActivePosition>();
     private DateTime? _viewportStart;
     private DateTime? _viewportEnd;
     private DateTime? _cursorDate;
@@ -42,18 +51,27 @@ internal sealed class TradingEnsembleChart : Border
     private bool _cursorPinned;
     private HashSet<string> _selectedPackages = new(StringComparer.OrdinalIgnoreCase);
     private bool _showEma;
-    private bool _showActiveEnsembles;
+    private TradingActiveMode _activeMode = TradingActiveMode.IndependentDeciles;
+    private int _recentPerformanceBars = 150;
     private bool _showPrice = true, _showCandles = true;
     private double _plotLeft, _plotTop, _plotWidth, _plotHeight, _slots = 1.0;
     private int _futureDateIndex = -1;
+    private DateTime? _lastVisibleRealDate;
     private readonly double[] _dividerYs = new double[3];
     private double _priceBoundary = .52, _ensembleBoundary = .63, _decileBoundary = .91;
     private int _resizeDivider = -1;
+    private int _resizeUpperPane = -1;
+    private int _resizeLowerPane = -1;
     private double _lastResizeY;
     private double _panelUsableHeight = 1.0;
     private bool[] _collapsed = new bool[4];
     private double[] _paneHeights = new double[4];
     private string? _message;
+    private readonly DispatcherTimer _activeLineHintTimer;
+    private readonly Popup _activeLineHintPopup;
+    private readonly TextBlock _activeLineHintText;
+    private FrameworkElement? _activeLineHintOwner;
+    private Point _activeLineHintPoint;
 
     public event Action<DateTime>? CursorDateChanged;
     public event Action? PaneLayoutChanged;
@@ -72,8 +90,41 @@ internal sealed class TradingEnsembleChart : Border
         Margin = new Thickness(0);
         Padding = new Thickness(0);
         Child = _canvas;
+        _activeLineHintText = new TextBlock
+        {
+            TextWrapping = TextWrapping.Wrap,
+            MaxWidth = 380,
+            Foreground = new SolidColorBrush(Color.FromRgb(32, 38, 44))
+        };
+        _activeLineHintPopup = new Popup
+        {
+            PlacementTarget = _canvas,
+            Placement = PlacementMode.Relative,
+            StaysOpen = true,
+            AllowsTransparency = true,
+            PopupAnimation = PopupAnimation.None,
+            IsHitTestVisible = false,
+            Child = new Border
+            {
+                Background = new SolidColorBrush(Color.FromRgb(238, 238, 238)),
+                BorderBrush = new SolidColorBrush(Color.FromRgb(145, 145, 145)),
+                BorderThickness = new Thickness(1),
+                Padding = new Thickness(8, 6, 8, 6),
+                Child = _activeLineHintText
+            }
+        };
+        _activeLineHintTimer = new DispatcherTimer
+        {
+            Interval = TimeSpan.FromMilliseconds(400)
+        };
+        _activeLineHintTimer.Tick += (_, _) => OpenActiveLineHint();
         SizeChanged += (_, _) => RenderSeries();
-        IsVisibleChanged += (_, _) => { if (IsVisible) Dispatcher.BeginInvoke(new Action(RenderSeries)); };
+        IsVisibleChanged += (_, _) =>
+        {
+            if (IsVisible) Dispatcher.BeginInvoke(new Action(RenderSeries));
+            else CloseActiveLineHint();
+        };
+        Unloaded += (_, _) => CloseActiveLineHint();
         MouseMove += ChartMouseMove;
     }
 
@@ -94,9 +145,36 @@ internal sealed class TradingEnsembleChart : Border
     }
 
     public void SetShowEma(bool show) { _showEma = show; if (IsVisible) RenderSeries(); }
-    public void SetShowActiveEnsembles(bool show)
+    public void SetChandelierStops(IReadOnlyDictionary<DateTime, IReadOnlyList<double>> stops)
     {
-        _showActiveEnsembles = show;
+        _chandelierStops = stops;
+        if (IsVisible) RenderSeries();
+    }
+    public void SetChandelierExecutions(IReadOnlyDictionary<DateTime, IReadOnlyList<double>> executions)
+    {
+        _chandelierExecutions = executions;
+        if (IsVisible) RenderSeries();
+    }
+    public void SetActualActivePositions(
+        IReadOnlyDictionary<DateTime, TradingActivePosition> positions)
+    {
+        _actualActivePositions = positions;
+        if (IsVisible) RenderSeries();
+    }
+    public void SetTargetActivePositions(
+        IReadOnlyDictionary<DateTime, TradingActivePosition> positions)
+    {
+        _targetActivePositions = positions;
+        if (IsVisible) RenderSeries();
+    }
+    public void SetActiveMode(TradingActiveMode mode)
+    {
+        _activeMode = mode;
+        if (IsVisible) RenderSeries();
+    }
+    public void SetRecentPerformanceBars(int bars)
+    {
+        _recentPerformanceBars = Math.Max(10, bars);
         if (IsVisible) RenderSeries();
     }
     public void SetShowPrice(bool show) { _showPrice = show; if (IsVisible) RenderSeries(); }
@@ -123,16 +201,24 @@ internal sealed class TradingEnsembleChart : Border
     }
 
     public bool IsOverPaneDivider(Point point) =>
-        _dates.Count > 1 && _dividerYs.Any(y => Math.Abs(point.Y - y) <= 7.0);
+        _dates.Count > 1 && Enumerable.Range(0, _dividerYs.Length).Any(index =>
+            double.IsFinite(_dividerYs[index]) &&
+            TryGetResizePair(index, out _, out _) &&
+            Math.Abs(point.Y - _dividerYs[index]) <= 7.0);
 
     public bool TryBeginPaneResize(Point point)
     {
-        if (_dates.Count < 2 || _paneHeights.Any(h => h <= 0) || _dividerYs.All(double.IsNaN)) return false;
+        if (_dates.Count < 2 || _dividerYs.All(double.IsNaN)) return false;
         int divider = Enumerable.Range(0, _dividerYs.Length)
-            .Where(index => double.IsFinite(_dividerYs[index]))
+            .Where(index => double.IsFinite(_dividerYs[index]) && TryGetResizePair(index, out _, out _))
             .OrderBy(index => Math.Abs(point.Y - _dividerYs[index]))
+            .DefaultIfEmpty(-1)
             .First();
+        if (divider < 0)
+            return false;
         if (Math.Abs(point.Y - _dividerYs[divider]) > 7.0)
+            return false;
+        if (!TryGetResizePair(divider, out _resizeUpperPane, out _resizeLowerPane))
             return false;
         _resizeDivider = divider;
         _lastResizeY = point.Y;
@@ -142,17 +228,18 @@ internal sealed class TradingEnsembleChart : Border
 
     public void ResizePane(Point point)
     {
-        if (_resizeDivider < 0)
+        if (_resizeDivider < 0 || _resizeUpperPane < 0 || _resizeLowerPane < 0)
             return;
         double[] weights = [_priceBoundary, _ensembleBoundary - _priceBoundary,
             _decileBoundary - _ensembleBoundary, 1 - _decileBoundary];
-        int i = _resizeDivider;
-        double pairHeight = _paneHeights[i] + _paneHeights[i + 1];
+        int upper = _resizeUpperPane;
+        int lower = _resizeLowerPane;
+        double pairHeight = _paneHeights[upper] + _paneHeights[lower];
         double minimum = Math.Min(TradingPaneLayout.MinimumExpandedHeight, pairHeight / 2);
-        double first = Math.Clamp(_paneHeights[i] + point.Y - _lastResizeY, minimum, pairHeight - minimum);
-        double pairWeight = weights[i] + weights[i + 1];
-        weights[i] = pairWeight * first / pairHeight;
-        weights[i + 1] = pairWeight - weights[i];
+        double first = Math.Clamp(_paneHeights[upper] + point.Y - _lastResizeY, minimum, pairHeight - minimum);
+        double pairWeight = weights[upper] + weights[lower];
+        weights[upper] = pairWeight * first / pairHeight;
+        weights[lower] = pairWeight - weights[upper];
         _priceBoundary = weights[0];
         _ensembleBoundary = weights[0] + weights[1];
         _decileBoundary = 1 - weights[3];
@@ -163,29 +250,73 @@ internal sealed class TradingEnsembleChart : Border
     public void EndPaneResize()
     {
         _resizeDivider = -1;
+        _resizeUpperPane = -1;
+        _resizeLowerPane = -1;
         Cursor = null;
+    }
+
+    private bool TryGetResizePair(int divider, out int upper, out int lower)
+    {
+        upper = -1;
+        lower = -1;
+        for (int index = Math.Min(divider, _collapsed.Length - 1); index >= 0; index--)
+            if (!_collapsed[index])
+            {
+                upper = index;
+                break;
+            }
+        for (int index = Math.Max(0, divider + 1); index < _collapsed.Length; index++)
+            if (!_collapsed[index])
+            {
+                lower = index;
+                break;
+            }
+        return upper >= 0 && lower >= 0;
     }
 
     private void RenderSeries()
     {
         if (ActualWidth < 150 || ActualHeight < 180) return;
+        CloseActiveLineHint();
         _canvas.Children.Clear();
         _cursorLine = null;
 
         var selected = SelectedSeries().ToList();
-        IEnumerable<DateTime> visibleDates = selected.SelectMany(item => item.Points.Select(point => point.Date))
+        if (selected.Count == 0)
+        {
+            _dates = [];
+            _futureDateIndex = -1;
+            _lastVisibleRealDate = null;
+            AddText("Trading Ensemble — TorchSharp4GPU / TorchSharp / Jordan / Encog", 12, 9, 13, Brushes.Black, FontWeights.SemiBold);
+            AddText(_message ?? "Включите хотя бы один торговый ансамбль.",
+                12, 36, 11, Brushes.DimGray, FontWeights.Normal);
+            return;
+        }
+
+        IEnumerable<DateTime> realDates = _prices?.Points.Select(point => point.Date.Date) ??
+            selected.SelectMany(item => item.Points.Select(point => point.Date.Date));
+        IEnumerable<DateTime> visibleDates = realDates
             .Where(date => !_viewportStart.HasValue || date >= _viewportStart.Value)
             .Where(date => !_viewportEnd.HasValue || date <= _viewportEnd.Value);
-        DateTime? lastRealDate = selected.SelectMany(item => item.Points.Select(point => point.Date))
-            .Cast<DateTime?>().Max();
+        DateTime? lastRealDate = realDates.Cast<DateTime?>().Max();
         bool latestBarVisible = lastRealDate.HasValue &&
             (!_viewportStart.HasValue || lastRealDate.Value >= _viewportStart.Value) &&
             (!_viewportEnd.HasValue || lastRealDate.Value <= _viewportEnd.Value);
         if (latestBarVisible)
+        {
             visibleDates = visibleDates.Concat(selected.SelectMany(item => item.Forecasts)
-                .Where(point => point.IsNextBar)
-                .Select(point => point.Date));
+                .Where(point => point.IsNextBar && point.Date.Date > lastRealDate!.Value.Date)
+                .Select(point => point.Date.Date));
+            visibleDates = visibleDates.Concat(_chandelierStops.Keys
+                .Where(date => date.Date > lastRealDate!.Value.Date));
+            visibleDates = visibleDates.Concat(_targetActivePositions.Keys
+                .Where(date => date.Date > lastRealDate!.Value.Date));
+        }
         _dates = visibleDates.Distinct().OrderBy(date => date).ToList();
+        _lastVisibleRealDate = _dates
+            .Where(date => !lastRealDate.HasValue || date.Date <= lastRealDate.Value.Date)
+            .Cast<DateTime?>()
+            .Max();
         _futureDateIndex = -1;
         if (lastRealDate.HasValue)
         {
@@ -215,9 +346,9 @@ internal sealed class TradingEnsembleChart : Border
         double priceHeight = _paneHeights[0], ensembleHeight = _paneHeights[1], decileHeight = _paneHeights[2], activeHeight = _paneHeights[3];
         double priceTop = top, ensembleTop = priceTop + priceHeight + gap;
         double decileTop = ensembleTop + ensembleHeight + gap, activeTop = decileTop + decileHeight + gap;
-        _dividerYs[0] = !_collapsed[0] && !_collapsed[1] ? priceTop + priceHeight + gap / 2.0 : double.NaN;
-        _dividerYs[1] = !_collapsed[1] && !_collapsed[2] ? ensembleTop + ensembleHeight + gap / 2.0 : double.NaN;
-        _dividerYs[2] = !_collapsed[2] && !_collapsed[3] ? decileTop + decileHeight + gap / 2.0 : double.NaN;
+        _dividerYs[0] = priceTop + priceHeight + gap / 2.0;
+        _dividerYs[1] = ensembleTop + ensembleHeight + gap / 2.0;
+        _dividerYs[2] = decileTop + decileHeight + gap / 2.0;
         double pricePlotTop = priceTop + PanelHeaderHeight;
         double ensemblePlotTop = ensembleTop + PanelHeaderHeight;
         double decilePlotTop = decileTop + PanelHeaderHeight;
@@ -239,44 +370,92 @@ internal sealed class TradingEnsembleChart : Border
         DrawPanelFrame(PanelInset, panelWidth, ensembleTop, ensembleHeight);
         DrawPanelFrame(PanelInset, panelWidth, decileTop, decileHeight);
         DrawPanelFrame(PanelInset, panelWidth, activeTop, activeHeight);
+        DrawRecentPerformanceBoundary(selected, X, pricePlotTop,
+            activePlotTop + activePlotHeight - pricePlotTop);
         DrawPaneDividers(PanelInset, panelWidth);
 
         if (!_collapsed[0]) DrawPrice(X, pricePlotTop, pricePlotHeight);
         if (!_collapsed[1] || !_collapsed[2]) DrawPercentPanels(selected, X, ensemblePlotTop, ensemblePlotHeight, decilePlotTop, decilePlotHeight);
-        (double Value, double Percentage)? lastActive = _collapsed[3]
+        ActiveSummary? lastActive = _collapsed[3]
             ? null
             : DrawActive(selected, X, activePlotTop, activePlotHeight);
         DrawPanelTitle(priceTop, "S&P 500 (SPY)", 0);
         DrawPanelTitle(ensembleTop, "Ensemble %", 1);
         DrawPanelTitle(decileTop, "Deciles, %", 2);
-        DrawPanelTitle(activeTop, _showActiveEnsembles ? "Active Ensembles" : "Active Deciles", 3);
+        DrawPanelTitle(activeTop, ActivePaneTitle(), 3);
         double? lastClose = LatestVisibleClose();
         if (lastClose.HasValue)
-            AddText($"Last: {lastClose.Value:N2}", Math.Max(left + 120, ActualWidth - 155),
+        {
+            double? lastStop = LatestVisibleStop();
+            string lastText = $"Last: {lastClose.Value:N2}" +
+                              (lastStop.HasValue ? $"   Stop: {lastStop.Value:N2}" : "   Stop: —");
+            AddText(lastText, Math.Max(left + 120, ActualWidth - 245),
                 priceTop + 7, 11, LastValueBrush, FontWeights.Normal);
+        }
         if (lastActive.HasValue)
-            AddText($"Last: {lastActive.Value.Value:0} ({lastActive.Value.Percentage:0.0}%)",
-                Math.Max(left + 120, ActualWidth - 190),
+            AddText(FormatActiveSummary(lastActive.Value),
+                Math.Max(left + 120, ActualWidth - 330),
                 activeTop + 7, 11, LastValueBrush, FontWeights.Normal);
         if (_collapsed.All(c => c)) _plotHeight = 0;
         DrawCursor();
+    }
+
+    private void DrawRecentPerformanceBoundary(
+        IReadOnlyList<TradingEnsembleSeries> selected,
+        Func<int, double> x,
+        double top,
+        double height)
+    {
+        if (_prices?.Points is not { } prices || prices.Count <= _recentPerformanceBars ||
+            selected.Count == 0 || _dates.Count == 0)
+            return;
+
+        DateTime commonEnd = selected.Min(item => item.Points.Count == 0
+            ? DateTime.MaxValue
+            : item.Points[^1].Date.Date);
+        if (commonEnd == DateTime.MaxValue)
+            return;
+        int endIndex = -1;
+        for (int index = prices.Count - 1; index >= 0; index--)
+            if (prices[index].Date.Date <= commonEnd)
+            {
+                endIndex = index;
+                break;
+            }
+        int startIndex = endIndex - _recentPerformanceBars;
+        if (startIndex < 0)
+            return;
+
+        DateTime boundaryDate = prices[startIndex].Date.Date;
+        if (boundaryDate < _dates[0].Date || boundaryDate > _dates[^1].Date)
+            return;
+        int dateIndex = Enumerable.Range(0, _dates.Count)
+            .MinBy(index => Math.Abs((_dates[index].Date - boundaryDate).Ticks));
+        double slotWidth = _plotWidth / Math.Max(1.0, _slots);
+        var marker = new Rectangle
+        {
+            Width = Math.Max(3.0, slotWidth * 0.55),
+            Height = Math.Max(1.0, height),
+            Fill = new SolidColorBrush(Color.FromRgb(134, 220, 151)),
+            Opacity = 0.5,
+            IsHitTestVisible = false
+        };
+        System.Windows.Automation.AutomationProperties.SetName(
+            marker, "Recent trading bars boundary");
+        Canvas.SetLeft(marker, x(dateIndex) - marker.Width / 2.0);
+        Canvas.SetTop(marker, top);
+        _canvas.Children.Add(marker);
     }
 
     private void DrawPrice(Func<int, double> x, double top, double height)
     {
         if (_prices is null || !_showPrice) return;
         var byDate = _prices.Points.ToDictionary(point => point.Date.Date);
-        int futureIndex = -1;
-        PricePoint? referencePoint = null;
-        for (int index = _dates.Count - 1; index >= 0; index--)
-        {
-            if (!byDate.TryGetValue(_dates[index], out PricePoint? point))
-                continue;
-            referencePoint = point;
-            if (index < _dates.Count - 1 && _dates[^1] > point.Date.Date)
-                futureIndex = _dates.Count - 1;
-            break;
-        }
+        int futureIndex = _futureDateIndex;
+        PricePoint? referencePoint = _lastVisibleRealDate.HasValue &&
+            byDate.TryGetValue(_lastVisibleRealDate.Value.Date, out PricePoint? latestPoint)
+                ? latestPoint
+                : null;
         var values = _dates.Select(date => byDate.TryGetValue(date, out PricePoint? point) ? point.Close : double.NaN).ToArray();
         var lines = new List<(double[] Values, Brush Brush, double Thickness)>();
         if (!_showCandles) lines.Add((values, Brushes.Black, 1.35));
@@ -291,7 +470,12 @@ internal sealed class TradingEnsembleChart : Border
 
         double[] priceExtremes = _dates.SelectMany(date => byDate.TryGetValue(date, out PricePoint? point)
             ? new[] { point.Low, point.High } : Array.Empty<double>()).ToArray();
-        double[] finite = priceExtremes.Concat(lines.SelectMany(item => item.Values)).Where(double.IsFinite).ToArray();
+        double[] visibleStops = _dates
+            .Select(date => TryGetMaximumStop(date, out double stop) ? stop : double.NaN)
+            .Where(double.IsFinite)
+            .ToArray();
+        double[] finite = priceExtremes.Concat(lines.SelectMany(item => item.Values))
+            .Concat(visibleStops).Where(double.IsFinite).ToArray();
         if (futureIndex >= 0 && referencePoint is not null && double.IsFinite(referencePoint.Close))
             finite = finite.Concat([referencePoint.Close * 0.98, referencePoint.Close * 1.02]).ToArray();
         if (finite.Length < 2) return;
@@ -346,6 +530,51 @@ internal sealed class TradingEnsembleChart : Border
             _canvas.Children.Add(forecastScale);
         }
         foreach (var line in lines) DrawLine(line.Values, x, Y, line.Brush, line.Thickness);
+        double dotSize = Math.Clamp(_plotWidth / Math.Max(1.0, _slots) * 0.18, 2.0, 4.0);
+        for (int index = 0; index < _dates.Count; index++)
+        {
+            if (!TryGetMaximumStop(_dates[index], out double stop))
+                continue;
+            bool projected = index == _futureDateIndex;
+            var marker = new Ellipse
+            {
+                Width = projected ? Math.Max(6.0, dotSize * 1.8) : dotSize,
+                Height = projected ? Math.Max(6.0, dotSize * 1.8) : dotSize,
+                Fill = projected ? Brushes.Transparent : Brushes.Black,
+                Stroke = Brushes.Black,
+                StrokeThickness = projected ? 1.5 : .35,
+                IsHitTestVisible = false
+            };
+            if (projected)
+                System.Windows.Automation.AutomationProperties.SetName(
+                    marker, "Projected next-session chandelier stop");
+            Canvas.SetLeft(marker, x(index) - marker.Width / 2.0);
+            Canvas.SetTop(marker, Y(stop) - marker.Height / 2.0);
+            _canvas.Children.Add(marker);
+        }
+        double crossSize = Math.Clamp(_plotWidth / Math.Max(1.0, _slots) * 0.42, 6.0, 9.0);
+        for (int index = 0; index < _dates.Count; index++)
+        {
+            if (!TryGetMaximumExecution(_dates[index], out double execution))
+                continue;
+            double centerX = x(index);
+            double centerY = Y(execution);
+            double half = crossSize / 2.0;
+            _canvas.Children.Add(new Line
+            {
+                X1 = centerX - half, Y1 = centerY - half,
+                X2 = centerX + half, Y2 = centerY + half,
+                Stroke = Brushes.Black, StrokeThickness = 1.6,
+                IsHitTestVisible = false
+            });
+            _canvas.Children.Add(new Line
+            {
+                X1 = centerX - half, Y1 = centerY + half,
+                X2 = centerX + half, Y2 = centerY - half,
+                Stroke = Brushes.Black, StrokeThickness = 1.6,
+                IsHitTestVisible = false
+            });
+        }
     }
 
     private void DrawPercentPanels(IReadOnlyList<TradingEnsembleSeries> selected, Func<int, double> x,
@@ -579,63 +808,179 @@ internal sealed class TradingEnsembleChart : Border
         _canvas.Children.Add(forecastScale);
     }
 
-    private (double Value, double Percentage)? DrawActive(
+    private readonly record struct ActiveSummary(
+        TradingActivePosition? WithoutChandelier,
+        TradingActivePosition? WithChandelier);
+
+    private ActiveSummary? DrawActive(
         IReadOnlyList<TradingEnsembleSeries> selected, Func<int, double> x,
         double top, double height)
     {
-        var maps = selected.Select(item => item.Points.ToDictionary(point => point.Date.Date)).ToList();
-        var values = Enumerable.Repeat(double.NaN, _dates.Count).ToArray();
-        var percentages = Enumerable.Repeat(double.NaN, _dates.Count).ToArray();
+        var signalValues = Enumerable.Repeat(double.NaN, _dates.Count).ToArray();
+        var heldValues = Enumerable.Repeat(double.NaN, _dates.Count).ToArray();
         for (int index = 0; index < _dates.Count; index++)
         {
-            double active = 0.0;
-            int availablePackages = 0;
-            foreach (var map in maps)
-                if (map.TryGetValue(_dates[index], out TradingEnsemblePoint? point))
-                {
-                    active += _showActiveEnsembles
-                        ? point.EnsemblePercent >= BaseClassificationThreshold ? 1 : 0
-                        : point.Deciles.Count(value => value >= BaseClassificationThreshold);
-                    availablePackages++;
-                }
-            if (availablePackages > 0)
-            {
-                values[index] = active;
-                int denominator = _showActiveEnsembles
-                    ? TotalEnsembleCount
-                    : availablePackages * 10;
-                percentages[index] = denominator > 0 ? active * 100.0 / denominator : double.NaN;
-            }
+            if (_targetActivePositions.TryGetValue(_dates[index].Date,
+                    out TradingActivePosition target))
+                signalValues[index] = target.Value;
+            if (_actualActivePositions.TryGetValue(_dates[index].Date,
+                    out TradingActivePosition position))
+                heldValues[index] = position.Value;
         }
-        double[] finite = values.Where(double.IsFinite).ToArray();
+        double[] finite = signalValues.Concat(heldValues).Where(double.IsFinite).ToArray();
         if (finite.Length == 0)
             return null;
-        double minimum;
+        double minimum = 0;
         double maximum;
-        if (_showActiveEnsembles)
+        if (_activeMode != TradingActiveMode.IndependentDeciles)
         {
-            minimum = 0;
-            maximum = TotalEnsembleCount;
-            DrawScaleGrid(top, height, minimum, maximum);
+            maximum = 10;
         }
         else
         {
-            double dataMinimum = finite.Min();
-            double dataMaximum = finite.Max();
-            bool constant = Math.Abs(dataMaximum - dataMinimum) < 1e-9;
-            minimum = constant ? dataMinimum - .5 : dataMinimum;
-            maximum = constant ? dataMaximum + .5 : dataMaximum;
-            if (constant)
-                DrawConstantScaleGrid(top, height, dataMinimum);
-            else
-                DrawScaleGrid(top, height, minimum, maximum);
+            maximum = Math.Max(10, selected.Count * 10);
         }
-        DrawLine(values, x, value => top + height *
-            (maximum - Math.Clamp(value, minimum, maximum)) / (maximum - minimum), Brushes.DarkBlue, 1.7);
-        for (int index = values.Length - 1; index >= 0; index--)
-            if (double.IsFinite(values[index]) && double.IsFinite(percentages[index]))
-                return (values[index], percentages[index]);
-        return null;
+        DrawScaleGrid(top, height, minimum, maximum);
+        double Y(double value) => top + height *
+            (maximum - Math.Clamp(value, minimum, maximum)) / (maximum - minimum);
+        DrawInteractiveActiveLine(signalValues, x, Y, Brushes.DarkOrange, 1.45,
+            "Без люстры — оранжевая линия",
+            "Позиция по сигналу ансамбля без защитной люстры и без задержки повторного входа. " +
+            "Значение на дате D рассчитано после закрытия предыдущего торгового бара и относится " +
+            "к открытию даты D.");
+        DrawInteractiveActiveLine(heldValues, x, Y, Brushes.DarkBlue, 1.8,
+            "С люстрой — синяя линия",
+            "Фактически удерживаемая позиция с учётом защитной люстры 3,75%, частичных или " +
+            "полных Stop-выходов и задержки повторного входа.");
+
+        DateTime? labelDate = _lastVisibleRealDate;
+        TradingActivePosition? signal = labelDate.HasValue &&
+            _targetActivePositions.TryGetValue(labelDate.Value.Date, out TradingActivePosition exactSignal)
+                ? exactSignal
+                : null;
+        TradingActivePosition? held = labelDate.HasValue &&
+            _actualActivePositions.TryGetValue(labelDate.Value.Date, out TradingActivePosition exactHeld)
+                ? exactHeld
+                : null;
+        return signal.HasValue || held.HasValue ? new ActiveSummary(signal, held) : null;
+    }
+
+    private string FormatActiveSummary(ActiveSummary summary)
+    {
+        if (!summary.WithChandelier.HasValue)
+            return "Last: —";
+        string value = _activeMode == TradingActiveMode.IndependentDeciles
+            ? summary.WithChandelier.Value.Value.ToString("0", CultureInfo.InvariantCulture)
+            : summary.WithChandelier.Value.Value.ToString("0.0", CultureInfo.InvariantCulture);
+        return $"Last: {value} ({summary.WithChandelier.Value.Percentage:0.0}%)";
+    }
+
+    private string ActivePaneTitle() => _activeMode switch
+    {
+        TradingActiveMode.ProportionalEnsembles => "Active Ensembles",
+        TradingActiveMode.QuantumEnsembles => "Active Ensembles 0/10",
+        _ => "Active Deciles"
+    };
+
+    private void DrawInteractiveActiveLine(
+        IReadOnlyList<double> values,
+        Func<int, double> x,
+        Func<double, double> y,
+        Brush brush,
+        double thickness,
+        string title,
+        string explanation)
+    {
+        Polyline? hitLine = null;
+        Polyline? visibleLine = null;
+        for (int index = 0; index < values.Count; index++)
+        {
+            if (!double.IsFinite(values[index]))
+            {
+                hitLine = null;
+                visibleLine = null;
+                continue;
+            }
+            if (hitLine is null || visibleLine is null)
+            {
+                hitLine = new Polyline
+                {
+                    Stroke = Brushes.Transparent,
+                    StrokeThickness = 12.0,
+                    IsHitTestVisible = true
+                };
+                System.Windows.Automation.AutomationProperties.SetName(
+                    hitLine, title + " — подсказка линии");
+                ConfigureActiveLineHint(hitLine, title, explanation);
+                _canvas.Children.Add(hitLine);
+
+                visibleLine = new Polyline
+                {
+                    Stroke = brush,
+                    StrokeThickness = thickness,
+                    IsHitTestVisible = false
+                };
+                _canvas.Children.Add(visibleLine);
+            }
+            Point point = new(x(index), y(values[index]));
+            hitLine.Points.Add(point);
+            visibleLine.Points.Add(point);
+        }
+    }
+
+    private void ConfigureActiveLineHint(
+        FrameworkElement owner,
+        string title,
+        string explanation)
+    {
+        string text = $"{title}\n{explanation}";
+        owner.Tag = text;
+        owner.MouseEnter += (_, e) =>
+            BeginActiveLineHint(owner, text, e.GetPosition(_canvas));
+        owner.MouseMove += (_, e) =>
+        {
+            if (ReferenceEquals(_activeLineHintOwner, owner) && !_activeLineHintPopup.IsOpen)
+                _activeLineHintPoint = e.GetPosition(_canvas);
+        };
+        owner.MouseLeave += (_, _) => CloseActiveLineHint(owner);
+    }
+
+    private void BeginActiveLineHint(
+        FrameworkElement owner,
+        string text,
+        Point point)
+    {
+        CloseActiveLineHint();
+        _activeLineHintOwner = owner;
+        _activeLineHintText.Text = text;
+        _activeLineHintPoint = point;
+        _activeLineHintTimer.Start();
+    }
+
+    private void OpenActiveLineHint()
+    {
+        _activeLineHintTimer.Stop();
+        if (_activeLineHintOwner?.IsMouseOver != true)
+        {
+            CloseActiveLineHint();
+            return;
+        }
+        _activeLineHintPopup.HorizontalOffset = _activeLineHintPoint.X > ActualWidth - 410
+            ? Math.Max(0, _activeLineHintPoint.X - 395)
+            : _activeLineHintPoint.X + 14;
+        _activeLineHintPopup.VerticalOffset = _activeLineHintPoint.Y > ActualHeight - 135
+            ? Math.Max(0, _activeLineHintPoint.Y - 115)
+            : _activeLineHintPoint.Y + 14;
+        _activeLineHintPopup.IsOpen = true;
+    }
+
+    private void CloseActiveLineHint(FrameworkElement? owner = null)
+    {
+        if (owner is not null && !ReferenceEquals(owner, _activeLineHintOwner))
+            return;
+        _activeLineHintTimer.Stop();
+        _activeLineHintPopup.IsOpen = false;
+        _activeLineHintOwner = null;
     }
 
     private void DrawConstantScaleGrid(double top, double height, double value)
@@ -686,7 +1031,7 @@ internal sealed class TradingEnsembleChart : Border
     {
         var button = new Button
         {
-            Content = _collapsed[index] ? "▶" : "▼", Width = 18, Height = 18, FontSize = 10,
+            Content = _collapsed[index] ? "▲" : "▼", Width = 18, Height = 18, FontSize = 10,
             Padding = new Thickness(0), Background = Brushes.White, BorderBrush = PanelBorderBrush,
             ToolTip = (_collapsed[index] ? "Развернуть " : "Свернуть ") + title
         };
@@ -703,8 +1048,9 @@ internal sealed class TradingEnsembleChart : Border
 
     private void DrawPaneDividers(double left, double width)
     {
-        foreach (double y in _dividerYs)
+        for (int index = 0; index < _dividerYs.Length; index++)
         {
+            double y = _dividerYs[index];
             if (!double.IsFinite(y)) continue;
             var divider = new Rectangle
             {
@@ -715,6 +1061,8 @@ internal sealed class TradingEnsembleChart : Border
             };
             Canvas.SetLeft(divider, left);
             Canvas.SetTop(divider, y - 2.5);
+            System.Windows.Automation.AutomationProperties.SetName(
+                divider, $"Trading pane divider {index + 1}");
             _canvas.Children.Add(divider);
         }
     }
@@ -768,6 +1116,39 @@ internal sealed class TradingEnsembleChart : Border
             if (byDate.TryGetValue(_dates[index], out PricePoint? point) && double.IsFinite(point.Close))
                 return point.Close;
         return null;
+    }
+
+    private double? LatestVisibleStop()
+    {
+        for (int index = _dates.Count - 1; index >= 0; index--)
+        {
+            if (!TryGetMaximumStop(_dates[index], out double stop))
+                continue;
+            return stop;
+        }
+        return null;
+    }
+
+    private bool TryGetMaximumStop(DateTime date, out double maximum)
+    {
+        maximum = double.NaN;
+        if (!_chandelierStops.TryGetValue(date.Date, out IReadOnlyList<double>? stops))
+            return false;
+        foreach (double stop in stops)
+            if (double.IsFinite(stop) && (!double.IsFinite(maximum) || stop > maximum))
+                maximum = stop;
+        return double.IsFinite(maximum);
+    }
+
+    private bool TryGetMaximumExecution(DateTime date, out double maximum)
+    {
+        maximum = double.NaN;
+        if (!_chandelierExecutions.TryGetValue(date.Date, out IReadOnlyList<double>? executions))
+            return false;
+        foreach (double execution in executions)
+            if (double.IsFinite(execution) && (!double.IsFinite(maximum) || execution > maximum))
+                maximum = execution;
+        return double.IsFinite(maximum);
     }
 
     private static (double Minimum, double Maximum) AutoRange(IEnumerable<double> values)
@@ -844,7 +1225,7 @@ internal sealed class TradingEnsembleChart : Border
                 yield return item;
     }
 
-    private static Brush PackageBrush(string package) => package switch
+    internal static Brush PackageBrush(string package) => package switch
     {
         "GPU-ZZ1" => new SolidColorBrush(Color.FromRgb(32, 116, 75)),
         "GPU-ZZ2" => new SolidColorBrush(Color.FromRgb(190, 62, 116)),

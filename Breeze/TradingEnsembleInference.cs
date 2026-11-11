@@ -21,6 +21,8 @@ namespace BreezeVL;
 // The formulas and JBIN reader mirror "GPU проторговка"; no derived CSV is created.
 internal sealed class TradingEnsembleInference : UserStrategyBase
 {
+    private const int PerformanceLookbackBars = 125;
+
     private static readonly string[] FeatureNames =
     [
         "model_cnn_fear_greed", "risk_measure", "model_panic_euphoria", "myRSI_rep",
@@ -76,7 +78,8 @@ internal sealed class TradingEnsembleInference : UserStrategyBase
                 TradingModelEngine.Encog => engine.CalculateEncogPackage(
                     bars, path, package.Key, package.CalculationMethod, Math.Max(0, forecastDays), cancellationToken),
                 _ => engine.CalculateJbinPackage(
-                    bars, path, package.Key, package.CalculationMethod, Math.Max(0, forecastDays), cancellationToken)
+                    bars, path, package.Key, package.CalculationMethod, Math.Max(0, forecastDays), cancellationToken,
+                    package.Engine == TradingModelEngine.JordanJbin)
             };
             ValidatePackage(series, bars);
             return series;
@@ -98,7 +101,7 @@ internal sealed class TradingEnsembleInference : UserStrategyBase
 
     private TradingEnsembleSeries CalculateJbinPackage(
         BarHistory bars, string packagePath, string packageName, int method, int forecastDays,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken, bool legacyFeatures = false)
     {
         if (!Directory.Exists(packagePath))
             throw new DirectoryNotFoundException($"Торговый пакет {packageName} не найден: {packagePath}");
@@ -121,8 +124,10 @@ internal sealed class TradingEnsembleInference : UserStrategyBase
             cancellationToken.ThrowIfCancellationRequested();
             try
             {
-                ModelParameters? parameters = LoadParameters(Path.ChangeExtension(modelFile, ".ini"),
-                    Path.Combine(Path.GetDirectoryName(packagePath) ?? packagePath, "system_param.ini"));
+                string defaults = Path.Combine(Path.GetDirectoryName(packagePath) ?? packagePath, "system_param.ini");
+                ModelParameters? parameters = legacyFeatures
+                    ? LoadLegacyParameters(Path.ChangeExtension(modelFile, ".ini"), defaults, false)
+                    : LoadParameters(Path.ChangeExtension(modelFile, ".ini"), defaults);
                 if (parameters is null || parameters.CalculationMethod != method) continue;
                 FeatureSet features = GetFeatures(bars, parameters);
                 Dictionary<string, double>[][]? forecastFeatures = forecastDays > 0
@@ -131,16 +136,18 @@ internal sealed class TradingEnsembleInference : UserStrategyBase
                 double[,]? modelForecastCounts = CreateForecastCountsLike(forecastCounts);
                 double[] forecast = RunModel(modelFile, bars.Count, features, parameters, forecastFeatures,
                     firstForecastOrigin, modelForecastCounts, cancellationToken);
-                models.Add(new ModelForecast(Path.GetFileName(modelFile), ParseBench(Path.GetFileName(modelFile)), forecast));
+                models.Add(new ModelForecast(Path.GetFileName(modelFile), ParseBench(Path.GetFileName(modelFile)),
+                    parameters.NetworkType, features.StartIndex, forecast));
                 MergeForecastCounts(forecastCounts, modelForecastCounts);
             }
             catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { throw; }
             catch (Exception ex) { failures.Add($"{Path.GetFileName(modelFile)}: {ex.Message}"); }
         }
         if (models.Count == 0)
-            throw new InvalidOperationException($"В {packageName} нет комплектных моделей метода {method}.");
+            throw new InvalidOperationException($"В {packageName} нет комплектных моделей метода {method}." +
+                (failures.Count > 0 ? $" Первая ошибка: {failures[0]}" : string.Empty));
 
-        return BuildSeries(bars, packageName, models, forecastCounts, firstForecastOrigin, FailureSummary(failures));
+        return BuildSeries(bars, packageName, models, forecastCounts, firstForecastOrigin, FailureSummary(failures), legacyFeatures);
     }
 
     private TradingEnsembleSeries CalculateTorchPackage(
@@ -163,8 +170,8 @@ internal sealed class TradingEnsembleInference : UserStrategyBase
             cancellationToken.ThrowIfCancellationRequested();
             try
             {
-                ModelParameters? parameters = LoadParameters(Path.ChangeExtension(modelFile, ".ini"),
-                    Path.Combine(Path.GetDirectoryName(packagePath) ?? packagePath, "system_param.ini"));
+                ModelParameters? parameters = LoadLegacyParameters(Path.ChangeExtension(modelFile, ".ini"),
+                    Path.Combine(Path.GetDirectoryName(packagePath) ?? packagePath, "system_param.ini"), false);
                 if (parameters is null || parameters.CalculationMethod != method)
                     continue;
                 FeatureSet features = GetFeatures(bars, parameters);
@@ -174,15 +181,17 @@ internal sealed class TradingEnsembleInference : UserStrategyBase
                 double[,]? modelForecastCounts = CreateForecastCountsLike(forecastCounts);
                 double[] values = RunTorchModel(modelFile, bars.Count, features, parameters,
                     forecastFeatures, firstForecastOrigin, modelForecastCounts, cancellationToken);
-                models.Add(new ModelForecast(Path.GetFileName(modelFile), ParseBench(Path.GetFileName(modelFile)), values));
+                models.Add(new ModelForecast(Path.GetFileName(modelFile), ParseBench(Path.GetFileName(modelFile)),
+                    1, features.StartIndex, values));
                 MergeForecastCounts(forecastCounts, modelForecastCounts);
             }
             catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { throw; }
             catch (Exception ex) { failures.Add($"{Path.GetFileName(modelFile)}: {ex.Message}"); }
         }
         if (models.Count == 0)
-            throw new InvalidOperationException($"В {packageName} нет комплектных PT-моделей метода {method}.");
-        return BuildSeries(bars, packageName, models, forecastCounts, firstForecastOrigin, FailureSummary(failures));
+            throw new InvalidOperationException($"В {packageName} нет комплектных PT-моделей метода {method}." +
+                (failures.Count > 0 ? $" Первая ошибка: {failures[0]}" : string.Empty));
+        return BuildSeries(bars, packageName, models, forecastCounts, firstForecastOrigin, FailureSummary(failures), true);
     }
 
     private TradingEnsembleSeries CalculateEncogPackage(
@@ -205,8 +214,8 @@ internal sealed class TradingEnsembleInference : UserStrategyBase
                 continue;
             try
             {
-                ModelParameters? parameters = LoadParameters(iniFile,
-                    Path.Combine(Path.GetDirectoryName(packagePath) ?? packagePath, "system_param.ini"));
+                ModelParameters? parameters = LoadLegacyParameters(iniFile,
+                    Path.Combine(Path.GetDirectoryName(packagePath) ?? packagePath, "system_param.ini"), true);
                 if (parameters is null || parameters.CalculationMethod != method || parameters.ActiveFeatures.Count == 0)
                     continue;
                 FeatureSet features = GetFeatures(bars, parameters);
@@ -216,26 +225,34 @@ internal sealed class TradingEnsembleInference : UserStrategyBase
                 double[,]? modelForecastCounts = CreateForecastCountsLike(forecastCounts);
                 double[] values = RunEncogModel(modelFile, bars.Count, features, parameters,
                     forecastFeatures, firstForecastOrigin, modelForecastCounts, cancellationToken);
-                models.Add(new ModelForecast(Path.GetFileName(iniFile), ParseBench(Path.GetFileName(iniFile)), values));
+                models.Add(new ModelForecast(Path.GetFileName(iniFile), ParseBench(Path.GetFileName(iniFile)),
+                    parameters.NetworkType, features.StartIndex, values));
                 MergeForecastCounts(forecastCounts, modelForecastCounts);
             }
             catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { throw; }
             catch (Exception ex) { failures.Add($"{Path.GetFileName(iniFile)}: {ex.Message}"); }
         }
         if (models.Count == 0)
-            throw new InvalidOperationException($"В {packageName} нет комплектных EG/INI-моделей метода {method}.");
-        return BuildSeries(bars, packageName, models, forecastCounts, firstForecastOrigin, FailureSummary(failures));
+            throw new InvalidOperationException($"В {packageName} нет комплектных EG/INI-моделей метода {method}." +
+                (failures.Count > 0 ? $" Первая ошибка: {failures[0]}" : string.Empty));
+        return BuildSeries(bars, packageName, models, forecastCounts, firstForecastOrigin, FailureSummary(failures), true);
     }
 
     private static TradingEnsembleSeries BuildSeries(
         BarHistory bars, string packageName, IReadOnlyList<ModelForecast> models,
-        double[,]? forecastCounts, int firstForecastOrigin, string warning)
+        double[,]? forecastCounts, int firstForecastOrigin, string warning, bool legacyOrder = false)
     {
         double[] ensemble = new double[bars.Count];
         foreach (ModelForecast model in models)
             for (int bar = 0; bar < bars.Count; bar++) ensemble[bar] += model.Values[bar];
-        List<ModelForecast> sorted = models.OrderBy(model => model.Bench)
-            .ThenBy(model => model.FileName, StringComparer.OrdinalIgnoreCase).ToList();
+        List<ModelForecast> sorted = models.ToList();
+        if (legacyOrder)
+            // The source strategy uses List.Sort on Bench alone, including ties.
+            // A filename tie-break changes decile membership and actual trades.
+            sorted.Sort((a, b) => a.Bench.CompareTo(b.Bench));
+        else
+            sorted = sorted.OrderBy(model => model.Bench)
+                .ThenBy(model => model.FileName, StringComparer.OrdinalIgnoreCase).ToList();
         var deciles = Enumerable.Range(0, 10).Select(_ => new double[bars.Count]).ToArray();
         var counts = new int[10];
         for (int modelIndex = 0; modelIndex < sorted.Count; modelIndex++)
@@ -265,7 +282,71 @@ internal sealed class TradingEnsembleInference : UserStrategyBase
                 DateTime date = next ? NextTradingDate(bars.DateTimes[origin].Date) : bars.DateTimes[origin + 1].Date;
                 forecasts.Add(new TradingForecastPoint(date, scenarios, next));
             }
-        return new TradingEnsembleSeries(packageName, points, forecasts, models.Count, warning);
+        IReadOnlyDictionary<int, int> architectureCounts = models
+            .GroupBy(model => model.NetworkType)
+            .OrderBy(group => group.Key)
+            .ToDictionary(group => group.Key, group => group.Count());
+        int validFromIndex = Math.Clamp(models.Max(model => model.StartIndex), 0, bars.Count - 1);
+        double last125BenchmarkPercent = CalculateLast125BenchmarkPercent(bars, models);
+        IReadOnlyDictionary<int, double> benchmarkPercentByLookback =
+            CalculateBenchmarkPercentByLookback(bars, models);
+        return new TradingEnsembleSeries(packageName, points, forecasts, models.Count, warning,
+            architectureCounts, bars.DateTimes[validFromIndex].Date, last125BenchmarkPercent,
+            benchmarkPercentByLookback);
+    }
+
+    private static IReadOnlyDictionary<int, double> CalculateBenchmarkPercentByLookback(
+        BarHistory bars, IReadOnlyList<ModelForecast> models)
+    {
+        int last = bars.Count - 1;
+        var sums = new Dictionary<int, double>();
+        var counts = new Dictionary<int, int>();
+        foreach (ModelForecast model in models)
+        {
+            double strategy = 0.0;
+            for (int lookback = 1; lookback <= last; lookback++)
+            {
+                int index = last - lookback + 1;
+                if (index >= model.StartIndex && index > 0 && model.Values[index - 1] >= 0.5)
+                    strategy += bars.Close[index] - bars.Close[index - 1];
+                if (lookback % 10 != 0)
+                    continue;
+                double benchmark = bars.Close[last] - bars.Close[last - lookback];
+                if (!double.IsFinite(strategy) || !double.IsFinite(benchmark) || Math.Abs(benchmark) < 1e-12)
+                    continue;
+                sums[lookback] = sums.GetValueOrDefault(lookback) + strategy / benchmark * 100.0;
+                counts[lookback] = counts.GetValueOrDefault(lookback) + 1;
+            }
+        }
+        return sums.Where(pair => counts.GetValueOrDefault(pair.Key) > 0)
+            .ToDictionary(pair => pair.Key, pair => pair.Value / counts[pair.Key]);
+    }
+
+    private static double CalculateLast125BenchmarkPercent(
+        BarHistory bars, IReadOnlyList<ModelForecast> models)
+    {
+        int last = bars.Count - 1;
+        if (last < PerformanceLookbackBars)
+            return double.NaN;
+        double benchmark = bars.Close[last] - bars.Close[last - PerformanceLookbackBars];
+        if (!double.IsFinite(benchmark) || Math.Abs(benchmark) < 1e-12)
+            return double.NaN;
+
+        double sum = 0.0;
+        int count = 0;
+        foreach (ModelForecast model in models)
+        {
+            int start = Math.Max(last - PerformanceLookbackBars + 1, model.StartIndex);
+            double strategy = 0.0;
+            for (int index = start; index <= last; index++)
+                if (model.Values[index - 1] >= 0.5)
+                    strategy += bars.Close[index] - bars.Close[index - 1];
+            if (!double.IsFinite(strategy))
+                continue;
+            sum += strategy / benchmark * 100.0;
+            count++;
+        }
+        return count == 0 ? double.NaN : sum / count;
     }
 
     private static string FailureSummary(IReadOnlyList<string> failures)
@@ -293,9 +374,9 @@ internal sealed class TradingEnsembleInference : UserStrategyBase
 
         var map = new Dictionary<string, TimeSeries>(StringComparer.OrdinalIgnoreCase);
         var starts = new List<int>();
-        BarHistory fear = GetHistory(bars, "model_cnn_fear_greed");
-        BarHistory risk = GetHistory(bars, "risk_measure");
-        BarHistory panic = GetHistory(bars, "model_panic_euphoria_day");
+        BarHistory fear = GetHistory(bars, SentimentCalculator.CnnFearGreedSymbol);
+        BarHistory risk = GetHistory(bars, SentimentCalculator.RiskMeasureSymbol);
+        BarHistory panic = GetHistory(bars, SentimentCalculator.PanicEuphoriaSymbol);
         map["model_cnn_fear_greed"] = (SMA.Series(fear.Close, 1) - 50) / 50;
         map["risk_measure"] = (SMA.Series(risk.Close, 1) - 50) / 50;
         map["model_panic_euphoria"] = SMA.Series(panic.Close, 1) - 0.5;
@@ -318,9 +399,31 @@ internal sealed class TradingEnsembleInference : UserStrategyBase
             foreach (string name in FeatureNames)
                 map[name] = Quantize(bars, map[name], p.InputGradations, p.ValidationWithoutGradation);
 
+        ValidateLatestFeatures(bars, map);
+
         cached = new FeatureSet(map, Math.Max(175, starts.DefaultIfEmpty(175).Max()));
         _featureCache[key] = cached;
         return cached;
+    }
+
+    private static void ValidateLatestFeatures(
+        BarHistory bars,
+        IReadOnlyDictionary<string, TimeSeries> map)
+    {
+        if (bars.Count == 0)
+            throw new InvalidOperationException("Невозможно рассчитать Trading Ensemble: история SPY пуста.");
+        int latest = bars.Count - 1;
+        foreach (string name in FeatureNames)
+        {
+            if (!map.TryGetValue(name, out TimeSeries? series) ||
+                latest >= series.Count ||
+                !double.IsFinite(series[latest]))
+            {
+                throw new InvalidOperationException(
+                    $"Trading Ensemble не рассчитан: вход {name} отсутствует на последнем баре SPY " +
+                    $"{bars.DateTimes[latest]:yyyy-MM-dd}. Обновите исходные данные и нажмите Recalculate.");
+            }
+        }
     }
 
     private Dictionary<string, double>[][] GetForecastFeatures(
@@ -645,6 +748,38 @@ internal sealed class TradingEnsembleInference : UserStrategyBase
         return index >= 0 && index < weights.Count ? weights[index] : 1.0;
     }
 
+    private static ModelParameters? LoadLegacyParameters(string path, string? defaultsPath, bool encog)
+    {
+        ModelParameters? parameters = LoadParameters(path, defaultsPath);
+        if (parameters is null) return null;
+
+        // Wealth-Lab "что если" and its original Encog strategy prepare these
+        // features with fixed periods, regardless of the training INI defaults.
+        // GPU packages keep their own INI-driven preprocessing in LoadParameters.
+        IReadOnlyList<string> features = FeatureNames;
+        if (encog)
+        {
+            string? header = null;
+            foreach (string raw in File.ReadLines(path))
+            {
+                int equals = raw.IndexOf('=');
+                if (equals > 0 && raw[..equals].Trim().Equals("ALLall_Header", StringComparison.OrdinalIgnoreCase))
+                    header = raw[(equals + 1)..].Trim();
+            }
+            if (string.IsNullOrWhiteSpace(header))
+                throw new InvalidDataException($"В {Path.GetFileName(path)} отсутствует ALLall_Header.");
+            features = header.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        }
+        return parameters with
+        {
+            InputGradations = 0, ValidationWithoutGradation = 0,
+            X4 = 14, X4Smooth = 8, X6 = 48, X6Down = 48, X7 = 7, X7Plus = 14,
+            X8 = 48, X9 = 35, X10 = 80, X11 = 80, X12 = 96,
+            X13 = 20, X13HiLoPeriod = 3, X13Mode = 0, X14 = 3, X14MaPeriod = 125,
+            ActiveFeatures = features
+        };
+    }
+
     private static ModelParameters? LoadParameters(string path, string? defaultsPath = null)
     {
         if (!File.Exists(path)) return null;
@@ -683,13 +818,14 @@ internal sealed class TradingEnsembleInference : UserStrategyBase
 
     private static double ParseBench(string name)
     {
-        Match match = Regex.Match(name, @"(?:^|_)Bench\s*=?\s*(-?\d+(?:\.\d+)?)", RegexOptions.IgnoreCase);
+        Match match = Regex.Match(name, @"Bench\s*=?\s*(-?\d+(?:\.\d+)?)", RegexOptions.IgnoreCase);
         return match.Success && double.TryParse(match.Groups[1].Value, NumberStyles.Float, CultureInfo.InvariantCulture, out double value)
             ? value : double.NaN;
     }
 
     private sealed record FeatureSet(Dictionary<string, TimeSeries> Map, int StartIndex);
-    private sealed record ModelForecast(string FileName, double Bench, double[] Values);
+    private sealed record ModelForecast(
+        string FileName, double Bench, int NetworkType, int StartIndex, double[] Values);
     private sealed record ModelParameters(
         int NetworkType, int ContextMode, double Level, int CalculationMethod,
         int InputGradations, int ValidationWithoutGradation,

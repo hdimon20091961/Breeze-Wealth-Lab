@@ -22,7 +22,7 @@ if (-not $currentPrincipal.IsInRole([Security.Principal.WindowsBuiltInRole]::Adm
         $elevationArguments += @('-LayoutDirectory', ('"' + $LayoutDirectory + '"'))
     }
 
-    $elevated = Start-Process powershell.exe -Verb RunAs -Wait -PassThru -ArgumentList $elevationArguments
+    $elevated = Start-Process powershell.exe -Verb RunAs -WindowStyle Hidden -Wait -PassThru -ArgumentList $elevationArguments
     exit $elevated.ExitCode
 }
 
@@ -42,6 +42,9 @@ $files = @(@{
 }, @{
     Source = Join-Path $PSScriptRoot 'Breeze\bin\x64\Release\net8.0-windows\BreezeEventCatalog.json'
     Destination = Join-Path $WealthLabDirectory 'BreezeEventCatalog.json'
+}, @{
+    Source = Join-Path $PSScriptRoot 'release\Indicators.JohnEhlers_8Wealth.dll'
+    Destination = Join-Path $WealthLabDirectory 'Indicators.JohnEhlers_8Wealth.dll'
 })
 if ($BreezeOnly) { $files = @($files | Where-Object { [System.IO.Path]::GetFileName($_.Destination) -ne 'Breeze.Strategies.dll' }) }
 
@@ -98,6 +101,7 @@ try {
         @{
             Version = 1
             FuzzyAnalysisRatio = 0.25
+            TradingAnalysisRatio = 0.25
             TradingPriceBoundary = 0.52
             TradingEnsembleBoundary = 0.63
             TradingDecileBoundary = 0.91

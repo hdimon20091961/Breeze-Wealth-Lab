@@ -1,0 +1,134 @@
+[
+  {
+    "Package": "ZZ1",
+    "Models": 879,
+    "Bars": 2086,
+    "Proportional": {
+      "LotBars": 14249,
+      "Percent": 68.3077660594439
+    },
+    "Deciles": {
+      "LotBars": 16283,
+      "Percent": 78.05848513902205
+    },
+    "AllOrNothing": {
+      "LotBars": 16430,
+      "Percent": 78.76318312559924
+    },
+    "DesiredLotBars": {
+      "Proportional": 15117,
+      "Deciles": 17110,
+      "AllOrNothing": 17270
+    }
+  },
+  {
+    "Package": "ZZ2",
+    "Models": 745,
+    "Bars": 2086,
+    "Proportional": {
+      "LotBars": 13658,
+      "Percent": 65.47459252157239
+    },
+    "Deciles": {
+      "LotBars": 15298,
+      "Percent": 73.33652924256951
+    },
+    "AllOrNothing": {
+      "LotBars": 15430,
+      "Percent": 73.9693192713327
+    },
+    "DesiredLotBars": {
+      "Proportional": 14405,
+      "Deciles": 15929,
+      "AllOrNothing": 16050
+    }
+  },
+  {
+    "Package": "ZZ1-J",
+    "Models": 600,
+    "Bars": 2086,
+    "Proportional": {
+      "LotBars": 13835,
+      "Percent": 66.32310642377757
+    },
+    "Deciles": {
+      "LotBars": 16295,
+      "Percent": 78.11601150527325
+    },
+    "AllOrNothing": {
+      "LotBars": 16640,
+      "Percent": 79.76989453499522
+    },
+    "DesiredLotBars": {
+      "Proportional": 14669,
+      "Deciles": 17113,
+      "AllOrNothing": 17450
+    }
+  },
+  {
+    "Package": "ZZ2-J",
+    "Models": 586,
+    "Bars": 2086,
+    "Proportional": {
+      "LotBars": 14624,
+      "Percent": 70.10546500479387
+    },
+    "Deciles": {
+      "LotBars": 16162,
+      "Percent": 77.47842761265579
+    },
+    "AllOrNothing": {
+      "LotBars": 16260,
+      "Percent": 77.94822627037392
+    },
+    "DesiredLotBars": {
+      "Proportional": 15481,
+      "Deciles": 16999,
+      "AllOrNothing": 17060
+    }
+  },
+  {
+    "Package": "Encog-ZZ1",
+    "Models": 1200,
+    "Bars": 2086,
+    "Proportional": {
+      "LotBars": 14200,
+      "Percent": 68.07286673058485
+    },
+    "Deciles": {
+      "LotBars": 16769,
+      "Percent": 80.38830297219559
+    },
+    "AllOrNothing": {
+      "LotBars": 16720,
+      "Percent": 80.15340364333653
+    },
+    "DesiredLotBars": {
+      "Proportional": 15122,
+      "Deciles": 17654,
+      "AllOrNothing": 17570
+    }
+  },
+  {
+    "Package": "Encog-ZZ2",
+    "Models": 529,
+    "Bars": 2086,
+    "Proportional": {
+      "LotBars": 13319,
+      "Percent": 63.84947267497603
+    },
+    "Deciles": {
+      "LotBars": 14984,
+      "Percent": 71.83125599232983
+    },
+    "AllOrNothing": {
+      "LotBars": 15000,
+      "Percent": 71.90795781399808
+    },
+    "DesiredLotBars": {
+      "Proportional": 13952,
+      "Deciles": 15490,
+      "AllOrNothing": 15500
+    }
+  }
+]

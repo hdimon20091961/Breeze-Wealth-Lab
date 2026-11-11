@@ -7,7 +7,7 @@ import pandas as pd
 
 
 SOURCE = Path(r"D:\fear_greed_close\Breeze")
-OUT = Path(r"D:\CODEX_PRG\Breadth\artifacts\Podhvat_1\research")
+OUT = Path(r"D:\CODEX_PRG\Breadth\research\artifacts\Podhvat_1\research")
 
 
 def ramp(value: pd.Series, start: float, end: float) -> pd.Series:

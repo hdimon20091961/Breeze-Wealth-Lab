@@ -6,7 +6,7 @@ from pathlib import Path
 
 
 ROOT = Path(r"D:\CODEX_PRG\Breadth")
-RESEARCH = ROOT / "artifacts" / "Podhvat_1" / "research"
+RESEARCH = ROOT / "research" / "artifacts" / "Podhvat_1" / "research"
 HELP = ROOT / "Breeze" / "BreezeHelp.html"
 START = "<!-- PODHVAT-RESEARCH-START -->"
 END = "<!-- PODHVAT-RESEARCH-END -->"

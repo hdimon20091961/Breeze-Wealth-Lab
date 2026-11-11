@@ -10,6 +10,7 @@ internal sealed class BreezeLayoutState
     public int ScoreProfile { get; set; } = 1;
     public bool[] TradingCollapsed { get; set; } = new bool[4];
     public double FuzzyAnalysisRatio { get; set; } = 0.25;
+    public double TradingAnalysisRatio { get; set; } = 0.25;
     public double TradingPriceBoundary { get; set; } = 0.52;
     public double TradingEnsembleBoundary { get; set; } = 0.63;
     public double TradingDecileBoundary { get; set; } = 0.91;
